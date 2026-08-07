@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Stdio transport — the local half of the server.
+#
+# Add to a client config as:
+#   { "command": "/absolute/path/to/this/checkout/bin/mcp-stdio" }
+# (must be an absolute path — clients don't resolve relative ones)
+#
+# NOTHING may be written to stdout except JSON-RPC frames: stdout *is* the
+# protocol channel. Rails boot chatter, `puts` in a tool, a stray `p` — any of
+# them corrupt the stream and the client disconnects with a parse error. So
+# stdout is redirected while the environment loads, and logs go to stderr.
+
+require "pathname"
+APP_ROOT = Pathname.new(File.expand_path("..", __dir__))
+
+real_stdout = $stdout.dup
+$stdout.reopen($stderr)
+
+ENV["RAILS_ENV"] ||= "development"
+require APP_ROOT.join("config/environment").to_s
+
+Rails.logger = ActiveSupport::Logger.new($stderr)
+ActiveRecord::Base.logger = Rails.logger if ENV["MCP_SQL_LOG"]
+
+$stdout.reopen(real_stdout)
+$stdout.sync = true
+
+store =
+  if ENV["MCP_STORE_CODE"].present?
+    Spree::Store.find_by(code: ENV["MCP_STORE_CODE"])
+  else
+    StoreMcp.default_store
+  end
+
+if store.nil?
+  warn("mcp-stdio: no store found (MCP_STORE_CODE=#{ENV['MCP_STORE_CODE'].inspect})")
+  exit 1
+end
+
+read_only = ActiveModel::Type::Boolean.new.cast(ENV.fetch("MCP_READ_ONLY", "false"))
+warn("mcp-stdio: serving store ##{store.id} (#{store.name})#{read_only ? ' [read-only]' : ''}")
+
+server = StoreMcp.server(store: store, read_only: read_only)
+MCP::Server::Transports::StdioTransport.new(server).open
