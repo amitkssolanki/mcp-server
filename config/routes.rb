@@ -1,4 +1,12 @@
 Rails.application.routes.draw do
+  use_doorkeeper
+
+  # OAuth discovery + dynamic client registration. Declared before the Spree
+  # engine mount for the same reason /mcp is — Spree is mounted at "/" and
+  # would otherwise swallow these paths.
+  get "/.well-known/oauth-protected-resource" => "well_known#protected_resource"
+  get "/.well-known/oauth-authorization-server" => "well_known#authorization_server"
+  post "/register" => "oauth_client_registrations#create"
   Spree::Core::Engine.add_routes do
     # Storefront routes
     scope '(:locale)', locale: /#{Spree.available_locales.join('|')}/, defaults: { locale: nil } do

@@ -64,3 +64,5 @@ gem "mcp", "~> 1.1"
 gem "spree_storefront", "~> 5.4"
 
 gem "devise", "~> 5.0"
+
+gem "doorkeeper", "~> 5.9"

@@ -15,6 +15,14 @@ Rails.application.configure do
   # Enable server timing.
   config.server_timing = true
 
+  # Rails blocks unrecognized Host headers by default (ActionDispatch::
+  # HostAuthorization). ngrok's tunnel forwards the original public hostname
+  # straight through, so without this every request 403s before it reaches
+  # any controller — including the OAuth metadata endpoints, which is exactly
+  # what a remote client hits first. Dev-only: a real deployment sets
+  # config.hosts to its actual domain instead of allowing any ngrok subdomain.
+  config.hosts << /.*\.ngrok-free\.(dev|app)\z/
+
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?

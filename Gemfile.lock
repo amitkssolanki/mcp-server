@@ -132,6 +132,8 @@ GEM
       railties (>= 7.0)
       responders
       warden (~> 1.2.3)
+    doorkeeper (5.9.5)
+      railties (>= 5)
     drb (2.2.3)
     erb (6.0.7)
     erubi (1.13.1)
@@ -565,6 +567,7 @@ DEPENDENCIES
   bundler-audit
   debug
   devise (~> 5.0)
+  doorkeeper (~> 5.9)
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
