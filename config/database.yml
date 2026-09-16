@@ -78,8 +78,11 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# Deployed via Kamal: DATABASE_URL is composed in .kamal/secrets and points at
+# this app's own Postgres accessory container. Rails merges DATABASE_URL over
+# whatever is written here, but the discrete host/user/password keys are left
+# out deliberately — with one source of truth there is no second, stale copy to
+# disagree with it.
 production:
   <<: *default
-  database: mcp_server_production
-  username: mcp_server
-  password: <%= ENV["MCP_SERVER_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>

@@ -73,6 +73,19 @@ module StoreMcp
     def default_store
       Spree::Store.default
     end
+
+    # Whether this deployment publishes the two write tools at all.
+    #
+    # The public demo runs with MCP_ALLOW_WRITE_SCOPE=false. The Doorkeeper
+    # initializer already drops mcp:write from the configured scopes, which
+    # stops new tokens from carrying it — but Doorkeeper checks scopes when a
+    # token is issued, not when it is presented, so a token minted before the
+    # flag flipped would still pass includes_scope?("mcp:write"). This is the
+    # check that holds at request time, and it is why McpController consults
+    # both.
+    def write_enabled?
+      ENV.fetch("MCP_ALLOW_WRITE_SCOPE", "true") != "false"
+    end
   end
 
   VERSION = "0.1.0"

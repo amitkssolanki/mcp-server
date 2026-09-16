@@ -66,3 +66,6 @@ gem "spree_storefront", "~> 5.4"
 gem "devise", "~> 5.0"
 
 gem "doorkeeper", "~> 5.9"
+
+# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
+gem "kamal", "~> 2.12", group: :development, require: false

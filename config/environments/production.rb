@@ -57,7 +57,13 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  #
+  # RAILS_HOST is the one place the deployed hostname is configured (set in
+  # config/deploy.yml); everything below derives from it. Spree generates
+  # absolute URLs in order confirmations and in the OAuth consent screen's
+  # redirect, so this has to be the real host, not a placeholder.
+  config.action_mailer.default_url_options = { host: ENV.fetch("RAILS_HOST", "example.com"), protocol: "https" }
+  routes.default_url_options = { host: ENV.fetch("RAILS_HOST", "example.com"), protocol: "https" }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -79,11 +85,30 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
   #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Rails only installs the host-authorization middleware when config.hosts is
+  # non-empty, so leaving this unset — the generated default — means no Host
+  # check at all in production. The README lists that as something a real
+  # deployment has to fix, and this is the fix. Note it is NOT the same check
+  # as the MCP SDK's: MCP_ALLOWED_HOSTS guards the /mcp transport separately,
+  # and one without the other leaves a hole.
+  if ENV["RAILS_HOST"].present?
+    config.hosts << ENV["RAILS_HOST"]
+
+    # kamal-proxy health-checks the container directly rather than through the
+    # public hostname, so /up arrives with a Host header that is not
+    # RAILS_HOST. Without this exclusion every health check 403s and the
+    # deploy never goes green.
+    config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  end
+
+  # Demo content: 32k products with names synthesized from a category and an
+  # ID fragment, over anonymised 2016-2018 Brazilian order history. None of it
+  # should turn up in search results under amitsolanki.com. robots.txt asks
+  # crawlers not to fetch; X-Robots-Tag tells the ones that fetch anyway not to
+  # index. Set DEMO_NOINDEX=false if this ever fronts a real catalogue.
+  if ENV.fetch("DEMO_NOINDEX", "true") != "false"
+    config.action_dispatch.default_headers =
+      config.action_dispatch.default_headers.merge("X-Robots-Tag" => "noindex, nofollow")
+  end
 end

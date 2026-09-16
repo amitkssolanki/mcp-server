@@ -1,0 +1,7 @@
+# Demo store. The catalogue is 32k products with names synthesized from the
+# Olist dataset's category codes, not real merchandise, and the order history
+# is anonymised 2016-2018 Brazilian data. None of it should appear in search
+# results. Production also sends X-Robots-Tag: noindex, nofollow while
+# DEMO_NOINDEX is on — see config/environments/production.rb.
+User-agent: *
+Disallow: /

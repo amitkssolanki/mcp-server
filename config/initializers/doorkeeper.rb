@@ -279,8 +279,16 @@ Doorkeeper.configure do
   # these the presented token actually carries — see app/controllers/mcp_controller.rb.
   # Namespaced (mcp:*) rather than bare read/write since this Doorkeeper
   # install may end up protecting more than just the MCP endpoint someday.
+  #
+  # MCP_ALLOW_WRITE_SCOPE=false (set on the public demo deployment) removes
+  # mcp:write from the configured scope set entirely: a client that asks for it
+  # is refused at the authorization endpoint, so no new token can carry it.
+  # That is the deploy-time half. The runtime half is StoreMcp.write_enabled?,
+  # checked in McpController — needed because Doorkeeper validates scopes when
+  # a token is *issued*, not when it is presented, so a token minted while
+  # writes were enabled would otherwise keep them after the flag flipped.
   default_scopes  :"mcp:read"
-  optional_scopes :"mcp:write"
+  optional_scopes :"mcp:write" if ENV.fetch("MCP_ALLOW_WRITE_SCOPE", "true") != "false"
 
   # Allows to restrict only certain scopes for grant_type.
   # By default, all the scopes will be available for all the grant types.
