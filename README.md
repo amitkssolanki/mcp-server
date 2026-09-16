@@ -7,9 +7,12 @@ that lets an AI assistant query and (carefully) manage it. Built to learn MCP by
 one against something real, not a toy API. See [db/olist/README.md](db/olist/README.md)
 for why real data instead of generated seeds, and every mapping decision the importer makes.
 
-**This isn't a production template.** Real data, real OAuth, real bugs found and fixed —
-but the deployment story (a hand-created admin account, a dev tunnel, no rate limiting) is
-learning-project shaped, not launch shaped. See [Known limitations](#known-limitations).
+Running at **<https://mcp-store.amitsolanki.com>** — storefront, admin, and the remote MCP
+endpoint at `/mcp`, deployed read-only (see [Deployment](#deployment)).
+
+**This isn't a production template.** Real data, real OAuth, real bugs found and fixed — but
+a single hand-created admin account and no rate limiting is learning-project shaped, not
+launch shaped. See [Known limitations](#known-limitations).
 
 ## What's here
 
@@ -114,6 +117,10 @@ Approving the consent grant is an admin-equivalent access decision — every too
 writes store-operator data, not customer-scoped data — so `resource_owner_authenticator` in
 the Doorkeeper initializer is wired to the admin login, not the storefront one.
 
+The deployed instance is read-only: `MCP_ALLOW_WRITE_SCOPE=false` drops `mcp:write` from
+Doorkeeper's configured scopes, so the authorization endpoint refuses a client that asks for
+it and `tools/list` returns the 9 read tools only.
+
 For local testing before you have a real domain, a tunnel (ngrok or similar) works, with two
 things worth knowing:
 
@@ -137,6 +144,34 @@ things worth knowing:
 | `update_product_price` | write | Previews the change; only writes with `confirm: true` |
 | `update_order_status` | write | Same preview-then-confirm pattern |
 
+## Deployment
+
+Kamal 2 onto a Hetzner box shared with a few other demo apps, reusing that box's
+`kamal-proxy` for TLS. `config/deploy.yml` carries the reasoning; the parts worth knowing:
+
+- **Its own Postgres accessory**, not a shared one. Each `revenue_report` or
+  `delivery_performance` call scans ~100k orders on demand from an MCP client, which has no
+  business sharing an instance with another app.
+- **The data is restored, not imported.** `olist:import` is a four-minute bulk load that
+  bypasses ActiveRecord's callback chain; it runs on a workstation and ships as a `pg_dump`.
+- **Read-only takes two halves.** The remote endpoint derives its tool set from the
+  presented token's scopes, so `MCP_ALLOW_WRITE_SCOPE=false` both drops `mcp:write` from
+  Doorkeeper's configured scopes (no new token can carry it) and is re-checked at request
+  time by `StoreMcp.write_enabled?` — because Doorkeeper validates scopes when a token is
+  *issued*, not when it is presented.
+- **Two host checks, not one.** Rails' `config.hosts` and the MCP SDK's own
+  `MCP_ALLOWED_HOSTS`/`MCP_ALLOWED_ORIGINS` are independent; setting either alone leaves a
+  gap. `/up` is excluded from the Rails check so kamal-proxy's health check can reach it.
+- **`DEMO_NOINDEX`** serves a disallow-all `robots.txt` and an `X-Robots-Tag: noindex`
+  header, because 32k synthesized product names should not be indexed under a real domain.
+
+```bash
+bin/rails secret                 # -> SECRET_KEY_BASE in .env.kamal (gitignored)
+bundle exec kamal setup          # first run: proxy, accessory, app
+bundle exec kamal deploy         # subsequent deploys
+bundle exec kamal logs -f
+```
+
 ## Known limitations
 
 - Single hand-created admin account, no per-scope granularity beyond read/write, no rate
@@ -146,6 +181,9 @@ things worth knowing:
   design choice worth a second opinion from someone who's actually shipped this before.
 - Products have no real names or photos — the Olist dataset doesn't include them, so the
   importer synthesizes names from category + a product-ID fragment.
-- The tunnel-based remote setup above is dev-only. A real deployment needs `config.hosts`
-  and `MCP_ALLOWED_HOSTS`/`MCP_ALLOWED_ORIGINS` pointed at the actual domain, not a
-  wildcard tunnel pattern.
+- The deployed instance is read-only. The write tools are exercised over stdio locally;
+  they have never run against a token issued by the public authorization server.
+- No rate limiting on `/admin` or `/oauth`. The consent screen is wired to the admin login
+  because every tool reads store-operator data, which makes that login admin-equivalent to
+  MCP access — a single password protecting both, with no throttling and no audit trail of
+  who approved which grant.
