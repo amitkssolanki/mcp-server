@@ -24,24 +24,22 @@ module Eval
       @cases = cases
     end
 
-    def run(only: nil)
+    def run(ids: nil)
       specs = {
-        "search-orders-random-filters" => [%w[search_orders], -> { search_cases }],
-        "revenue-report-random-windows" => [%w[revenue_report], -> { revenue_cases }],
-        "delivery-random-windows" => [%w[delivery_performance], -> { delivery_cases }],
-        "customers-random" => [%w[find_customer], -> { customer_cases }],
-        "products-random" => [%w[get_product], -> { product_cases }],
-        "sellers-random-states" => [%w[seller_performance], -> { seller_cases }]
+        "search-orders-random-filters" => -> { search_cases },
+        "revenue-report-random-windows" => -> { revenue_cases },
+        "delivery-random-windows" => -> { delivery_cases },
+        "customers-random" => -> { customer_cases },
+        "products-random" => -> { product_cases },
+        "sellers-random-states" => -> { seller_cases }
       }
-      specs.select { |_, (tools, _)| only.nil? || tools.intersect?(only) }.map do |id, (_, build)|
+      specs.select { |id, _| ids.nil? || ids.include?(id) }.map do |id, build|
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         check = judge(id, build.call)
         check.seconds = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(3)
         check
       end
     end
-
-    def self.tools = %w[search_orders revenue_report delivery_performance find_customer get_product seller_performance]
 
     private
 

@@ -28,6 +28,10 @@ end
   oracle/dataset oracle/oracle
   runner/check runner/mcp_client runner/expectations runner/question_runner
   invariants/invariants invariants/differential reconciliation
-  regressions/historical regressions/registry
+  regressions/historical
+  regressions/pre_fix/search_orders regressions/pre_fix/list_categories regressions/pre_fix/delivery_performance
+  regressions/pre_fix/find_customer regressions/pre_fix/seller_performance regressions/pre_fix/get_order
+  regressions/pre_fix/get_product regressions/pre_fix/revenue_report regressions/pre_fix/product_counters
+  regressions/registry
   run report
 ].each { |f| require File.join(Eval::ROOT, f) }

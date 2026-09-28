@@ -8,7 +8,7 @@ module Eval
   # object; Report renders it.
   class Run
     Result = Struct.new(:meta, :checks, :regressions, :seconds, keyword_init: true)
-    RegressionResult = Struct.new(:id, :kind, :title, :provenance, :caught, :caught_by, :failing, :evidence,
+    RegressionResult = Struct.new(:id, :kind, :finding, :title, :provenance, :caught, :caught_by, :failing, :evidence,
                                   keyword_init: true)
 
     def initialize(seed: DEFAULT_SEED, cases: 25, regressions: true, io: $stdout)
@@ -32,50 +32,52 @@ module Eval
 
     private
 
-    def run_checks(client, truth, tools: nil, reconcile: true)
+    # `ids`, when given, limits the run to those checks: a regression is judged
+    # only on the checks it names, so running anything else would be wasted
+    # time.
+    def run_checks(client, truth, ids: nil)
+      wanted = ->(id) { ids.nil? || ids.include?(id) }
       runner = QuestionRunner.new(client: client, expectations: @expectations)
-      questions = @questions.select { |q| tools.nil? || tools.include?(q["tool"]) }
-      invariants = Invariants.new(client: client, seed: @seed, cases: @cases)
-      only = tools && Invariants::TOOLS.select { |_, ts| ts.intersect?(tools) }.keys.map { |k| k.to_s.delete_prefix("check_") }
-
+      invariant_ids = Invariants.all.map { |m| m.to_s.delete_prefix("check_").tr("_", "-") }.select(&wanted)
       differential = Differential.new(runner: runner, truth: truth, seed: @seed, cases: @cases)
 
-      questions.map { |q| runner.run(q) } +
-        (only&.empty? ? [] : invariants.run(only: only)) +
-        differential.run(only: tools) +
-        (reconcile ? Reconciliation.new(truth).run : [])
+      @questions.select { |q| wanted.(q["id"]) }.map { |q| runner.run(q) } +
+        (invariant_ids.empty? ? [] : Invariants.new(client: client, seed: @seed, cases: @cases).run(only: invariant_ids)) +
+        differential.run(ids: ids) +
+        (ids.nil? || ids.any? { |id| id.start_with?("reconcile-") } ? Reconciliation.new(truth).run : [])
     end
 
     # A regression is caught when one of its named checks fails differently
     # from how it fails on the unmodified system. Before the fixes land, some
     # checks already fail, so "fails" alone would prove nothing.
     def run_regression(regression, baseline, truth)
-      tools = regression.substitute&.map(&:name_value)
       checks = if regression.mutate
                  in_rolled_back_transaction do
                    regression.mutate.call
-                   run_checks(McpClient.new, truth, tools: %w[revenue_report])
+                   run_checks(McpClient.new, truth, ids: regression.caught_by)
                  end
                else
-                 run_checks(McpClient.new(tools: regression.substitute), truth, tools: tools, reconcile: false)
+                 run_checks(McpClient.new(tools: regression.substitute), truth, ids: regression.caught_by)
                end
 
       before = baseline.to_h { |c| [c.id, signature(c)] }
       failing = checks.select { |c| c.fail? && before[c.id] != signature(c) }
       caught = failing.map(&:id) & regression.caught_by
       RegressionResult.new(
-        id: regression.id, kind: regression.kind, title: regression.title, provenance: regression.provenance,
+        id: regression.id, kind: regression.kind, finding: regression.finding, title: regression.title,
+        provenance: regression.provenance,
         caught: caught.any?, caught_by: caught, failing: failing.map(&:id),
         evidence: failing.select { |c| caught.include?(c.id) }.to_h { |c| [c.id, evidence(c)] }
       )
     end
 
     # The largest single disagreement, which is what a reader wants to see.
+    # A differential check's diffs are failing cases; show the case and its
+    # first field-level difference.
     def evidence(check)
-      diffs = Array(check.diffs)
-      worst = diffs.select { |d| d.is_a?(Hash) && d[:ratio] }.max_by { |d| (Math.log(d[:ratio].abs.nonzero? || 1)).abs }
-      (worst || diffs.first || {}).slice(:key, :field, :expected, :actual, :ratio, :comparison, :values, :metric,
-                                         :list_categories, :revenue_report, :seller_performance)
+      diffs = Array(check.diffs).map { |d| d[:first_diff].is_a?(Hash) ? d[:first_diff].merge(case: d[:case]) : d }
+      worst = diffs.select { |d| d.is_a?(Hash) && d[:ratio] }.max_by { |d| Math.log(d[:ratio].abs.nonzero? || 1).abs }
+      (worst || diffs.first || {}).except(:delta, :diffs, :status)
     end
 
     def signature(check) = Digest::SHA256.hexdigest(JSON.generate([check.status, check.diffs]))

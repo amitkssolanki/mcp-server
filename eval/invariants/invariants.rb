@@ -31,20 +31,6 @@ module Eval
       names.map { |name| timed(name) { send(name) } }
     end
 
-    # Which tools each invariant exercises, so a regression run can skip the
-    # ones a substituted tool cannot affect.
-    TOOLS = {
-      check_unique_keys: %w[revenue_report list_categories seller_performance delivery_performance],
-      check_value_bounds: %w[revenue_report list_categories seller_performance delivery_performance],
-      check_partitions_sum_to_total: %w[revenue_report list_categories delivery_performance],
-      check_overlapping_groups_not_additive: %w[revenue_report],
-      check_same_metric_same_number: %w[revenue_report list_categories seller_performance search_products get_product],
-      check_complete_listing_matches_count: %w[search_orders],
-      check_narrower_filter_never_counts_more: %w[search_orders revenue_report],
-      check_adjacent_date_windows_partition: %w[search_orders revenue_report],
-      check_find_customer_exact_match: %w[find_customer]
-    }.freeze
-
     # Every grouped result has one row per key.
     def check_unique_keys
       failures = grouped_outputs.filter_map do |label, rows, key|
