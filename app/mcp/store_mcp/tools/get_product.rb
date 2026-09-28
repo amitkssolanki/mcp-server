@@ -50,6 +50,7 @@ module StoreMcp
               SELECT DISTINCT li.order_id
                 FROM spree_line_items li
                 JOIN spree_variants v ON v.id = li.variant_id
+                JOIN spree_orders o ON o.id = li.order_id AND o.state = 'complete'
                WHERE v.product_id = #{product.id.to_i}
             ) product_orders
        LEFT JOIN #{ORDER_REVIEWS} r ON r.spree_order_id = product_orders.order_id

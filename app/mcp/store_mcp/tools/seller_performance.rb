@@ -44,7 +44,9 @@ module StoreMcp
                    else "revenue DESC"
                    end
 
-        where = ["o.store_id = #{store_id.to_i}"]
+        # Completed orders only: a cancelled order is not a sale, and its review
+        # is not a verdict on a delivered product (docs/METRICS.md).
+        where = ["o.store_id = #{store_id.to_i}", "o.state = 'complete'"]
         where << "s.state = #{quote(args[:state].to_s.upcase)}" if args[:state].present?
 
         # AVG(rev.score) / AVG(d.days_late) must not be computed over the same

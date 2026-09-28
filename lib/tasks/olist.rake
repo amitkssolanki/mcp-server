@@ -11,6 +11,13 @@ namespace :olist do
     Olist::Importer.new(dir: dir, limit: ENV["LIMIT"]).run!
   end
 
+  desc "Recompute product sales counters (completed orders only) on an existing import, without re-importing"
+  task recount_products: :environment do
+    require Rails.root.join("lib/olist/importer")
+
+    Olist::Importer.new(dir: Rails.root.join("db/olist")).recount_products!
+  end
+
   desc "Check the imported data is internally consistent and valid to Spree"
   task verify: :environment do
     failures = []

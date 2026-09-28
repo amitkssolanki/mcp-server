@@ -52,8 +52,9 @@ module StoreMcp
         end
 
         summary = sql(<<~SQL).first
-          SELECT COUNT(*) AS orders, COALESCE(SUM(o.total),0) AS lifetime,
-                 ROUND(AVG(rev.score), 2) AS avg_review
+          SELECT COUNT(*) AS orders,
+                 COALESCE(SUM(o.total) FILTER (WHERE o.state = 'complete'), 0) AS lifetime,
+                 ROUND(AVG(rev.score) FILTER (WHERE o.state = 'complete'), 2) AS avg_review
             FROM spree_orders o
        LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
            WHERE o.user_id = #{user.id.to_i} AND o.store_id = #{store_id.to_i}
