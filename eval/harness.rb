@@ -28,4 +28,6 @@ end
   oracle/dataset oracle/oracle
   runner/check runner/mcp_client runner/expectations runner/question_runner
   invariants/invariants reconciliation
+  regressions/historical regressions/registry
+  run report
 ].each { |f| require File.join(Eval::ROOT, f) }

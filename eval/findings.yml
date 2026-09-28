@@ -1,0 +1,151 @@
+# Triage of everything the harness has found. When a check fails, the report
+# looks it up here. A failure listed under no finding is reported as
+# UNTRIAGED, meaning a new problem nobody has looked at yet.
+#
+# triage: what was actually wrong
+#   tool_bug        the tool's SQL does not compute its own stated metric
+#   definition_gap  the tools disagree because no definition existed
+#   import_bug      the data in Postgres does not match the source
+#   oracle_bug      the oracle was wrong (a finding about the harness itself)
+#   security        a trust-boundary problem, not a correctness one
+#
+# scope: what we decided to do about it
+#   harness         part of the truth harness itself
+#   fix             required correctness fix, in scope
+#   definition      resolved by a decision recorded in docs/METRICS.md
+#   separate        real, but needs its own scope decision
+#   out_of_scope    acknowledged, deliberately not addressed
+
+- id: F1
+  title: Orders with several reviews fan out every order-level join
+  triage: tool_bug
+  scope: fix
+  status: open
+  checks: [search-all-placed, search-rj-one-star, delivery-by-bucket, delivery-by-state,
+           customer-with-multi-review-order, complete-listing-matches-count]
+  summary: >
+    555 orders carry more than one review. search_orders, delivery_performance
+    and find_customer LEFT JOIN olist_reviews at order grain, so those orders
+    appear once per review. search_orders reports 100,000 matches for 99,441
+    orders; a customer with one twice-reviewed order shows 2 orders and double
+    their lifetime value.
+
+- id: F2
+  title: No review-per-order policy
+  triage: definition_gap
+  scope: definition
+  status: open
+  checks: [categories-all, sellers-top-revenue, sellers-worst-reviewed, delivery-by-bucket, delivery-by-state,
+           customer-with-multi-review-order]
+  summary: >
+    When an order has two reviews with different scores (209 orders), every
+    average silently used both. Decision (METRICS.md): an order's score is its
+    most recent review.
+
+- id: F3
+  title: Two tools, two different "category revenue"
+  triage: definition_gap
+  scope: fix
+  status: open
+  checks: [revenue-by-category-top20, categories-all, same-metric-same-number, partitions-sum-to-total]
+  summary: >
+    list_categories reports item revenue over all orders (Health Beauty
+    R$1,258,681); revenue_report(category) credits each category with the
+    whole order total, freight included, of every completed order touching it
+    (R$1,445,137). Both are labelled "revenue". No tool exposed total item
+    revenue, so category revenue could not be reconciled against anything.
+
+- id: F4
+  title: Sellers credited with other sellers' items
+  triage: tool_bug
+  scope: fix
+  status: open
+  checks: [revenue-by-seller-top20, same-metric-same-number]
+  summary: >
+    revenue_report(seller) sums whole order totals, so in the 1,278
+    multi-seller orders each seller is credited with every other seller's
+    items and all the freight. The top seller shows R$253,122 there and
+    R$229,473 in seller_performance.
+
+- id: F5
+  title: Cancelled orders counted as sales in product, category and seller figures
+  triage: definition_gap
+  scope: fix
+  status: open
+  checks: [categories-all, sellers-top-revenue, sellers-worst-reviewed]
+  summary: >
+    The importer's product sales counters (units_sold_count, revenue), which
+    list_categories, get_product and search_products read, and
+    seller_performance's revenue, include items from cancelled and unavailable
+    orders. revenue_report excludes them, so the same product's revenue
+    depended on which tool asked.
+
+- id: F6
+  title: Overlapping buckets presented as additive
+  triage: tool_bug
+  scope: fix
+  status: open
+  checks: [overlapping-groups-not-additive]
+  summary: >
+    revenue_report prints "Total across shown rows: N orders" and returns
+    totals.orders for category, seller and payment-method groupings, where one
+    order sits in several buckets. The total is larger than the number of
+    orders, and it invites the model to repeat it.
+
+- id: F7
+  title: Payment-method revenue double-counts split payments
+  triage: tool_bug
+  scope: fix
+  status: open
+  checks: [revenue-by-payment-method]
+  summary: >
+    revenue_report(payment_method) credits the whole order total to every
+    payment type the order used, so a voucher plus credit card order is
+    counted in full twice. Credit card comes out R$185k high. Decision: this
+    grouping reports payment_value.
+
+- id: F8
+  title: Delivery metrics include cancelled orders
+  triage: definition_gap
+  scope: definition
+  status: open
+  checks: [delivery-by-bucket, delivery-by-state]
+  summary: >
+    Six cancelled orders have a delivery timestamp and an estimate.
+    delivery_performance counted them. Decision: delivery metrics cover
+    completed orders only.
+
+- id: F9
+  title: find_customer matches email as a substring
+  triage: tool_bug
+  scope: fix
+  status: open
+  checks: [find-customer-exact-match]
+  summary: >
+    LIKE '%term%' with the user's input, so "%" or a fragment returns an
+    arbitrary customer's history. The answer is about the wrong person, and
+    it is a way to enumerate customers. Fix: exact, case-insensitive match.
+
+- id: F10
+  title: Preview-then-confirm is enforced by the prompt, not the server
+  triage: security
+  scope: separate
+  status: deferred
+  checks: []
+  summary: >
+    Nothing server-side ties a confirm:true call to an earlier preview; a
+    model can confirm first. Writes are disabled on the public deployment
+    (verified by the HTTP boundary tests), so there is no live exposure. The
+    fix is a signed, expiring preview token with stale-preview rejection.
+    That is write-safety work, deliberately outside the correctness scope.
+
+- id: F11
+  title: Customer lookup is not scoped to the store
+  triage: security
+  scope: out_of_scope
+  status: deferred
+  checks: []
+  summary: >
+    Spree users are global. find_customer scopes the customer's orders to the
+    store but not the user row. With one store this cannot leak anything;
+    real multi-tenancy would need it.
