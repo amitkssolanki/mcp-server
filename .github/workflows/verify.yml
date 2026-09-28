@@ -1,0 +1,82 @@
+# The verification suite: import the real Olist dataset into a fresh database
+# and prove the MCP tools tell the truth about it. See eval/README.md.
+#
+# Fails on any failing canonical question, invariant, differential case or
+# reconciliation, on any known bug the harness no longer catches, and on any
+# failing test (oracle self-tests, HTTP/MCP boundary).
+name: Verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+
+    env:
+      RAILS_ENV: test
+      CI: "1"
+      # A throwaway service container, reachable only from this job.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/mcp_server_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      # CC BY-NC-SA 4.0 data, fetched at run time from a pinned mirror and
+      # checksum-verified. Never committed, never uploaded as an artifact.
+      - name: Fetch the Olist dataset
+        run: bin/olist-fetch
+
+      - name: Build the database
+        run: bin/rails db:create db:schema:load db:seed
+
+      - name: Import 99,441 orders
+        run: bin/rails olist:import
+
+      - name: Tests (oracle self-tests, HTTP/MCP boundary)
+        run: bin/rails test
+
+      - name: Truth harness
+        run: |
+          set -o pipefail
+          mkdir -p tmp/eval
+          bin/rails eval:run OUT=tmp/eval/report.json 2>&1 | grep -v DEPRECATION | tee tmp/eval/report.txt
+
+      - name: Report summary
+        if: always()
+        run: |
+          if [ -f tmp/eval/report.txt ]; then
+            { echo '```'; sed -n '/^MCP truth harness/,$p' tmp/eval/report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: tmp/eval/report.*
+          if-no-files-found: ignore

@@ -45,12 +45,7 @@ categories, a payment method) — not the Olist data yet.
 ### Load the Olist data
 
 ```bash
-cd db/olist && for f in olist_orders_dataset olist_order_items_dataset olist_products_dataset \
-  olist_customers_dataset olist_sellers_dataset olist_order_payments_dataset \
-  olist_order_reviews_dataset product_category_name_translation; do
-  curl -sSLO "https://raw.githubusercontent.com/spdrio/Brazilian-E-Commerce-Public-Dataset-by-Olist/HEAD/files/$f.csv"
-done
-cd ../..
+bin/olist-fetch             # pinned mirror, checksum-verified; see db/olist/README.md for the licence
 bin/rails olist:import      # ~4 min for the full 100k orders; LIMIT=2000 for a quick subset
 bin/rails olist:verify      # row counts, referential integrity, Spree validity
 bin/rails olist:queries     # sample analytics — proves the data is worth querying

@@ -6,16 +6,32 @@ something worth querying.
 
 ## Getting the CSVs
 
-The CSVs are gitignored (65MB). Fetch them into this directory:
+The CSVs are gitignored (65MB) and are never committed. Fetch them into this
+directory:
 
 ```bash
-cd db/olist && for f in olist_orders_dataset olist_order_items_dataset olist_products_dataset olist_customers_dataset olist_sellers_dataset olist_order_payments_dataset olist_order_reviews_dataset product_category_name_translation; do curl -sSLO "https://raw.githubusercontent.com/spdrio/Brazilian-E-Commerce-Public-Dataset-by-Olist/HEAD/files/$f.csv"; done
+bin/olist-fetch
 ```
 
+That downloads from a public GitHub mirror pinned to one commit
+(`spdrio/Brazilian-E-Commerce-Public-Dataset-by-Olist@fa0cc6d`) and checks
+every file against a pinned SHA-256. It fails rather than use a file that has
+changed. The evaluation harness's expected values are computed from these
+exact files, so they must not drift.
+
 Kaggle is the canonical source but requires an account and API token. The
-mirror above needs neither. Note it is a slightly different cut: its reviews
-file has 100,000 rows where Kaggle's has 99,224. It also omits the
-geolocation table, which this importer does not use.
+mirror needs neither. Note it is a slightly different cut: its reviews file
+has 100,000 rows where Kaggle's has 99,224. It also omits the geolocation
+table, which this importer does not use.
+
+### Licence
+
+The dataset is published by Olist on Kaggle under **CC BY-NC-SA 4.0**
+(attribution, non-commercial, share-alike). This repository does not
+redistribute it: the files are downloaded at run time, locally and in CI, and
+are neither committed nor uploaded as build artifacts. Use here is
+non-commercial: a demonstration store and its test suite. Attribution: *Brazilian
+E-Commerce Public Dataset by Olist*, https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce.
 
 ## Running it
 
