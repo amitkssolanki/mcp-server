@@ -170,6 +170,52 @@ module Eval
         end
       end
 
+      # get_order. One order's totals and the score its review policy gives it.
+      # Totals are for the order as placed, whatever its status.
+      def order_summary(order_id)
+        o = order(order_id)
+        { status: o.status, item_total: money(o.item_revenue), freight: money(o.freight), total: money(o.gross),
+          line_items: o.items.size, sellers: o.items.map(&:seller_id).uniq.size, review_score: o.score,
+          days_late: o.days_late }
+      end
+
+      # get_product. Sales figures are over completed orders.
+      def product(product_id)
+        sold = completed_orders.flat_map { |o| o.items.select { |i| i.product_id == product_id }.map { |i| [o, i] } }
+        orders = sold.map(&:first).uniq(&:id)
+        { units_sold: sold.size, item_revenue: money(sold.sum(BigDecimal("0")) { |_, i| i.price }),
+          orders: orders.size, avg_review: mean_of(orders.filter_map(&:score), 2),
+          avg_days_late: mean_of(orders.filter_map(&:days_late), 1) }
+      end
+
+      # search_products filtered to one category: each product's sales.
+      def products_in_category(category)
+        per_product = dataset.products.each_key.select { |pid| category_of(pid) == category }
+                                      .to_h { |pid| [pid, { units_sold: 0, item_revenue: BigDecimal("0") }] }
+        completed_orders.each do |o|
+          o.items.each do |i|
+            next unless per_product.key?(i.product_id)
+
+            per_product[i.product_id][:units_sold] += 1
+            per_product[i.product_id][:item_revenue] += i.price
+          end
+        end
+        per_product.transform_values { |v| v.merge(item_revenue: money(v[:item_revenue])) }
+      end
+
+      # Products ranked by completed units sold, then revenue, then id.
+      def best_selling_product
+        units = Hash.new(0)
+        revenue = Hash.new(BigDecimal("0"))
+        completed_orders.each { |o| o.items.each { |i| units[i.product_id] += 1; revenue[i.product_id] += i.price } }
+        units.keys.min_by { |pid| [-units[pid], -revenue[pid], pid] }
+      end
+
+      # The customer with the most placed orders (ties: lowest id).
+      def most_frequent_customer
+        @orders_by_customer.min_by { |uid, os| [-os.size, uid] }.first
+      end
+
       # find_customer.
       def customer(unique_id)
         placed = @orders_by_customer.fetch(unique_id, [])
@@ -186,6 +232,11 @@ module Eval
 
       def multi_review_order_ids = @multi_review_order_ids
 
+      # Orders where the review policy changes the answer: the most recent
+      # review's score differs from the score of the first review in the file.
+      # Taking "any review" gets these wrong.
+      def policy_sensitive_order_ids = @policy_sensitive_order_ids
+
       def lateness_bucket(days)
         if days <= 0 then "on time or early"
         elsif days <= 3 then "1-3 days late"
@@ -200,6 +251,9 @@ module Eval
         items_by_order = dataset.items.group_by(&:order_id)
         reviews_by_order = dataset.reviews.group_by(&:order_id)
         @multi_review_order_ids = reviews_by_order.select { |_, rs| rs.size > 1 }.keys.sort
+        @policy_sensitive_order_ids = @multi_review_order_ids.select do |oid|
+          reviews_by_order[oid].first.score != latest_review(reviews_by_order[oid]).score
+        end
 
         @orders = dataset.orders.to_h do |o|
           customer = dataset.customers.fetch(o.customer_id)

@@ -106,6 +106,32 @@ class OracleTest < ActiveSupport::TestCase
     assert_equal({ orders: 2, lifetime_value: 18.75, avg_review: 5.0 }, mini_truth.customer("u1"))
   end
 
+  test "an order summary is the order as placed, with the score the policy picks" do
+    assert_equal({ status: "shipped", item_total: 20.0, freight: 3.0, total: 23.0, line_items: 1, sellers: 1,
+                   review_score: nil, days_late: nil }, mini_truth.order_summary("o3"))
+    assert_equal 5, mini_truth.order_summary("o1")[:review_score]
+  end
+
+  test "policy-sensitive orders are the ones where the first review on file is not the latest" do
+    assert_equal %w[o1 o4], mini_truth.policy_sensitive_order_ids
+  end
+
+  test "a product's sales exclude cancelled and unavailable orders" do
+    # p1 also sold in o2 (cancelled, 100.00) and o5 (unavailable, 50.00)
+    assert_equal({ units_sold: 2, item_revenue: 17.25, orders: 2, avg_review: 4.5, avg_days_late: 1.0 },
+                 mini_truth.product("p1"))
+    assert_equal "p1", mini_truth.best_selling_product
+  end
+
+  test "a category's products include those that never sold" do
+    assert_equal({ "p1" => { units_sold: 2, item_revenue: 17.25 }, "p4" => { units_sold: 0, item_revenue: 0.0 } },
+                 mini_truth.products_in_category("health_beauty"))
+  end
+
+  test "the most frequent customer counts orders of every status" do
+    assert_equal "u1", mini_truth.most_frequent_customer # o1 delivered + o2 cancelled
+  end
+
   test "the oracle never touches the database" do
     queries = []
     callback = ->(*, payload) { queries << payload[:sql] }

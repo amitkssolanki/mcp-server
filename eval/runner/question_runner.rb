@@ -112,7 +112,7 @@ module Eval
     def compare_fields(key, fields, expected, actual)
       fields.filter_map do |tool_field, oracle_field|
         e = expected[oracle_field.to_sym]
-        a = actual[tool_field.to_s]
+        a = dig(actual, tool_field)
         Diff.new(key: key, field: tool_field, expected: e, actual: a) unless equal?(e, a)
       end
     end
@@ -148,7 +148,12 @@ module Eval
 
     def pick_fields(hash, keys) = keys.to_h { |k| [k.to_s, hash[k.to_sym] || hash[k.to_s]] }
 
-    def dig(hash, path) = path.to_s.split(".").reduce(hash) { |h, k| h.is_a?(Hash) ? h[k] : nil }
+    # "a.b" digs into nested objects; "items#count" is the length of an array.
+    def dig(hash, path)
+      path, count = path.to_s.split("#", 2)
+      value = path.split(".").reduce(hash) { |h, k| h.is_a?(Hash) ? h[k] : nil }
+      count == "count" ? value&.size : value
+    end
 
     def interpolate(value, picked)
       case value
