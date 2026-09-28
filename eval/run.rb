@@ -91,7 +91,7 @@ module Eval
         seed: @seed, cases_per_invariant: @cases,
         database: ActiveRecord::Base.connection.current_database,
         git_commit: `git rev-parse --short HEAD 2>/dev/null`.strip.presence,
-        git_dirty: `git status --porcelain -- app lib eval 2>/dev/null`.strip.present?,
+        git_dirty: `git status --porcelain -- app lib eval ':!eval/reports' 2>/dev/null`.strip.present?,
         dataset: Oracle::Dataset::FILES.values.to_h do |name|
           [name, Digest::SHA256.file(File.join(Eval.data_dir, "#{name}.csv")).hexdigest[0, 12]]
         end,
