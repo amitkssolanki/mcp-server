@@ -1,0 +1,1884 @@
+{
+  "meta": {
+    "seed": 20260928,
+    "cases_per_invariant": 25,
+    "database": "mcp_server_test",
+    "git_commit": "b1c49a2",
+    "git_dirty": false,
+    "dataset": {
+      "olist_orders_dataset": "8df58ef3d2d7",
+      "olist_order_items_dataset": "0bc4d068c4fe",
+      "olist_products_dataset": "3e6569628a17",
+      "olist_customers_dataset": "983a422239e1",
+      "olist_sellers_dataset": "1f643d2b9503",
+      "olist_order_payments_dataset": "4f713964f281",
+      "olist_order_reviews_dataset": "0dff69f6fed3",
+      "product_category_name_translation": "9da093e114e5"
+    },
+    "ruby": "3.4.7",
+    "started_at": "2026-09-28T17:53:31Z",
+    "fingerprint": "f4841a48894b268d",
+    "seconds": 129.8,
+    "passed": true
+  },
+  "summary": {
+    "question": {
+      "total": 35,
+      "pass": 35
+    },
+    "invariant": {
+      "total": 9,
+      "pass": 9
+    },
+    "differential": {
+      "total": 6,
+      "pass": 6
+    },
+    "reconciliation": {
+      "total": 2,
+      "pass": 2
+    },
+    "regressions": {
+      "total": 12,
+      "caught": 12
+    },
+    "untriaged": []
+  },
+  "checks": [
+    {
+      "id": "revenue-by-month",
+      "kind": "question",
+      "title": "Revenue and completed orders by purchase month",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "month"
+      },
+      "expected": {
+        "rows": 24
+      },
+      "actual": {
+        "rows": 24
+      },
+      "seconds": 0.369
+    },
+    {
+      "id": "revenue-by-state",
+      "kind": "question",
+      "title": "Revenue and completed orders by customer state",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "state",
+        "limit": 50
+      },
+      "expected": {
+        "rows": 27
+      },
+      "actual": {
+        "rows": 27
+      },
+      "seconds": 0.166
+    },
+    {
+      "id": "revenue-by-category-top20",
+      "kind": "question",
+      "title": "Top 20 categories by revenue",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "category",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.259
+    },
+    {
+      "id": "revenue-by-seller-top20",
+      "kind": "question",
+      "title": "Top 20 sellers by revenue",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "seller",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.274
+    },
+    {
+      "id": "revenue-by-payment-method",
+      "kind": "question",
+      "title": "Payments collected by payment method",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "payment_value"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "payment_method"
+      },
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "seconds": 0.182
+    },
+    {
+      "id": "categories-all",
+      "kind": "question",
+      "title": "Every category with products, units, item revenue and review score",
+      "status": "pass",
+      "metrics": [
+        "products",
+        "units_sold",
+        "item_revenue",
+        "avg_review"
+      ],
+      "tool": "list_categories",
+      "expected": {
+        "rows": 74
+      },
+      "actual": {
+        "rows": 74
+      },
+      "seconds": 0.3
+    },
+    {
+      "id": "sellers-top-revenue",
+      "kind": "question",
+      "title": "Top 20 sellers by item revenue (at least 50 orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "avg_review",
+        "avg_days_late"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "revenue",
+        "min_orders": 50,
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.602
+    },
+    {
+      "id": "sellers-worst-reviewed",
+      "kind": "question",
+      "title": "The 10 worst-reviewed sellers (at least 100 orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "avg_review",
+        "avg_days_late"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "avg_review",
+        "min_orders": 100,
+        "limit": 10
+      },
+      "expected": {
+        "rows": 10
+      },
+      "actual": {
+        "rows": 10
+      },
+      "seconds": 0.61
+    },
+    {
+      "id": "delivery-by-bucket",
+      "kind": "question",
+      "title": "Delivery lateness bands and their review scores",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "late_orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_delivery_days",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "seconds": 0.205
+    },
+    {
+      "id": "delivery-by-state",
+      "kind": "question",
+      "title": "Delivery performance by customer state",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "late_orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_delivery_days",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "arguments": {
+        "group_by": "state",
+        "min_orders": 1,
+        "limit": 50
+      },
+      "expected": {
+        "rows": 27
+      },
+      "actual": {
+        "rows": 27
+      },
+      "seconds": 0.193
+    },
+    {
+      "id": "search-all-placed",
+      "kind": "question",
+      "title": "How many orders are there?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "expected": 99441,
+      "actual": 99441,
+      "seconds": 0.554
+    },
+    {
+      "id": "search-rj-one-star",
+      "kind": "question",
+      "title": "How many Rio de Janeiro orders got a one-star review?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "customer_state": "RJ",
+        "max_review_score": 1
+      },
+      "expected": 2254,
+      "actual": 2254,
+      "seconds": 0.136
+    },
+    {
+      "id": "customer-with-multi-review-order",
+      "kind": "question",
+      "title": "Order count, lifetime value and review score for a customer with a twice-reviewed order",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "lifetime_value",
+        "avg_review"
+      ],
+      "tool": "find_customer",
+      "arguments": {
+        "email": "000bfa1d2f1a41876493be685390d6d3@olist.invalid"
+      },
+      "expected": {
+        "orders": 1,
+        "lifetime_value": 46.85,
+        "avg_review": 4.0
+      },
+      "actual": {
+        "orders": 1,
+        "lifetime_value": 46.85,
+        "avg_review": 4.0
+      },
+      "seconds": 0.079
+    },
+    {
+      "id": "revenue-black-friday-week-by-state",
+      "kind": "question",
+      "title": "Revenue by state for Black Friday week 2017 (20-26 November)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "state",
+        "from": "2017-11-20",
+        "to": "2017-11-26",
+        "limit": 50
+      },
+      "expected": {
+        "rows": 27
+      },
+      "actual": {
+        "rows": 27
+      },
+      "seconds": 0.154
+    },
+    {
+      "id": "revenue-2018-h1-by-month",
+      "kind": "question",
+      "title": "Monthly revenue for the first half of 2018",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "month",
+        "from": "2018-01-01",
+        "to": "2018-06-30"
+      },
+      "expected": {
+        "rows": 6
+      },
+      "actual": {
+        "rows": 6
+      },
+      "seconds": 0.129
+    },
+    {
+      "id": "search-black-friday-day",
+      "kind": "question",
+      "title": "How many orders were placed on Black Friday 2017?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "from": "2017-11-24",
+        "to": "2017-11-24"
+      },
+      "expected": 1176,
+      "actual": 1176,
+      "seconds": 0.055
+    },
+    {
+      "id": "revenue-by-month-split",
+      "kind": "question",
+      "title": "Merchandise, freight and average order value by month",
+      "status": "pass",
+      "metrics": [
+        "item_revenue",
+        "freight",
+        "avg_order_value"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "month"
+      },
+      "expected": {
+        "rows": 24
+      },
+      "actual": {
+        "rows": 24
+      },
+      "seconds": 0.283
+    },
+    {
+      "id": "revenue-by-category-split",
+      "kind": "question",
+      "title": "Top 20 categories with merchandise and freight separated",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "freight",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "category",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.195
+    },
+    {
+      "id": "revenue-by-seller-split",
+      "kind": "question",
+      "title": "Top 20 sellers with merchandise and freight separated",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "freight",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "seller",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.28
+    },
+    {
+      "id": "revenue-by-payment-method-2018",
+      "kind": "question",
+      "title": "Payments collected by method in 2018",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "payment_value"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "payment_method",
+        "from": "2018-01-01",
+        "to": "2018-12-31"
+      },
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "seconds": 0.119
+    },
+    {
+      "id": "categories-worst-reviewed",
+      "kind": "question",
+      "title": "The 10 worst-reviewed categories",
+      "status": "pass",
+      "metrics": [
+        "products",
+        "units_sold",
+        "item_revenue",
+        "avg_review"
+      ],
+      "tool": "list_categories",
+      "arguments": {
+        "sort": "avg_review"
+      },
+      "expected": {
+        "rows": 10
+      },
+      "actual": {
+        "rows": 74
+      },
+      "seconds": 0.332
+    },
+    {
+      "id": "sellers-latest-deliverers",
+      "kind": "question",
+      "title": "The 10 sellers whose deliveries run latest (at least 50 orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "avg_days_late",
+        "avg_review"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "days_late",
+        "min_orders": 50,
+        "limit": 10
+      },
+      "expected": {
+        "rows": 10
+      },
+      "actual": {
+        "rows": 10
+      },
+      "seconds": 0.588
+    },
+    {
+      "id": "sellers-in-rio-by-revenue",
+      "kind": "question",
+      "title": "Top Rio de Janeiro sellers by revenue (at least 20 orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "avg_review"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "revenue",
+        "state": "RJ",
+        "min_orders": 20,
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.147
+    },
+    {
+      "id": "delivery-by-category-worst",
+      "kind": "question",
+      "title": "The 20 categories whose customers review deliveries worst (at least 30 orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "arguments": {
+        "group_by": "category",
+        "min_orders": 30,
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.227
+    },
+    {
+      "id": "delivery-by-seller-worst",
+      "kind": "question",
+      "title": "The 10 worst-reviewed sellers by delivery (at least 100 delivered orders)",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "arguments": {
+        "group_by": "seller",
+        "min_orders": 100,
+        "limit": 10
+      },
+      "expected": {
+        "rows": 10
+      },
+      "actual": {
+        "rows": 10
+      },
+      "seconds": 0.334
+    },
+    {
+      "id": "delivery-buckets-2017-q4",
+      "kind": "question",
+      "title": "Lateness bands for orders placed in Q4 2017",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "late_orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "arguments": {
+        "from": "2017-10-01",
+        "to": "2017-12-31"
+      },
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "seconds": 0.096
+    },
+    {
+      "id": "search-very-late",
+      "kind": "question",
+      "title": "How many orders arrived ten or more days late?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "min_days_late": 10
+      },
+      "expected": 2485,
+      "actual": 2485,
+      "seconds": 0.507
+    },
+    {
+      "id": "search-big-sp-orders",
+      "kind": "question",
+      "title": "How many Sao Paulo orders totalled R$1,000 or more?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "customer_state": "SP",
+        "min_total": 1000
+      },
+      "expected": 359,
+      "actual": 359,
+      "seconds": 0.096
+    },
+    {
+      "id": "search-late-and-unhappy",
+      "kind": "question",
+      "title": "How many late orders got two stars or fewer?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "min_days_late": 1,
+        "max_review_score": 2
+      },
+      "expected": 4255,
+      "actual": 4255,
+      "seconds": 0.314
+    },
+    {
+      "id": "search-cancelled-in-2018",
+      "kind": "question",
+      "title": "How many 2018 orders were cancelled?",
+      "status": "pass",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "status": "canceled",
+        "from": "2018-01-01",
+        "to": "2018-12-31"
+      },
+      "expected": 334,
+      "actual": 334,
+      "seconds": 0.053
+    },
+    {
+      "id": "customer-most-orders",
+      "kind": "question",
+      "title": "Order count, lifetime value and review score for the store's most frequent customer",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "lifetime_value",
+        "avg_review"
+      ],
+      "tool": "find_customer",
+      "arguments": {
+        "email": "8d50f5eadf50201ccdcedfb9e2ac8455@olist.invalid"
+      },
+      "expected": {
+        "orders": 17,
+        "lifetime_value": 902.04,
+        "avg_review": 5.0
+      },
+      "actual": {
+        "orders": 17,
+        "lifetime_value": 902.04,
+        "avg_review": 5.0
+      },
+      "seconds": 0.089
+    },
+    {
+      "id": "order-multi-seller-multi-review",
+      "kind": "question",
+      "title": "Totals, items and review score of an order with two sellers and two reviews",
+      "status": "pass",
+      "metrics": [
+        "item_revenue",
+        "freight",
+        "gross_revenue",
+        "review score"
+      ],
+      "tool": "get_order",
+      "arguments": {
+        "order_number": "OL000087289"
+      },
+      "expected": {
+        "status": "delivered",
+        "item_total": 831.8,
+        "freight": 39.64,
+        "total": 871.44,
+        "line_items": 2,
+        "review_score": 5,
+        "days_late": -17
+      },
+      "actual": {
+        "olist_status": "delivered",
+        "item_total": 831.8,
+        "shipment_total": 39.64,
+        "total": 871.44,
+        "line_items#count": null,
+        "review.score": null,
+        "timeline.days_late": null
+      },
+      "seconds": 0.043
+    },
+    {
+      "id": "product-best-seller",
+      "kind": "question",
+      "title": "Sales, orders, review score and lateness for the best-selling product",
+      "status": "pass",
+      "metrics": [
+        "units_sold",
+        "item_revenue",
+        "orders",
+        "avg_review",
+        "avg_days_late"
+      ],
+      "tool": "get_product",
+      "arguments": {
+        "sku": "aca2eb7d00ea1a7b8ebd4e68314663af"
+      },
+      "expected": {
+        "units_sold": 527,
+        "item_revenue": 37608.9,
+        "orders": 431,
+        "avg_review": 4.09,
+        "avg_days_late": -9.3
+      },
+      "actual": {
+        "units_sold": 527,
+        "revenue": 37608.9,
+        "orders": 431,
+        "avg_review": 4.09,
+        "avg_days_late": -9.3
+      },
+      "seconds": 0.132
+    },
+    {
+      "id": "products-top-health-beauty",
+      "kind": "question",
+      "title": "The 20 best-selling Health Beauty products by revenue",
+      "status": "pass",
+      "metrics": [
+        "units_sold",
+        "item_revenue"
+      ],
+      "tool": "search_products",
+      "arguments": {
+        "category": "Health Beauty",
+        "sort": "revenue",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "seconds": 0.043
+    },
+    {
+      "id": "products-count-pc-gamer",
+      "kind": "question",
+      "title": "How many products are in the untranslated Pc Gamer category?",
+      "status": "pass",
+      "metrics": [
+        "products"
+      ],
+      "tool": "search_products",
+      "arguments": {
+        "category": "Pc Gamer"
+      },
+      "expected": 3,
+      "actual": 3,
+      "seconds": 0.008
+    },
+    {
+      "id": "adjacent-date-windows-partition",
+      "kind": "invariant",
+      "title": "Adjacent date windows add up to the window that spans them",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 25,
+        "seeded_cases": 25
+      },
+      "seconds": 3.358
+    },
+    {
+      "id": "complete-listing-matches-count",
+      "kind": "invariant",
+      "title": "A one-page search lists exactly total_matches distinct orders",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 100,
+        "seeded_cases": 100
+      },
+      "seconds": 12.348
+    },
+    {
+      "id": "find-customer-exact-match",
+      "kind": "invariant",
+      "title": "A customer lookup resolves only an exact email",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 6
+      },
+      "seconds": 0.258
+    },
+    {
+      "id": "narrower-filter-never-counts-more",
+      "kind": "invariant",
+      "title": "Narrowing a date window never increases a count or a sum",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 25,
+        "seeded_cases": 25
+      },
+      "seconds": 4.524
+    },
+    {
+      "id": "overlapping-groups-not-additive",
+      "kind": "invariant",
+      "title": "Order counts are never summed across overlapping buckets (category, seller, payment method)",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 3
+      },
+      "seconds": 0.621
+    },
+    {
+      "id": "partitions-sum-to-total",
+      "kind": "invariant",
+      "title": "Partitions of the same population agree on its total",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 4
+      },
+      "seconds": 1.017
+    },
+    {
+      "id": "same-metric-same-number",
+      "kind": "invariant",
+      "title": "Two tools reporting the same named metric agree",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 3
+      },
+      "seconds": 2.25
+    },
+    {
+      "id": "unique-keys",
+      "kind": "invariant",
+      "title": "Every grouped result has exactly one row per key",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 11
+      },
+      "seconds": 2.664
+    },
+    {
+      "id": "value-bounds",
+      "kind": "invariant",
+      "title": "Scores within 1-5, rates within 0-100, no negative counts or money",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 410
+      },
+      "seconds": 0.001
+    },
+    {
+      "id": "search-orders-random-filters",
+      "kind": "differential",
+      "title": "80 seeded random search_orders calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 80
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 80,
+        "seeded_cases": 80
+      },
+      "seconds": 9.324
+    },
+    {
+      "id": "revenue-report-random-windows",
+      "kind": "differential",
+      "title": "30 seeded random revenue_report calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 30
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 30,
+        "seeded_cases": 30
+      },
+      "seconds": 4.697
+    },
+    {
+      "id": "delivery-random-windows",
+      "kind": "differential",
+      "title": "20 seeded random delivery_performance calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 20
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 20,
+        "seeded_cases": 20
+      },
+      "seconds": 3.404
+    },
+    {
+      "id": "customers-random",
+      "kind": "differential",
+      "title": "30 seeded random find_customer calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 30
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 30,
+        "seeded_cases": 30
+      },
+      "seconds": 1.949
+    },
+    {
+      "id": "products-random",
+      "kind": "differential",
+      "title": "30 seeded random get_product calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 30
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 30,
+        "seeded_cases": 30
+      },
+      "seconds": 3.068
+    },
+    {
+      "id": "sellers-random-states",
+      "kind": "differential",
+      "title": "10 seeded random seller_performance calls agree with the oracle",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 10
+      },
+      "expected": {
+        "disagreements": 0
+      },
+      "actual": {
+        "disagreements": 0,
+        "cases": 10,
+        "seeded_cases": 10
+      },
+      "seconds": 3.002
+    },
+    {
+      "id": "reconcile-row-counts",
+      "kind": "reconciliation",
+      "title": "Every source row was imported, table by table",
+      "status": "pass",
+      "expected": {
+        "orders": 99441,
+        "items": 112650,
+        "products": 32951,
+        "customers": 99441,
+        "sellers": 3095,
+        "payments": 103886,
+        "reviews": 100000,
+        "customer_people": 96096
+      },
+      "seconds": 0.472
+    },
+    {
+      "id": "reconcile-value-sums",
+      "kind": "reconciliation",
+      "title": "Imported money, scores and statuses sum to the source's",
+      "status": "pass",
+      "expected": {
+        "item_price": 13591643.7,
+        "freight": 2251909.54,
+        "order_totals": 15843553.24,
+        "payment_value": 16008872.12,
+        "review_scores": 407089,
+        "completed_orders": 98202
+      },
+      "seconds": 0.191
+    }
+  ],
+  "regressions": [
+    {
+      "id": "H1-category-revenue-fan-out",
+      "kind": "historical",
+      "finding": null,
+      "title": "Category revenue summed over a line-item x review join (the 42x bug)",
+      "provenance": "reconstructed from the article; on the pre-fix product counters it reproduces the article's R$52,545,084 exactly (R$52,474,005 on today's counters, still ~42x)",
+      "caught": true,
+      "caught_by": [
+        "categories-all",
+        "partitions-sum-to-total",
+        "same-metric-same-number"
+      ],
+      "failing": [
+        "categories-all",
+        "partitions-sum-to-total",
+        "same-metric-same-number"
+      ],
+      "evidence": {
+        "categories-all": {
+          "key": "garden_tools",
+          "field": "units_sold",
+          "expected": 4328,
+          "actual": 801366,
+          "ratio": 185.1585
+        },
+        "partitions-sum-to-total": {
+          "comparison": "item revenue: list_categories vs revenue_report(month)",
+          "values": [
+            13494400.74,
+            385401581.61
+          ]
+        },
+        "same-metric-same-number": {
+          "metric": "category item revenue",
+          "key": "Health Beauty",
+          "list_categories": 52474005.02,
+          "revenue_report": 1255695.13
+        }
+      }
+    },
+    {
+      "id": "H2-seller-average-fan-out",
+      "kind": "historical",
+      "finding": null,
+      "title": "Seller review average taken over line items instead of orders (3.81 reported as 2.57)",
+      "provenance": "reconstructed from the article; reproduces its 3.81 -> 2.57 exactly",
+      "caught": true,
+      "caught_by": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed",
+        "same-metric-same-number"
+      ],
+      "failing": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed",
+        "same-metric-same-number"
+      ],
+      "evidence": {
+        "sellers-top-revenue": {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "avg_days_late",
+          "expected": -9.5,
+          "actual": -9.9,
+          "ratio": 1.0421
+        },
+        "sellers-worst-reviewed": {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "avg_review",
+          "expected": 3.61,
+          "actual": 3.37,
+          "ratio": 0.9335
+        },
+        "same-metric-same-number": {
+          "metric": "seller item revenue",
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "seller_performance": 229472.63,
+          "revenue_report": 229237.63
+        }
+      }
+    },
+    {
+      "id": "H3-silently-dropped-payments",
+      "kind": "historical",
+      "finding": null,
+      "title": "33 payment rows silently missing after import (the insert_all bug)",
+      "provenance": "simulated effect; the original index/column combination is not recoverable",
+      "caught": true,
+      "caught_by": [
+        "revenue-by-payment-method",
+        "reconcile-row-counts",
+        "reconcile-value-sums"
+      ],
+      "failing": [
+        "revenue-by-payment-method",
+        "reconcile-row-counts",
+        "reconcile-value-sums"
+      ],
+      "evidence": {
+        "revenue-by-payment-method": {
+          "key": "voucher",
+          "field": "revenue",
+          "expected": 349874.4,
+          "actual": 349407.03,
+          "ratio": 0.9987
+        },
+        "reconcile-row-counts": {
+          "key": "payments",
+          "field": "payments",
+          "expected": 103886,
+          "actual": 103853,
+          "ratio": 0.9997
+        },
+        "reconcile-value-sums": {
+          "key": "payment_value",
+          "field": "payment_value",
+          "expected": 16008872.12,
+          "actual": 16008272.1,
+          "ratio": 1.0
+        }
+      }
+    },
+    {
+      "id": "P1-search-orders",
+      "kind": "pre-fix",
+      "finding": "F1",
+      "title": "search_orders joined every review, listing twice-reviewed orders twice",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "search-all-placed",
+        "search-rj-one-star",
+        "search-black-friday-day",
+        "search-very-late",
+        "search-big-sp-orders",
+        "search-late-and-unhappy",
+        "search-cancelled-in-2018",
+        "complete-listing-matches-count",
+        "search-orders-random-filters"
+      ],
+      "failing": [
+        "search-all-placed",
+        "search-rj-one-star",
+        "search-black-friday-day",
+        "search-very-late",
+        "search-big-sp-orders",
+        "search-late-and-unhappy",
+        "search-cancelled-in-2018",
+        "complete-listing-matches-count",
+        "search-orders-random-filters"
+      ],
+      "evidence": {
+        "search-all-placed": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 99441,
+          "actual": 100000,
+          "ratio": 1.0056
+        },
+        "search-rj-one-star": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 2254,
+          "actual": 2272,
+          "ratio": 1.008
+        },
+        "search-black-friday-day": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 1176,
+          "actual": 1185,
+          "ratio": 1.0077
+        },
+        "search-very-late": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 2485,
+          "actual": 2499,
+          "ratio": 1.0056
+        },
+        "search-big-sp-orders": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 359,
+          "actual": 361,
+          "ratio": 1.0056
+        },
+        "search-late-and-unhappy": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 4255,
+          "actual": 4274,
+          "ratio": 1.0045
+        },
+        "search-cancelled-in-2018": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 334,
+          "actual": 336,
+          "ratio": 1.006
+        },
+        "complete-listing-matches-count": {
+          "arguments": {
+            "from": "2017-05-06",
+            "to": "2017-05-06",
+            "limit": 50,
+            "customer_state": "SP"
+          },
+          "total_matches": 41,
+          "rows": 41,
+          "distinct": 40
+        },
+        "search-orders-random-filters": {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 232,
+          "actual": 234,
+          "ratio": 1.0086,
+          "case": "search#7"
+        }
+      }
+    },
+    {
+      "id": "P2-list-categories",
+      "kind": "pre-fix",
+      "finding": "F2",
+      "title": "list_categories averaged reviews over every order and every review",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "categories-all",
+        "categories-worst-reviewed"
+      ],
+      "failing": [
+        "categories-all",
+        "categories-worst-reviewed"
+      ],
+      "evidence": {
+        "categories-all": {
+          "key": "pc_gamer",
+          "field": "avg_review",
+          "expected": 3.43,
+          "actual": 3.13,
+          "ratio": 0.9125
+        },
+        "categories-worst-reviewed": {
+          "key": "pc_gamer",
+          "field": "avg_review",
+          "expected": 3.43,
+          "actual": 3.13,
+          "ratio": 0.9125
+        }
+      }
+    },
+    {
+      "id": "P3-delivery-performance",
+      "kind": "pre-fix",
+      "finding": "F1, F8",
+      "title": "delivery_performance counted twice-reviewed orders twice, and cancelled orders",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "delivery-by-bucket",
+        "delivery-by-state",
+        "delivery-by-category-worst",
+        "delivery-by-seller-worst",
+        "delivery-buckets-2017-q4",
+        "delivery-random-windows"
+      ],
+      "failing": [
+        "delivery-by-bucket",
+        "delivery-by-state",
+        "delivery-by-category-worst",
+        "delivery-by-seller-worst",
+        "delivery-buckets-2017-q4",
+        "delivery-random-windows"
+      ],
+      "evidence": {
+        "delivery-by-bucket": {
+          "key": "more than a week late",
+          "field": "avg_review",
+          "expected": 1.71,
+          "actual": 1.72,
+          "ratio": 1.0058
+        },
+        "delivery-by-state": {
+          "key": "MA",
+          "field": "avg_days_late",
+          "expected": -8.7,
+          "actual": -8.8,
+          "ratio": 1.0115
+        },
+        "delivery-by-category-worst": {
+          "key": "bed_bath_table",
+          "field": "late_rate",
+          "expected": 8.6,
+          "actual": 8.7,
+          "ratio": 1.0116
+        },
+        "delivery-by-seller-worst": {
+          "key": "b2479f944e1b90cf8a5de1bbfde284d6",
+          "field": "late_rate",
+          "expected": 13.9,
+          "actual": 13.6,
+          "ratio": 0.9784
+        },
+        "delivery-buckets-2017-q4": {
+          "key": "more than a week late",
+          "field": "avg_review",
+          "expected": 1.65,
+          "actual": 1.66,
+          "ratio": 1.0061
+        },
+        "delivery-random-windows": {
+          "key": "4-7 days late",
+          "field": "orders",
+          "expected": 148,
+          "actual": 149,
+          "ratio": 1.0068,
+          "case": "delivery#8"
+        }
+      }
+    },
+    {
+      "id": "P4-find-customer",
+      "kind": "pre-fix",
+      "finding": "F1, F9",
+      "title": "find_customer matched substrings and doubled twice-reviewed orders",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "customer-with-multi-review-order",
+        "customer-most-orders",
+        "find-customer-exact-match",
+        "customers-random"
+      ],
+      "failing": [
+        "customer-with-multi-review-order",
+        "customer-most-orders",
+        "find-customer-exact-match",
+        "customers-random"
+      ],
+      "evidence": {
+        "customer-with-multi-review-order": {
+          "key": "(record)",
+          "field": "orders",
+          "expected": 1,
+          "actual": 2,
+          "ratio": 2.0
+        },
+        "customer-most-orders": {
+          "key": "(record)",
+          "field": "avg_review",
+          "expected": 5.0,
+          "actual": 4.76,
+          "ratio": 0.952
+        },
+        "find-customer-exact-match": {
+          "probe": "%",
+          "should_resolve": false,
+          "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+        },
+        "customers-random": {
+          "key": "(record)",
+          "field": "orders",
+          "expected": 1,
+          "actual": 2,
+          "ratio": 2.0,
+          "case": "customer#11"
+        }
+      }
+    },
+    {
+      "id": "P5-seller-performance",
+      "kind": "pre-fix",
+      "finding": "F2, F5",
+      "title": "seller_performance counted cancelled orders and every review",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed",
+        "sellers-latest-deliverers",
+        "sellers-in-rio-by-revenue",
+        "same-metric-same-number",
+        "sellers-random-states"
+      ],
+      "failing": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed",
+        "sellers-latest-deliverers",
+        "sellers-in-rio-by-revenue",
+        "same-metric-same-number",
+        "sellers-random-states"
+      ],
+      "evidence": {
+        "sellers-top-revenue": {
+          "key": "7e93a43ef30c4f03f38b393420bc753a",
+          "field": "revenue",
+          "expected": 172583.88,
+          "actual": 176431.87,
+          "ratio": 1.0223
+        },
+        "sellers-worst-reviewed": {
+          "key": "18a349e75d307f4b4cc646a691ed4216",
+          "field": "orders",
+          "expected": 119,
+          "actual": 121,
+          "ratio": 1.0168
+        },
+        "sellers-latest-deliverers": {
+          "key": "2a1348e9addc1af5aaa619b1a3679d6b",
+          "field": "orders",
+          "expected": 51,
+          "actual": 52,
+          "ratio": 1.0196
+        },
+        "sellers-in-rio-by-revenue": {
+          "key": "d05ae8f7a5bd1d2a690a44cd079e4e27",
+          "field": "revenue",
+          "expected": 13244.0,
+          "actual": 13436.0,
+          "ratio": 1.0145
+        },
+        "same-metric-same-number": {
+          "metric": "seller item revenue",
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "seller_performance": 229472.63,
+          "revenue_report": 229237.63
+        },
+        "sellers-random-states": {
+          "key": "42bde9fef835393bb8a8849cb6b7f245",
+          "field": "orders",
+          "expected": 34,
+          "actual": 35,
+          "ratio": 1.0294,
+          "case": "seller#2"
+        }
+      }
+    },
+    {
+      "id": "P6-get-order",
+      "kind": "pre-fix",
+      "finding": "F2",
+      "title": "get_order showed whichever review the database returned first",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "order-multi-seller-multi-review"
+      ],
+      "failing": [
+        "order-multi-seller-multi-review"
+      ],
+      "evidence": {
+        "order-multi-seller-multi-review": {
+          "key": "(record)",
+          "field": "review.score",
+          "expected": 5,
+          "actual": 4,
+          "ratio": 0.8
+        }
+      }
+    },
+    {
+      "id": "P7-get-product",
+      "kind": "pre-fix",
+      "finding": "F2, F5",
+      "title": "get_product averaged over line items and cancelled orders",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "product-best-seller",
+        "products-random"
+      ],
+      "failing": [
+        "product-best-seller",
+        "products-random"
+      ],
+      "evidence": {
+        "product-best-seller": {
+          "key": "(record)",
+          "field": "avg_days_late",
+          "expected": -9.3,
+          "actual": -9.1,
+          "ratio": 0.9785
+        },
+        "products-random": {
+          "key": "(record)",
+          "field": "avg_review",
+          "expected": 4.0,
+          "actual": 3.8,
+          "ratio": 0.95,
+          "case": "product#0"
+        }
+      }
+    },
+    {
+      "id": "P8-revenue-report",
+      "kind": "pre-fix",
+      "finding": "F3, F4, F6, F7",
+      "title": "revenue_report credited whole orders to categories, sellers and payment methods",
+      "provenance": "verbatim from git at 9fa9b02, the code the harness first ran against",
+      "caught": true,
+      "caught_by": [
+        "revenue-by-category-top20",
+        "revenue-by-seller-top20",
+        "revenue-by-payment-method",
+        "revenue-by-month-split",
+        "revenue-by-category-split",
+        "revenue-by-seller-split",
+        "revenue-by-payment-method-2018",
+        "overlapping-groups-not-additive",
+        "partitions-sum-to-total",
+        "same-metric-same-number",
+        "revenue-report-random-windows"
+      ],
+      "failing": [
+        "revenue-by-category-top20",
+        "revenue-by-seller-top20",
+        "revenue-by-payment-method",
+        "revenue-by-month-split",
+        "revenue-by-category-split",
+        "revenue-by-seller-split",
+        "revenue-by-payment-method-2018",
+        "overlapping-groups-not-additive",
+        "partitions-sum-to-total",
+        "same-metric-same-number",
+        "revenue-report-random-windows"
+      ],
+      "evidence": {
+        "revenue-by-category-top20": {
+          "key": "furniture_decor",
+          "field": "revenue",
+          "expected": 899626.04,
+          "actual": 929190.19,
+          "ratio": 1.0329
+        },
+        "revenue-by-seller-top20": {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "revenue",
+          "expected": 235359.3,
+          "actual": 248435.14,
+          "ratio": 1.0556
+        },
+        "revenue-by-payment-method": {
+          "key": "voucher",
+          "field": "revenue",
+          "expected": 349874.4,
+          "actual": 490583.08,
+          "ratio": 1.4022
+        },
+        "revenue-by-month-split": {
+          "key": "2016-09",
+          "field": "item_revenue",
+          "expected": 207.86
+        },
+        "revenue-by-category-split": {
+          "key": "furniture_decor",
+          "field": "revenue",
+          "expected": 899626.04,
+          "actual": 929190.19,
+          "ratio": 1.0329
+        },
+        "revenue-by-seller-split": {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "revenue",
+          "expected": 235359.3,
+          "actual": 248435.14,
+          "ratio": 1.0556
+        },
+        "revenue-by-payment-method-2018": {
+          "key": "voucher",
+          "field": "revenue",
+          "expected": 181015.42,
+          "actual": 248104.78,
+          "ratio": 1.3706
+        },
+        "overlapping-groups-not-additive": {
+          "group_by": "category",
+          "claims": [
+            "structured totals.orders=97729",
+            "text states an order total"
+          ]
+        },
+        "partitions-sum-to-total": {
+          "comparison": "item revenue: list_categories vs revenue_report(month)",
+          "problem": "no tool reports this total",
+          "values": [
+            null,
+            13494400.74
+          ]
+        },
+        "same-metric-same-number": {
+          "metric": "category item revenue",
+          "key": "Health Beauty",
+          "list_categories": 1255695.13,
+          "revenue_report": 1445137.23
+        },
+        "revenue-report-random-windows": {
+          "key": "2017-01",
+          "field": "item_revenue",
+          "expected": 120098.27,
+          "case": "revenue#0"
+        }
+      }
+    },
+    {
+      "id": "P9-product-counters",
+      "kind": "pre-fix",
+      "finding": "F5",
+      "title": "product sales counters included cancelled and unavailable orders",
+      "provenance": "importer SQL verbatim from git at 9fa9b02, applied in a rolled-back transaction",
+      "caught": true,
+      "caught_by": [
+        "categories-all",
+        "categories-worst-reviewed",
+        "products-top-health-beauty",
+        "products-random"
+      ],
+      "failing": [
+        "categories-all",
+        "categories-worst-reviewed",
+        "products-top-health-beauty",
+        "products-random"
+      ],
+      "evidence": {
+        "categories-all": {
+          "key": "dvds_blu_ray",
+          "field": "revenue",
+          "expected": 4559.49,
+          "actual": 5999.39,
+          "ratio": 1.3158
+        },
+        "categories-worst-reviewed": {
+          "key": "pc_gamer",
+          "field": "revenue",
+          "expected": 1306.95,
+          "actual": 1545.95,
+          "ratio": 1.1829
+        },
+        "products-top-health-beauty": {
+          "key": "8c292ca193d326152e335d77176746f0",
+          "field": "units_sold",
+          "expected": 90,
+          "actual": 92,
+          "ratio": 1.0222
+        },
+        "products-random": {
+          "key": "(record)",
+          "field": "units_sold",
+          "expected": 122,
+          "actual": 123,
+          "ratio": 1.0082,
+          "case": "product#24"
+        }
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "title": "Orders with several reviews fan out every order-level join",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F2",
+      "title": "No review-per-order policy",
+      "triage": "definition_gap",
+      "scope": "definition",
+      "status": "verified"
+    },
+    {
+      "id": "F3",
+      "title": "Two tools, two different \"category revenue\"",
+      "triage": "definition_gap",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F4",
+      "title": "Sellers credited with other sellers' items",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F5",
+      "title": "Cancelled orders counted as sales in product, category and seller figures",
+      "triage": "definition_gap",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F6",
+      "title": "Overlapping buckets presented as additive",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F7",
+      "title": "Payment-method revenue double-counts split payments",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F8",
+      "title": "Delivery metrics include cancelled orders",
+      "triage": "definition_gap",
+      "scope": "definition",
+      "status": "verified"
+    },
+    {
+      "id": "F9",
+      "title": "find_customer matches email as a substring",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "verified"
+    },
+    {
+      "id": "F10",
+      "title": "Preview-then-confirm is enforced by the prompt, not the server",
+      "triage": "security",
+      "scope": "separate",
+      "status": "deferred"
+    },
+    {
+      "id": "F11",
+      "title": "Customer lookup is not scoped to the store",
+      "triage": "security",
+      "scope": "out_of_scope",
+      "status": "out_of_scope"
+    }
+  ]
+}
