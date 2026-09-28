@@ -89,8 +89,10 @@ module Eval
         # Ranking is judged on the oracle's values in the tool's order, not on
         # key identity. Tied rows may come back in any order, and any of the
         # rows tied at the cut-off is an acceptable last entry.
+        # Only the first N rows are the answer to a top-N question; a tool
+        # without a limit (list_categories) returns everything after them.
         rank_by = q["match"].fetch("rank_by").to_sym
-        actual_order = rows.map { |r| normalize.call(r[key_field]) }
+        actual_order = rows.first(q["match"].fetch("top")).map { |r| normalize.call(r[key_field]) }
         wanted_values = wanted_keys.map { |k| expected.dig(k, rank_by) }
         actual_values = actual_order.map { |k| expected.dig(k, rank_by) }
         unless actual_values == wanted_values && (actual_order - expected.keys).empty?
