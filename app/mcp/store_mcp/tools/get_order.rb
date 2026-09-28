@@ -29,7 +29,9 @@ module StoreMcp
         return failure("No order #{args[:order_number]} in this store.") if order.nil?
 
         detail = OlistOrderDetail.find_by(spree_order_id: order.id)
-        review = OlistReview.find_by(spree_order_id: order.id)
+        review = sql(<<~SQL).first&.then { |r| OlistReview.new(r.slice("score", "title", "message")) }
+          SELECT score, title, message FROM #{ORDER_REVIEWS} r WHERE r.spree_order_id = #{order.id.to_i}
+        SQL
         address = order.bill_address
 
         items = sql(<<~SQL).map do |r|

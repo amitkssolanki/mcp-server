@@ -60,7 +60,7 @@ module StoreMcp
               FROM category_products cp
               JOIN spree_variants v ON v.product_id = cp.product_id AND v.is_master = TRUE
               JOIN spree_line_items li ON li.variant_id = v.id
-              JOIN olist_reviews rev ON rev.spree_order_id = li.order_id
+              JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = li.order_id
           )
           SELECT cp.category,
                  COUNT(DISTINCT cp.product_id) AS products,

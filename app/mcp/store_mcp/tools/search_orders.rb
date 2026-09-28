@@ -65,7 +65,7 @@ module StoreMcp
         from_sql = <<~SQL
           FROM spree_orders o
           JOIN olist_order_details d ON d.spree_order_id = o.id
-     LEFT JOIN olist_reviews r ON r.spree_order_id = o.id
+     LEFT JOIN #{ORDER_REVIEWS} r ON r.spree_order_id = o.id
      LEFT JOIN spree_addresses a ON a.id = o.bill_address_id
          WHERE #{where.join(' AND ')}
         SQL

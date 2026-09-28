@@ -38,7 +38,7 @@ module StoreMcp
                  d.days_late, rev.score, a.city, a.state_name AS state
             FROM spree_orders o
             JOIN olist_order_details d ON d.spree_order_id = o.id
-       LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+       LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
        LEFT JOIN spree_addresses a ON a.id = o.bill_address_id
            WHERE o.user_id = #{user.id.to_i} AND o.store_id = #{store_id.to_i}
            ORDER BY d.purchased_at DESC
@@ -55,7 +55,7 @@ module StoreMcp
           SELECT COUNT(*) AS orders, COALESCE(SUM(o.total),0) AS lifetime,
                  ROUND(AVG(rev.score), 2) AS avg_review
             FROM spree_orders o
-       LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+       LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
            WHERE o.user_id = #{user.id.to_i} AND o.store_id = #{store_id.to_i}
         SQL
 

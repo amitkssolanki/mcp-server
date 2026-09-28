@@ -41,14 +41,19 @@ module StoreMcp
         master = product.master
         taxon = product.taxons.first
         stats = sql(<<~SQL).first
-          SELECT COUNT(DISTINCT li.order_id)   AS orders,
-                 ROUND(AVG(r.score), 2)        AS avg_review,
-                 ROUND(AVG(d.days_late), 1)    AS avg_days_late
-            FROM spree_line_items li
-            JOIN spree_variants v ON v.id = li.variant_id
-       LEFT JOIN olist_reviews r ON r.spree_order_id = li.order_id
-       LEFT JOIN olist_order_details d ON d.spree_order_id = li.order_id
-           WHERE v.product_id = #{product.id.to_i}
+          SELECT COUNT(*)                   AS orders,
+                 ROUND(AVG(r.score), 2)     AS avg_review,
+                 ROUND(AVG(d.days_late), 1) AS avg_days_late
+            FROM (
+              -- one row per order: two units of this product in one order
+              -- must not count that order's review or lateness twice
+              SELECT DISTINCT li.order_id
+                FROM spree_line_items li
+                JOIN spree_variants v ON v.id = li.variant_id
+               WHERE v.product_id = #{product.id.to_i}
+            ) product_orders
+       LEFT JOIN #{ORDER_REVIEWS} r ON r.spree_order_id = product_orders.order_id
+       LEFT JOIN olist_order_details d ON d.spree_order_id = product_orders.order_id
         SQL
 
         detail = {

@@ -85,7 +85,7 @@ module StoreMcp
                      d.days_late, d.delivery_days, r.score
                 FROM spree_orders o
                 JOIN olist_order_details d ON d.spree_order_id = o.id
-           LEFT JOIN olist_reviews r ON r.spree_order_id = o.id
+           LEFT JOIN #{ORDER_REVIEWS} r ON r.spree_order_id = o.id
                 #{joins}
                WHERE #{where.join(' AND ')}
             ) grouped

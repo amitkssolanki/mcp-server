@@ -62,7 +62,7 @@ module StoreMcp
               JOIN spree_line_items li ON li.id = lid.spree_line_item_id
               JOIN spree_orders o ON o.id = li.order_id
               JOIN olist_order_details d ON d.spree_order_id = o.id
-         LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+         LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
              WHERE #{where.join(' AND ')}
           ),
           seller_revenue AS (
