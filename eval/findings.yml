@@ -30,7 +30,8 @@
   severity: high
   triage: tool_bug
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 948ce4c
   tools: [search_orders, delivery_performance, find_customer]
   definition: "METRICS.md: Reviews (one review score per order); Counts (total_matches)"
   summary: >
@@ -45,6 +46,7 @@
            delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4,
            customer-with-multi-review-order, customer-most-orders, complete-listing-matches-count,
            search-orders-random-filters, delivery-random-windows, customers-random]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P1-search-orders, P3-delivery-performance, P4-find-customer]
 
 - id: F2
@@ -52,7 +54,8 @@
   severity: medium
   triage: definition_gap
   scope: definition
-  status: reproduced
+  status: verified
+  fixed_in: 948ce4c
   tools: [list_categories, seller_performance, delivery_performance, find_customer, get_order, get_product]
   definition: "METRICS.md: Reviews. An order's score is its most recent review"
   summary: >
@@ -66,6 +69,7 @@
            delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, search-late-and-unhappy,
            customer-with-multi-review-order, customer-most-orders, order-multi-seller-multi-review,
            product-best-seller, products-random, sellers-random-states, customers-random]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P2-list-categories, P3-delivery-performance, P5-seller-performance, P6-get-order, P7-get-product]
 
 - id: F3
@@ -73,7 +77,8 @@
   severity: high
   triage: definition_gap
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 5fa9bf3
   tools: [revenue_report, list_categories]
   definition: "METRICS.md: Money (item_revenue, gross_revenue); Dimensions (category)"
   summary: >
@@ -86,6 +91,7 @@
     R$1,255,695.13, gross R$1,437,665.78.
   checks: [revenue-by-category-top20, revenue-by-category-split, revenue-by-month-split, categories-all,
            categories-worst-reviewed, same-metric-same-number, partitions-sum-to-total, revenue-report-random-windows]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P8-revenue-report]
 
 - id: F4
@@ -93,7 +99,8 @@
   severity: high
   triage: tool_bug
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 5fa9bf3
   tools: [revenue_report]
   definition: "METRICS.md: Principles (allocate at the grain the data has); Dimensions (seller)"
   summary: >
@@ -103,6 +110,7 @@
     R$229,473 in seller_performance; under the definitions it is R$249,393.44
     gross, R$229,237.63 item revenue.
   checks: [revenue-by-seller-top20, revenue-by-seller-split, same-metric-same-number]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P8-revenue-report]
 
 - id: F5
@@ -110,7 +118,8 @@
   severity: medium
   triage: definition_gap
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 383453d
   tools: [list_categories, get_product, search_products, seller_performance]
   definition: "METRICS.md: Populations (completed orders)"
   summary: >
@@ -122,6 +131,7 @@
   checks: [categories-all, categories-worst-reviewed, sellers-top-revenue, sellers-worst-reviewed,
            sellers-latest-deliverers, sellers-in-rio-by-revenue, products-top-health-beauty, product-best-seller,
            products-random, sellers-random-states]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P5-seller-performance, P9-product-counters]
 
 - id: F6
@@ -129,7 +139,8 @@
   severity: medium
   triage: tool_bug
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 5fa9bf3
   tools: [revenue_report]
   definition: "METRICS.md: Principles (say whether a breakdown adds up); Counts (orders)"
   summary: >
@@ -139,6 +150,7 @@
     97,729 orders. The figure is inflated, and it invites the model to repeat
     it.
   checks: [overlapping-groups-not-additive]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P8-revenue-report]
 
 - id: F7
@@ -146,7 +158,8 @@
   severity: high
   triage: tool_bug
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 5fa9bf3
   tools: [revenue_report]
   definition: "METRICS.md: Money (payment_value)"
   summary: >
@@ -156,6 +169,7 @@
     R$12,349,530 collected) and voucher 1.4x high. Decision: this grouping
     reports payment_value.
   checks: [revenue-by-payment-method, revenue-by-payment-method-2018]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P8-revenue-report]
 
 - id: F8
@@ -163,7 +177,8 @@
   severity: low
   triage: definition_gap
   scope: definition
-  status: reproduced
+  status: verified
+  fixed_in: 383453d
   tools: [delivery_performance]
   definition: "METRICS.md: Populations (delivered orders); Delivery"
   summary: >
@@ -173,6 +188,7 @@
     search_orders can still find those six.
   checks: [delivery-by-bucket, delivery-by-state, delivery-by-category-worst, delivery-by-seller-worst,
            delivery-buckets-2017-q4, delivery-random-windows]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P3-delivery-performance]
 
 - id: F9
@@ -180,7 +196,8 @@
   severity: medium
   triage: tool_bug
   scope: fix
-  status: reproduced
+  status: verified
+  fixed_in: 77c4a70
   tools: [find_customer]
   definition: "METRICS.md: Customers (exact, case-insensitive match)"
   summary: >
@@ -189,6 +206,7 @@
     wrong person, and the tool can be used to enumerate customers. Fix: exact,
     case-insensitive match.
   checks: [find-customer-exact-match]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
   regression: [P4-find-customer]
 
 - id: F10

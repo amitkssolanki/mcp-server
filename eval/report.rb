@@ -66,8 +66,9 @@ module Eval
 
       if @result.regressions.any?
         caught = @result.regressions.count(&:caught)
-        io.puts format("%-16s %3d   caught %d   missed %d", "Regressions", @result.regressions.size, caught,
-                       @result.regressions.size - caught)
+        by_kind = @result.regressions.group_by(&:kind).map { |k, rs| "#{k} #{rs.count(&:caught)}/#{rs.size}" }
+        io.puts format("%-16s %3d   caught %d   missed %d   (%s)", "Regressions", @result.regressions.size, caught,
+                       @result.regressions.size - caught, by_kind.join(", "))
         @result.regressions.each do |r|
           io.puts format("  %-7s %-32s %s", r.caught ? "CAUGHT" : "MISSED", r.id, r.title)
           io.puts "          by #{r.caught_by.join(', ')}" if r.caught
@@ -88,6 +89,8 @@ module Eval
         io.puts
       end
 
+      statuses = @findings.map { |f| f["status"] }.tally.map { |st, n| "#{n} #{st}" }.join(", ")
+      io.puts "Findings register: #{@findings.size} findings (#{statuses})"
       io.puts format("Result: %s   fingerprint %s   %.1fs", passed? ? "PASS" : "FAIL", fingerprint, @result.seconds)
     end
 
