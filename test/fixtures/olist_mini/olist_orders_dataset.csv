@@ -1,0 +1,6 @@
+"order_id","customer_id","order_status","order_purchase_timestamp","order_approved_at","order_delivered_carrier_date","order_delivered_customer_date","order_estimated_delivery_date"
+o1,c1,delivered,2017-01-02 10:00:00,2017-01-02 11:00:00,2017-01-05 09:00:00,2017-01-22 12:00:00,2017-01-20 00:00:00
+o2,c2,canceled,2017-01-03 09:00:00,,,,2017-01-25 00:00:00
+o3,c3,shipped,2017-01-15 08:30:00,2017-01-15 09:00:00,2017-01-16 10:00:00,,2017-02-05 00:00:00
+o4,c4,delivered,2017-02-01 23:59:59,2017-02-02 08:00:00,2017-02-03 10:00:00,2017-02-09 12:00:00,2017-02-10 00:00:00
+o5,c5,unavailable,2017-02-02 00:00:00,2017-02-02 08:00:00,,,2017-02-20 00:00:00
