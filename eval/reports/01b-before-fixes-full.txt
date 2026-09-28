@@ -1,0 +1,107 @@
+Running (seed 20260928)
+  oracle built from CSVs          7.8s
+  checks                         50.7s
+  regressions                    44.7s
+
+MCP truth harness
+  database mcp_server_test  commit 186fc03  seed 20260928
+
+Questions         35   pass   5   fail  30   error 0
+  PASS  revenue-by-month                            0.29s
+  PASS  revenue-by-state                            0.24s
+  FAIL  revenue-by-category-top20                   0.46s  20 diff(s); furniture_decor revenue: expected 899626.04, got 929190.19 (x1.033)
+  FAIL  revenue-by-seller-top20                     0.42s  20 diff(s); 4a3ca9315b744ce9f8e9374361493884 revenue: expected 235359.3, got 248435.14 (x1.056)
+  FAIL  revenue-by-payment-method                   0.26s  4 diff(s); voucher revenue: expected 349874.4, got 490583.08 (x1.402)
+  FAIL  categories-all                              0.51s  148 diff(s); dvds_blu_ray revenue: expected 4559.49, got 5999.39 (x1.316)
+  FAIL  sellers-top-revenue                         0.60s  43 diff(s); 7e93a43ef30c4f03f38b393420bc753a revenue: expected 172583.88, got 176431.87 (x1.022)
+  FAIL  sellers-worst-reviewed                      0.59s  17 diff(s); 18a349e75d307f4b4cc646a691ed4216 orders: expected 119, got 121 (x1.017)
+  FAIL  delivery-by-bucket                          0.21s  9 diff(s); more than a week late avg_review: expected 1.71, got 1.72 (x1.006)
+  FAIL  delivery-by-state                           0.20s  37 diff(s); MA avg_days_late: expected -8.7, got -8.8 (x1.012)
+  FAIL  search-all-placed                           0.05s  1 diff(s); total_matches total_matches: expected 99441, got 100000 (x1.006)
+  FAIL  search-rj-one-star                          0.06s  1 diff(s); total_matches total_matches: expected 2254, got 2272 (x1.008)
+  FAIL  customer-with-multi-review-order            0.01s  3 diff(s); (record) orders: expected 1, got 2 (x2)
+  PASS  revenue-black-friday-week-by-state          0.02s
+  PASS  revenue-2018-h1-by-month                    0.13s
+  FAIL  search-black-friday-day                     0.02s  1 diff(s); total_matches total_matches: expected 1176, got 1185 (x1.008)
+  FAIL  revenue-by-month-split                      0.25s  48 diff(s); 2016-09 item_revenue: expected 207.86, got 
+  FAIL  revenue-by-category-split                   0.42s  58 diff(s); furniture_decor revenue: expected 899626.04, got 929190.19 (x1.033)
+  FAIL  revenue-by-seller-split                     0.42s  60 diff(s); 4a3ca9315b744ce9f8e9374361493884 revenue: expected 235359.3, got 248435.14 (x1.056)
+  FAIL  revenue-by-payment-method-2018              0.15s  4 diff(s); voucher revenue: expected 181015.42, got 248104.78 (x1.371)
+  FAIL  categories-worst-reviewed                   0.45s  19 diff(s); pc_gamer revenue: expected 1306.95, got 1545.95 (x1.183)
+  FAIL  sellers-latest-deliverers                   0.66s  7 diff(s); 2a1348e9addc1af5aaa619b1a3679d6b orders: expected 51, got 52 (x1.02)
+  FAIL  sellers-in-rio-by-revenue                   0.08s  13 diff(s); d05ae8f7a5bd1d2a690a44cd079e4e27 revenue: expected 13244.0, got 13436.0 (x1.014)
+  FAIL  delivery-by-category-worst                  0.25s  13 diff(s); bed_bath_table late_rate: expected 8.6, got 8.7 (x1.012)
+  FAIL  delivery-by-seller-worst                    0.45s  15 diff(s); b2479f944e1b90cf8a5de1bbfde284d6 late_rate: expected 13.9, got 13.6 (x0.9784)
+  FAIL  delivery-buckets-2017-q4                    0.06s  7 diff(s); more than a week late avg_review: expected 1.65, got 1.66 (x1.006)
+  FAIL  search-very-late                            0.02s  1 diff(s); total_matches total_matches: expected 2485, got 2499 (x1.006)
+  FAIL  search-big-sp-orders                        0.07s  1 diff(s); total_matches total_matches: expected 359, got 361 (x1.006)
+  FAIL  search-late-and-unhappy                     0.02s  1 diff(s); total_matches total_matches: expected 4255, got 4274 (x1.004)
+  FAIL  search-cancelled-in-2018                    0.01s  1 diff(s); total_matches total_matches: expected 334, got 336 (x1.006)
+  FAIL  customer-most-orders                        0.01s  1 diff(s); (record) avg_review: expected 5.0, got 4.76 (x0.952)
+  FAIL  order-multi-seller-multi-review             0.04s  1 diff(s); (record) review.score: expected 5, got 4 (x0.8)
+  FAIL  product-best-seller                         0.07s  2 diff(s); (record) avg_days_late: expected -9.3, got -9.1 (x0.9785)
+  FAIL  products-top-health-beauty                  0.07s  7 diff(s); 8c292ca193d326152e335d77176746f0 units_sold: expected 90, got 92 (x1.022)
+  PASS  products-count-pc-gamer                     0.01s
+
+Invariants         9   pass   4   fail   5   error 0   (150 seeded cases)
+  PASS  adjacent-date-windows-partition             1.33s
+  FAIL  complete-listing-matches-count              2.42s  10 diff(s); arguments={"from" => "2017-05-06", "to" => "2017-05-06", "limit" => 50, "customer_state" => "SP"} total_matches=41 rows=41 distinct=40
+  FAIL  find-customer-exact-match                   0.03s  4 diff(s); probe="%" should_resolve=false resolved_to="861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+  PASS  narrower-filter-never-counts-more           4.04s
+  FAIL  overlapping-groups-not-additive             0.90s  3 diff(s); group_by="category" claims=["structured totals.orders=97729", "text states an order total"]
+  FAIL  partitions-sum-to-total                     1.15s  1 diff(s); comparison="item revenue: list_categories vs revenue_report(month)" problem="no tool reports this total" values=[nil, 13591643.7]
+  FAIL  same-metric-same-number                     1.77s  6 diff(s); metric="category item revenue" list_categories=1258681.34 revenue_report=1445137.23
+  PASS  unique-keys                                 3.18s
+  PASS  value-bounds                                0.00s
+
+Differentials      6   pass   0   fail   6   error 0   (200 seeded cases)
+  FAIL  search-orders-random-filters                6.28s  8 diff(s); case="search#1" arguments={"from" => "2017-10-05", "to" => "2017-12-25", "limit" => 1} status="fail" first_diff={key: "total_matches", field: "total_matches", e
+  FAIL  revenue-report-random-windows               5.29s  8 diff(s); case="revenue#0" arguments={"group_by" => "month", "from" => "2017-01-03", "to" => "2017-11-19", "limit" => 50} status="fail" first_diff={key: "2017-01", field:
+  FAIL  delivery-random-windows                     4.41s  8 diff(s); case="delivery#0" arguments={"from" => "2018-04-15", "to" => "2018-10-05"} status="fail" first_diff={key: "on time or early", field: "orders", expected: 27422, 
+  FAIL  customers-random                            0.63s  8 diff(s); case="customer#1" arguments={"email" => "a8d344109edd5d56bed40ebbc3119129@olist.invalid"} status="fail" first_diff={key: "(record)", field: "orders", expected: 
+  FAIL  products-random                             2.37s  4 diff(s); case="product#0" arguments={"sku" => "c8d415e06ebd7a37c7a5b4a18641ca11"} status="fail" first_diff={key: "(record)", field: "avg_review", expected: 4.0, actual: 
+  FAIL  sellers-random-states                       2.86s  8 diff(s); case="seller#0" arguments={"state" => "RJ", "min_orders" => 5, "sort" => "revenue", "limit" => 50} status="fail" first_diff={key: "(ranking)", field: "item_reve
+
+Reconciliations    2   pass   2   fail   0   error 0
+  PASS  reconcile-row-counts                        1.01s
+  PASS  reconcile-value-sums                        0.25s
+
+Regressions        3   caught 3   missed 0
+  CAUGHT  H1-category-revenue-fan-out      Category revenue summed over a line-item x review join (the 42x bug)
+          by categories-all, partitions-sum-to-total, same-metric-same-number
+          categories-all: garden_tools units_sold: expected 4328, got 801988 (x185.3)
+          partitions-sum-to-total: comparison="item revenue: list_categories vs revenue_report(month)" values=[nil, 386160753.39]
+          same-metric-same-number: metric="category item revenue" list_categories=52545084.05 revenue_report=1445137.23
+          provenance: reconstructed from the article; reproduces its R$52,545,084 exactly
+  CAUGHT  H2-seller-average-fan-out        Seller review average taken over line items instead of orders (3.81 reported as 2.57)
+          by sellers-top-revenue, sellers-worst-reviewed
+          sellers-top-revenue: 1f50f920176fa81dab994f9023523100 avg_days_late: expected -9.5, got -9.9 (x1.042)
+          sellers-worst-reviewed: 897060da8b9a21f655304d50fd935913 avg_review: expected 3.61, got 3.37 (x0.9335)
+          provenance: reconstructed from the article; reproduces its 3.81 -> 2.57 exactly
+  CAUGHT  H3-silently-dropped-payments     33 payment rows silently missing after import (the insert_all bug)
+          by reconcile-row-counts, reconcile-value-sums
+          reconcile-row-counts: payments payments: expected 103886, got 103853 (x0.9997)
+          reconcile-value-sums: payment_value payment_value: expected 16008872.12, got 16008272.1 (x1)
+          provenance: simulated effect; the original index/column combination is not recoverable
+
+Failures by finding (eval/findings.yml)
+  F1 [tool_bug/fix] Orders with several reviews fan out every order-level join
+      delivery-by-bucket, delivery-by-state, search-all-placed, search-rj-one-star, customer-with-multi-review-order, search-black-friday-day, delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, search-very-late, search-big-sp-orders, search-late-and-unhappy, search-cancelled-in-2018, customer-most-orders, complete-listing-matches-count, search-orders-random-filters, delivery-random-windows, customers-random
+  F2 [definition_gap/definition] No review-per-order policy
+      categories-all, sellers-top-revenue, sellers-worst-reviewed, delivery-by-bucket, delivery-by-state, customer-with-multi-review-order, categories-worst-reviewed, sellers-latest-deliverers, sellers-in-rio-by-revenue, delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, search-late-and-unhappy, customer-most-orders, order-multi-seller-multi-review, product-best-seller, customers-random, products-random, sellers-random-states
+  F3 [definition_gap/fix] Two tools, two different "category revenue"
+      revenue-by-category-top20, categories-all, revenue-by-month-split, revenue-by-category-split, categories-worst-reviewed, partitions-sum-to-total, same-metric-same-number, revenue-report-random-windows
+  F4 [tool_bug/fix] Sellers credited with other sellers' items
+      revenue-by-seller-top20, revenue-by-seller-split, same-metric-same-number
+  F5 [definition_gap/fix] Cancelled orders counted as sales in product, category and seller figures
+      categories-all, sellers-top-revenue, sellers-worst-reviewed, categories-worst-reviewed, sellers-latest-deliverers, sellers-in-rio-by-revenue, product-best-seller, products-top-health-beauty, products-random, sellers-random-states
+  F6 [tool_bug/fix] Overlapping buckets presented as additive
+      overlapping-groups-not-additive
+  F7 [tool_bug/fix] Payment-method revenue double-counts split payments
+      revenue-by-payment-method, revenue-by-payment-method-2018
+  F8 [definition_gap/definition] Delivery metrics include cancelled orders
+      delivery-by-bucket, delivery-by-state, delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, delivery-random-windows
+  F9 [tool_bug/fix] find_customer matches email as a substring
+      find-customer-exact-match
+
+Result: FAIL   fingerprint 1e9f84eb3ff5ecc1   103.3s
