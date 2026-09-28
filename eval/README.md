@@ -140,4 +140,15 @@ RAILS_ENV=test bin/rails eval:run
 `SEED=`, `CASES=` (seeded cases per invariant, default 25) and
 `REGRESSIONS=0` are optional. CI (`.github/workflows/verify.yml`) runs exactly
 these steps on every push and fails on any failing check, uncaught
-regression or failing test.
+regression or failing test. That was checked by putting the pre-fix
+`find_customer` back and running the CI pipeline command: it exits 1 and
+attributes every failure to F1, F2 or F9.
+
+**CI runtime is about 8 minutes**, measured on the first run: 3m20s to import
+99,441 orders, 3m16s for the harness, 7s for the tests, and the rest setting
+up Ruby and Postgres. That is over the 5-minute target, and deliberately
+not optimised. The import is part of what is verified (the reconciliation
+audits it), so caching an imported database would stop testing the importer.
+Cutting cases or data would weaken the claim the run exists to support. CI
+printed the same fingerprint as local runs (`f4841a48894b268d`) on a
+different machine and a fresh database.
