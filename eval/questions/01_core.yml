@@ -1,0 +1,148 @@
+# Canonical questions, day 1 set. Each asks one tool one question and states
+# which metrics (docs/METRICS.md) the answer is made of. `expected` names the
+# oracle query that computes the same answer from the raw CSVs.
+#
+# `fields` maps the tool's structured-output field to the oracle's field.
+# Where the names differ (the tool's `revenue` vs the oracle's
+# `gross_revenue`), the mapping *is* the definition: it states which metric
+# that tool column is supposed to be.
+
+- id: revenue-by-month
+  title: Revenue and completed orders by purchase month
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: month }
+  rows: rows
+  key: month
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: month } }
+  match: all
+
+- id: revenue-by-state
+  title: Revenue and completed orders by customer state
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: state, limit: 50 }
+  rows: rows
+  key: state
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: state } }
+  match: all
+
+- id: revenue-by-category-top20
+  title: Top 20 categories by revenue
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: category, limit: 20 }
+  rows: rows
+  key: category
+  key_format: category
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: category } }
+  match: { top: 20, rank_by: gross_revenue, order: desc }
+
+- id: revenue-by-seller-top20
+  title: Top 20 sellers by revenue
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: seller, limit: 20 }
+  rows: rows
+  key: seller
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: seller } }
+  match: { top: 20, rank_by: gross_revenue, order: desc }
+
+- id: revenue-by-payment-method
+  title: Payments collected by payment method
+  metrics: [orders, payment_value]
+  tool: revenue_report
+  args: { group_by: payment_method }
+  rows: rows
+  key: method
+  fields: { orders: orders, revenue: payment_value }
+  expected: { oracle: revenue_by, params: { dimension: payment_method } }
+  match: all
+
+- id: categories-all
+  title: Every category with products, units, item revenue and review score
+  metrics: [products, units_sold, item_revenue, avg_review]
+  tool: list_categories
+  args: {}
+  rows: categories
+  key: category
+  key_format: category
+  fields: { products: products, units_sold: units_sold, revenue: item_revenue, avg_review: avg_review }
+  expected: { oracle: categories }
+  match: all
+
+- id: sellers-top-revenue
+  title: Top 20 sellers by item revenue (at least 50 orders)
+  metrics: [orders, item_revenue, avg_review, avg_days_late]
+  tool: seller_performance
+  args: { sort: revenue, min_orders: 50, limit: 20 }
+  rows: sellers
+  key: seller
+  fields: { orders: orders, revenue: item_revenue, avg_review: avg_review, avg_days_late: avg_days_late }
+  expected: { oracle: sellers, params: { min_orders: 50 } }
+  match: { top: 20, rank_by: item_revenue, order: desc }
+
+- id: sellers-worst-reviewed
+  title: The 10 worst-reviewed sellers (at least 100 orders)
+  metrics: [orders, item_revenue, avg_review, avg_days_late]
+  tool: seller_performance
+  args: { sort: avg_review, min_orders: 100, limit: 10 }
+  rows: sellers
+  key: seller
+  fields: { orders: orders, revenue: item_revenue, avg_review: avg_review, avg_days_late: avg_days_late }
+  expected: { oracle: sellers, params: { min_orders: 100 } }
+  match: { top: 10, rank_by: avg_review, order: asc }
+
+- id: delivery-by-bucket
+  title: Delivery lateness bands and their review scores
+  metrics: [orders, late_orders, late_rate, avg_days_late, avg_delivery_days, avg_review]
+  tool: delivery_performance
+  args: {}
+  rows: rows
+  key: delivery
+  fields: { orders: orders, late_orders: late_orders, late_rate: late_rate, avg_days_late: avg_days_late,
+            avg_delivery_days: avg_delivery_days, avg_review: avg_review }
+  expected: { oracle: delivery_by, params: { dimension: bucket } }
+  match: all
+
+- id: delivery-by-state
+  title: Delivery performance by customer state
+  metrics: [orders, late_orders, late_rate, avg_days_late, avg_delivery_days, avg_review]
+  tool: delivery_performance
+  args: { group_by: state, min_orders: 1, limit: 50 }
+  rows: rows
+  key: state
+  fields: { orders: orders, late_orders: late_orders, late_rate: late_rate, avg_days_late: avg_days_late,
+            avg_delivery_days: avg_delivery_days, avg_review: avg_review }
+  expected: { oracle: delivery_by, params: { dimension: state, min_orders: 1 } }
+  match: all
+
+- id: search-all-placed
+  title: How many orders are there?
+  metrics: [total_matches]
+  tool: search_orders
+  args: {}
+  scalar: total_matches
+  expected: { oracle: search_count }
+
+- id: search-rj-one-star
+  title: How many Rio de Janeiro orders got a one-star review?
+  metrics: [total_matches]
+  tool: search_orders
+  args: { customer_state: RJ, max_review_score: 1 }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { customer_state: RJ, max_review_score: 1 } }
+
+- id: customer-with-multi-review-order
+  title: Order count, lifetime value and review score for a customer with a twice-reviewed order
+  metrics: [orders, lifetime_value, avg_review]
+  tool: find_customer
+  pick: multi_review_customer
+  args: { email: "%{unique_id}@olist.invalid" }
+  record: true
+  fields: { orders: orders, lifetime_value: lifetime_value, avg_review: avg_review }
+  expected: { oracle: customer, params: { unique_id: "%{unique_id}" } }

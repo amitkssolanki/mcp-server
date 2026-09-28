@@ -26,4 +26,5 @@ end
 
 %w[
   oracle/dataset oracle/oracle
+  runner/check runner/mcp_client runner/expectations runner/question_runner
 ].each { |f| require File.join(Eval::ROOT, f) }
