@@ -1,0 +1,3456 @@
+{
+  "meta": {
+    "seed": 20260928,
+    "cases_per_invariant": 25,
+    "database": "mcp_server_test",
+    "git_commit": "5c66677",
+    "git_dirty": true,
+    "dataset": {
+      "olist_orders_dataset": "8df58ef3d2d7",
+      "olist_order_items_dataset": "0bc4d068c4fe",
+      "olist_products_dataset": "3e6569628a17",
+      "olist_customers_dataset": "983a422239e1",
+      "olist_sellers_dataset": "1f643d2b9503",
+      "olist_order_payments_dataset": "4f713964f281",
+      "olist_order_reviews_dataset": "0dff69f6fed3",
+      "product_category_name_translation": "9da093e114e5"
+    },
+    "ruby": "3.4.7",
+    "started_at": "2026-09-28T17:11:15Z",
+    "fingerprint": "914cfc05da423748",
+    "seconds": 59.0,
+    "passed": false
+  },
+  "summary": {
+    "question": {
+      "total": 13,
+      "pass": 2,
+      "fail": 11
+    },
+    "invariant": {
+      "total": 9,
+      "pass": 4,
+      "fail": 5
+    },
+    "reconciliation": {
+      "total": 2,
+      "pass": 2
+    },
+    "regressions": {
+      "total": 3,
+      "caught": 3
+    },
+    "untriaged": []
+  },
+  "checks": [
+    {
+      "id": "revenue-by-month",
+      "kind": "question",
+      "title": "Revenue and completed orders by purchase month",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "month"
+      },
+      "expected": {
+        "rows": 24
+      },
+      "actual": {
+        "rows": 24
+      },
+      "seconds": 0.496
+    },
+    {
+      "id": "revenue-by-state",
+      "kind": "question",
+      "title": "Revenue and completed orders by customer state",
+      "status": "pass",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "state",
+        "limit": 50
+      },
+      "expected": {
+        "rows": 27
+      },
+      "actual": {
+        "rows": 27
+      },
+      "seconds": 0.253
+    },
+    {
+      "id": "revenue-by-category-top20",
+      "kind": "question",
+      "title": "Top 20 categories by revenue",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "category",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "diffs": [
+        {
+          "key": "(ranking)",
+          "field": "gross_revenue",
+          "expected": [
+            "health_beauty",
+            "watches_gifts",
+            "bed_bath_table",
+            "sports_leisure",
+            "computers_accessories",
+            "furniture_decor",
+            "housewares",
+            "cool_stuff",
+            "auto",
+            "garden_tools",
+            "toys",
+            "baby",
+            "perfumery",
+            "telephony",
+            "office_furniture",
+            "stationery",
+            "pet_shop",
+            "computers",
+            "uncategorised",
+            "musical_instruments"
+          ],
+          "actual": [
+            "health_beauty",
+            "watches_gifts",
+            "bed_bath_table",
+            "sports_leisure",
+            "computers_accessories",
+            "furniture_decor",
+            "housewares",
+            "cool_stuff",
+            "auto",
+            "garden_tools",
+            "toys",
+            "baby",
+            "perfumery",
+            "telephony",
+            "office_furniture",
+            "stationery",
+            "pet_shop",
+            "computers",
+            "uncategorised",
+            "electronics"
+          ]
+        },
+        {
+          "key": "health_beauty",
+          "field": "revenue",
+          "expected": 1437665.78,
+          "actual": 1445137.23,
+          "delta": 7471.45,
+          "ratio": 1.0052
+        },
+        {
+          "key": "watches_gifts",
+          "field": "revenue",
+          "expected": 1298292.47,
+          "actual": 1303548.7,
+          "delta": 5256.23,
+          "ratio": 1.004
+        },
+        {
+          "key": "bed_bath_table",
+          "field": "revenue",
+          "expected": 1240386.13,
+          "actual": 1263988.59,
+          "delta": 23602.46,
+          "ratio": 1.019
+        },
+        {
+          "key": "sports_leisure",
+          "field": "revenue",
+          "expected": 1147244.63,
+          "actual": 1156548.06,
+          "delta": 9303.43,
+          "ratio": 1.0081
+        },
+        {
+          "key": "computers_accessories",
+          "field": "revenue",
+          "expected": 1050941.58,
+          "actual": 1057810.31,
+          "delta": 6868.73,
+          "ratio": 1.0065
+        },
+        {
+          "key": "furniture_decor",
+          "field": "revenue",
+          "expected": 899626.04,
+          "actual": 929190.19,
+          "delta": 29564.15,
+          "ratio": 1.0329
+        },
+        {
+          "key": "housewares",
+          "field": "revenue",
+          "expected": 772035.14,
+          "actual": 786787.46,
+          "delta": 14752.32,
+          "ratio": 1.0191
+        },
+        {
+          "key": "cool_stuff",
+          "field": "revenue",
+          "expected": 704086.24,
+          "actual": 714388.04,
+          "delta": 10301.8,
+          "ratio": 1.0146
+        },
+        {
+          "key": "auto",
+          "field": "revenue",
+          "expected": 678606.64,
+          "actual": 681834.23,
+          "delta": 3227.59,
+          "ratio": 1.0048
+        },
+        {
+          "key": "garden_tools",
+          "field": "revenue",
+          "expected": 579525.2,
+          "actual": 592001.64,
+          "delta": 12476.44,
+          "ratio": 1.0215
+        },
+        {
+          "key": "toys",
+          "field": "revenue",
+          "expected": 556783.29,
+          "actual": 562205.0,
+          "delta": 5421.71,
+          "ratio": 1.0097
+        },
+        {
+          "key": "baby",
+          "field": "revenue",
+          "expected": 478320.0,
+          "actual": 489362.69,
+          "delta": 11042.69,
+          "ratio": 1.0231
+        },
+        {
+          "key": "perfumery",
+          "field": "revenue",
+          "expected": 450580.47,
+          "actual": 453989.19,
+          "delta": 3408.72,
+          "ratio": 1.0076
+        },
+        {
+          "key": "telephony",
+          "field": "revenue",
+          "expected": 393306.02,
+          "actual": 397006.48,
+          "delta": 3700.46,
+          "ratio": 1.0094
+        },
+        {
+          "key": "office_furniture",
+          "field": "revenue",
+          "expected": 342073.02,
+          "actual": 344393.24,
+          "delta": 2320.22,
+          "ratio": 1.0068
+        },
+        {
+          "key": "stationery",
+          "field": "revenue",
+          "expected": 276152.18,
+          "actual": 279443.2,
+          "delta": 3291.02,
+          "ratio": 1.0119
+        },
+        {
+          "key": "pet_shop",
+          "field": "revenue",
+          "expected": 253176.96,
+          "actual": 254505.28,
+          "delta": 1328.32,
+          "ratio": 1.0052
+        },
+        {
+          "key": "computers",
+          "field": "revenue",
+          "expected": 232799.43,
+          "actual": 232937.59,
+          "delta": 138.16,
+          "ratio": 1.0006
+        },
+        {
+          "key": "uncategorised",
+          "field": "revenue",
+          "expected": 206524.29,
+          "actual": 213290.21,
+          "delta": 6765.92,
+          "ratio": 1.0328
+        }
+      ],
+      "seconds": 0.431
+    },
+    {
+      "id": "revenue-by-seller-top20",
+      "kind": "question",
+      "title": "Top 20 sellers by revenue",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "gross_revenue"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "seller",
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "diffs": [
+        {
+          "key": "(ranking)",
+          "field": "gross_revenue",
+          "expected": [
+            "4869f7a5dfa277a7dca6462dcf3b52b2",
+            "7c67e1448b00f6e969d365cea6b010ab",
+            "53243585a1d6dc2643021fd1853d8905",
+            "4a3ca9315b744ce9f8e9374361493884",
+            "fa1c13f2614d7b5c4749cbc52fecda94",
+            "da8622b14eb17ae2831f4ac5b9dab84a",
+            "7e93a43ef30c4f03f38b393420bc753a",
+            "1025f0e2d44d7041d6cf58b6550e0bfa",
+            "7a67c85e85bb2ce8582c35f2203ad736",
+            "955fee9216a65b617aa5c0531780ce60",
+            "6560211a19b47992c3666cc44a7e94c0",
+            "1f50f920176fa81dab994f9023523100",
+            "46dc3b2cc0980fb8ec44634e21d2718e",
+            "a1043bafd471dff536d0c462352beb48",
+            "cc419e0650a3c5ba77189a1882b7556a",
+            "620c87c171fb2a6dd6e8bb4dec959fc6",
+            "5dceca129747e92ff8ef7a997dc4f8ca",
+            "7d13fca15225358621be4086e1eb0964",
+            "3d871de0142ce09b7081e2b9d1733cb1",
+            "edb1ef5e36e0c8cd84eb3c9b003e486d"
+          ],
+          "actual": [
+            "4869f7a5dfa277a7dca6462dcf3b52b2",
+            "4a3ca9315b744ce9f8e9374361493884",
+            "7c67e1448b00f6e969d365cea6b010ab",
+            "53243585a1d6dc2643021fd1853d8905",
+            "fa1c13f2614d7b5c4749cbc52fecda94",
+            "da8622b14eb17ae2831f4ac5b9dab84a",
+            "7e93a43ef30c4f03f38b393420bc753a",
+            "1025f0e2d44d7041d6cf58b6550e0bfa",
+            "7a67c85e85bb2ce8582c35f2203ad736",
+            "955fee9216a65b617aa5c0531780ce60",
+            "6560211a19b47992c3666cc44a7e94c0",
+            "1f50f920176fa81dab994f9023523100",
+            "46dc3b2cc0980fb8ec44634e21d2718e",
+            "a1043bafd471dff536d0c462352beb48",
+            "cc419e0650a3c5ba77189a1882b7556a",
+            "620c87c171fb2a6dd6e8bb4dec959fc6",
+            "5dceca129747e92ff8ef7a997dc4f8ca",
+            "7d13fca15225358621be4086e1eb0964",
+            "3d871de0142ce09b7081e2b9d1733cb1",
+            "edb1ef5e36e0c8cd84eb3c9b003e486d"
+          ]
+        },
+        {
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "field": "revenue",
+          "expected": 249393.44,
+          "actual": 253121.92,
+          "delta": 3728.48,
+          "ratio": 1.015
+        },
+        {
+          "key": "7c67e1448b00f6e969d365cea6b010ab",
+          "field": "revenue",
+          "expected": 239536.44,
+          "actual": 241141.19,
+          "delta": 1604.75,
+          "ratio": 1.0067
+        },
+        {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "revenue",
+          "expected": 235359.3,
+          "actual": 248435.14,
+          "delta": 13075.84,
+          "ratio": 1.0556
+        },
+        {
+          "key": "fa1c13f2614d7b5c4749cbc52fecda94",
+          "field": "revenue",
+          "expected": 202861.67,
+          "actual": 204611.35,
+          "delta": 1749.68,
+          "ratio": 1.0086
+        },
+        {
+          "key": "da8622b14eb17ae2831f4ac5b9dab84a",
+          "field": "revenue",
+          "expected": 185192.32,
+          "actual": 190248.06,
+          "delta": 5055.74,
+          "ratio": 1.0273
+        },
+        {
+          "key": "7e93a43ef30c4f03f38b393420bc753a",
+          "field": "revenue",
+          "expected": 178838.42,
+          "actual": 179731.28,
+          "delta": 892.86,
+          "ratio": 1.005
+        },
+        {
+          "key": "1025f0e2d44d7041d6cf58b6550e0bfa",
+          "field": "revenue",
+          "expected": 172860.69,
+          "actual": 177615.78,
+          "delta": 4755.09,
+          "ratio": 1.0275
+        },
+        {
+          "key": "7a67c85e85bb2ce8582c35f2203ad736",
+          "field": "revenue",
+          "expected": 162607.24,
+          "actual": 166694.21,
+          "delta": 4086.97,
+          "ratio": 1.0251
+        },
+        {
+          "key": "955fee9216a65b617aa5c0531780ce60",
+          "field": "revenue",
+          "expected": 160582.9,
+          "actual": 161971.32,
+          "delta": 1388.42,
+          "ratio": 1.0086
+        },
+        {
+          "key": "6560211a19b47992c3666cc44a7e94c0",
+          "field": "revenue",
+          "expected": 150522.02,
+          "actual": 153224.55,
+          "delta": 2702.53,
+          "ratio": 1.018
+        },
+        {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "revenue",
+          "expected": 142037.48,
+          "actual": 148196.53,
+          "delta": 6159.05,
+          "ratio": 1.0434
+        },
+        {
+          "key": "46dc3b2cc0980fb8ec44634e21d2718e",
+          "field": "revenue",
+          "expected": 138919.78,
+          "actual": 139241.01,
+          "delta": 321.23,
+          "ratio": 1.0023
+        },
+        {
+          "key": "a1043bafd471dff536d0c462352beb48",
+          "field": "revenue",
+          "expected": 133195.8,
+          "actual": 134448.7,
+          "delta": 1252.9,
+          "ratio": 1.0094
+        },
+        {
+          "key": "cc419e0650a3c5ba77189a1882b7556a",
+          "field": "revenue",
+          "expected": 129169.95,
+          "actual": 130891.71,
+          "delta": 1721.76,
+          "ratio": 1.0133
+        },
+        {
+          "key": "620c87c171fb2a6dd6e8bb4dec959fc6",
+          "field": "revenue",
+          "expected": 127674.78,
+          "actual": 128360.08,
+          "delta": 685.3,
+          "ratio": 1.0054
+        },
+        {
+          "key": "5dceca129747e92ff8ef7a997dc4f8ca",
+          "field": "revenue",
+          "expected": 125737.68,
+          "actual": 126366.8,
+          "delta": 629.12,
+          "ratio": 1.005
+        },
+        {
+          "key": "7d13fca15225358621be4086e1eb0964",
+          "field": "revenue",
+          "expected": 122261.02,
+          "actual": 124913.61,
+          "delta": 2652.59,
+          "ratio": 1.0217
+        },
+        {
+          "key": "3d871de0142ce09b7081e2b9d1733cb1",
+          "field": "revenue",
+          "expected": 116835.8,
+          "actual": 118858.01,
+          "delta": 2022.21,
+          "ratio": 1.0173
+        },
+        {
+          "key": "edb1ef5e36e0c8cd84eb3c9b003e486d",
+          "field": "revenue",
+          "expected": 83189.65,
+          "actual": 83399.77,
+          "delta": 210.12,
+          "ratio": 1.0025
+        }
+      ],
+      "seconds": 0.439
+    },
+    {
+      "id": "revenue-by-payment-method",
+      "kind": "question",
+      "title": "Payments collected by payment method",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "payment_value"
+      ],
+      "tool": "revenue_report",
+      "arguments": {
+        "group_by": "payment_method"
+      },
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "diffs": [
+        {
+          "key": "boleto",
+          "field": "revenue",
+          "expected": 2826626.86,
+          "actual": 2826476.22,
+          "delta": -150.64,
+          "ratio": 0.9999
+        },
+        {
+          "key": "credit_card",
+          "field": "revenue",
+          "expected": 12349529.9,
+          "actual": 12534958.62,
+          "delta": 185428.72,
+          "ratio": 1.015
+        },
+        {
+          "key": "debit_card",
+          "field": "revenue",
+          "expected": 212417.75,
+          "actual": 212572.56,
+          "delta": 154.81,
+          "ratio": 1.0007
+        },
+        {
+          "key": "voucher",
+          "field": "revenue",
+          "expected": 349874.4,
+          "actual": 490583.08,
+          "delta": 140708.68,
+          "ratio": 1.4022
+        }
+      ],
+      "seconds": 0.265
+    },
+    {
+      "id": "categories-all",
+      "kind": "question",
+      "title": "Every category with products, units, item revenue and review score",
+      "status": "fail",
+      "metrics": [
+        "products",
+        "units_sold",
+        "item_revenue",
+        "avg_review"
+      ],
+      "tool": "list_categories",
+      "expected": {
+        "rows": 74
+      },
+      "actual": {
+        "rows": 74
+      },
+      "diffs": [
+        {
+          "key": "air_conditioning",
+          "field": "units_sold",
+          "expected": 295,
+          "actual": 297,
+          "delta": 2,
+          "ratio": 1.0068
+        },
+        {
+          "key": "air_conditioning",
+          "field": "revenue",
+          "expected": 54723.16,
+          "actual": 55024.96,
+          "delta": 301.8,
+          "ratio": 1.0055
+        },
+        {
+          "key": "air_conditioning",
+          "field": "avg_review",
+          "expected": 4.0,
+          "actual": 3.98,
+          "delta": -0.02,
+          "ratio": 0.995
+        },
+        {
+          "key": "art",
+          "field": "units_sold",
+          "expected": 208,
+          "actual": 209,
+          "delta": 1,
+          "ratio": 1.0048
+        },
+        {
+          "key": "art",
+          "field": "revenue",
+          "expected": 24167.64,
+          "actual": 24202.64,
+          "delta": 35.0,
+          "ratio": 1.0014
+        },
+        {
+          "key": "art",
+          "field": "avg_review",
+          "expected": 4.02,
+          "actual": 4.0,
+          "delta": -0.02,
+          "ratio": 0.995
+        },
+        {
+          "key": "audio",
+          "field": "units_sold",
+          "expected": 363,
+          "actual": 364,
+          "delta": 1,
+          "ratio": 1.0028
+        },
+        {
+          "key": "audio",
+          "field": "revenue",
+          "expected": 50668.6,
+          "actual": 50688.5,
+          "delta": 19.9,
+          "ratio": 1.0004
+        },
+        {
+          "key": "audio",
+          "field": "avg_review",
+          "expected": 3.83,
+          "actual": 3.81,
+          "delta": -0.02,
+          "ratio": 0.9948
+        },
+        {
+          "key": "auto",
+          "field": "units_sold",
+          "expected": 4204,
+          "actual": 4235,
+          "delta": 31,
+          "ratio": 1.0074
+        },
+        {
+          "key": "auto",
+          "field": "revenue",
+          "expected": 586585.73,
+          "actual": 592720.11,
+          "delta": 6134.38,
+          "ratio": 1.0105
+        },
+        {
+          "key": "auto",
+          "field": "avg_review",
+          "expected": 4.09,
+          "actual": 4.08,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "baby",
+          "field": "units_sold",
+          "expected": 3043,
+          "actual": 3065,
+          "delta": 22,
+          "ratio": 1.0072
+        },
+        {
+          "key": "baby",
+          "field": "revenue",
+          "expected": 410312.2,
+          "actual": 411764.89,
+          "delta": 1452.69,
+          "ratio": 1.0035
+        },
+        {
+          "key": "baby",
+          "field": "avg_review",
+          "expected": 4.04,
+          "actual": 4.02,
+          "delta": -0.02,
+          "ratio": 0.995
+        },
+        {
+          "key": "bed_bath_table",
+          "field": "units_sold",
+          "expected": 11097,
+          "actual": 11115,
+          "delta": 18,
+          "ratio": 1.0016
+        },
+        {
+          "key": "bed_bath_table",
+          "field": "revenue",
+          "expected": 1035964.06,
+          "actual": 1036988.68,
+          "delta": 1024.62,
+          "ratio": 1.001
+        },
+        {
+          "key": "bed_bath_table",
+          "field": "avg_review",
+          "expected": 3.95,
+          "actual": 3.94,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "books_general_interest",
+          "field": "units_sold",
+          "expected": 546,
+          "actual": 553,
+          "delta": 7,
+          "ratio": 1.0128
+        },
+        {
+          "key": "books_general_interest",
+          "field": "revenue",
+          "expected": 45622.29,
+          "actual": 46856.88,
+          "delta": 1234.59,
+          "ratio": 1.0271
+        },
+        {
+          "key": "books_general_interest",
+          "field": "avg_review",
+          "expected": 4.5,
+          "actual": 4.46,
+          "delta": -0.04,
+          "ratio": 0.9911
+        },
+        {
+          "key": "christmas_supplies",
+          "field": "units_sold",
+          "expected": 152,
+          "actual": 153,
+          "delta": 1,
+          "ratio": 1.0066
+        },
+        {
+          "key": "christmas_supplies",
+          "field": "revenue",
+          "expected": 8787.83,
+          "actual": 8800.82,
+          "delta": 12.99,
+          "ratio": 1.0015
+        },
+        {
+          "key": "christmas_supplies",
+          "field": "avg_review",
+          "expected": 4.06,
+          "actual": 4.04,
+          "delta": -0.02,
+          "ratio": 0.9951
+        },
+        {
+          "key": "computers_accessories",
+          "field": "units_sold",
+          "expected": 7781,
+          "actual": 7827,
+          "delta": 46,
+          "ratio": 1.0059
+        },
+        {
+          "key": "computers_accessories",
+          "field": "revenue",
+          "expected": 904322.02,
+          "actual": 911954.32,
+          "delta": 7632.3,
+          "ratio": 1.0084
+        },
+        {
+          "key": "computers_accessories",
+          "field": "avg_review",
+          "expected": 4.03,
+          "actual": 4.01,
+          "delta": -0.02,
+          "ratio": 0.995
+        },
+        {
+          "key": "consoles_games",
+          "field": "units_sold",
+          "expected": 1127,
+          "actual": 1137,
+          "delta": 10,
+          "ratio": 1.0089
+        },
+        {
+          "key": "consoles_games",
+          "field": "revenue",
+          "expected": 154927.27,
+          "actual": 157465.22,
+          "delta": 2537.95,
+          "ratio": 1.0164
+        },
+        {
+          "key": "consoles_games",
+          "field": "avg_review",
+          "expected": 4.07,
+          "actual": 4.04,
+          "delta": -0.03,
+          "ratio": 0.9926
+        },
+        {
+          "key": "construction_tools_construction",
+          "field": "units_sold",
+          "expected": 927,
+          "actual": 929,
+          "delta": 2,
+          "ratio": 1.0022
+        },
+        {
+          "key": "construction_tools_construction",
+          "field": "revenue",
+          "expected": 144550.19,
+          "actual": 144677.59,
+          "delta": 127.4,
+          "ratio": 1.0009
+        },
+        {
+          "key": "construction_tools_construction",
+          "field": "avg_review",
+          "expected": 4.08,
+          "actual": 4.07,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "construction_tools_lights",
+          "field": "units_sold",
+          "expected": 302,
+          "actual": 304,
+          "delta": 2,
+          "ratio": 1.0066
+        },
+        {
+          "key": "construction_tools_lights",
+          "field": "revenue",
+          "expected": 40002.0,
+          "actual": 41080.0,
+          "delta": 1078.0,
+          "ratio": 1.0269
+        },
+        {
+          "key": "construction_tools_lights",
+          "field": "avg_review",
+          "expected": 4.1,
+          "actual": 4.09,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "construction_tools_safety",
+          "field": "units_sold",
+          "expected": 189,
+          "actual": 194,
+          "delta": 5,
+          "ratio": 1.0265
+        },
+        {
+          "key": "construction_tools_safety",
+          "field": "revenue",
+          "expected": 39589.02,
+          "actual": 40544.52,
+          "delta": 955.5,
+          "ratio": 1.0241
+        },
+        {
+          "key": "construction_tools_safety",
+          "field": "avg_review",
+          "expected": 3.85,
+          "actual": 3.83,
+          "delta": -0.02,
+          "ratio": 0.9948
+        },
+        {
+          "key": "cool_stuff",
+          "field": "units_sold",
+          "expected": 3779,
+          "actual": 3796,
+          "delta": 17,
+          "ratio": 1.0045
+        },
+        {
+          "key": "cool_stuff",
+          "field": "revenue",
+          "expected": 620770.49,
+          "actual": 635290.85,
+          "delta": 14520.36,
+          "ratio": 1.0234
+        },
+        {
+          "key": "cool_stuff",
+          "field": "avg_review",
+          "expected": 4.17,
+          "actual": 4.15,
+          "delta": -0.02,
+          "ratio": 0.9952
+        },
+        {
+          "key": "costruction_tools_garden",
+          "field": "units_sold",
+          "expected": 234,
+          "actual": 238,
+          "delta": 4,
+          "ratio": 1.0171
+        },
+        {
+          "key": "costruction_tools_garden",
+          "field": "revenue",
+          "expected": 25552.18,
+          "actual": 25715.89,
+          "delta": 163.71,
+          "ratio": 1.0064
+        },
+        {
+          "key": "costruction_tools_garden",
+          "field": "avg_review",
+          "expected": 4.22,
+          "actual": 4.19,
+          "delta": -0.03,
+          "ratio": 0.9929
+        },
+        {
+          "key": "diapers_and_hygiene",
+          "field": "units_sold",
+          "expected": 38,
+          "actual": 39,
+          "delta": 1,
+          "ratio": 1.0263
+        },
+        {
+          "key": "diapers_and_hygiene",
+          "field": "revenue",
+          "expected": 1538.79,
+          "actual": 1567.59,
+          "delta": 28.8,
+          "ratio": 1.0187
+        },
+        {
+          "key": "diapers_and_hygiene",
+          "field": "avg_review",
+          "expected": 3.85,
+          "actual": 3.74,
+          "delta": -0.11,
+          "ratio": 0.9714
+        },
+        {
+          "key": "drinks",
+          "field": "units_sold",
+          "expected": 378,
+          "actual": 379,
+          "delta": 1,
+          "ratio": 1.0026
+        },
+        {
+          "key": "drinks",
+          "field": "revenue",
+          "expected": 22378.71,
+          "actual": 22428.7,
+          "delta": 49.99,
+          "ratio": 1.0022
+        },
+        {
+          "key": "drinks",
+          "field": "avg_review",
+          "expected": 4.16,
+          "actual": 4.15,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "dvds_blu_ray",
+          "field": "units_sold",
+          "expected": 62,
+          "actual": 64,
+          "delta": 2,
+          "ratio": 1.0323
+        },
+        {
+          "key": "dvds_blu_ray",
+          "field": "revenue",
+          "expected": 4559.49,
+          "actual": 5999.39,
+          "delta": 1439.9,
+          "ratio": 1.3158
+        },
+        {
+          "key": "dvds_blu_ray",
+          "field": "avg_review",
+          "expected": 4.14,
+          "actual": 4.03,
+          "delta": -0.11,
+          "ratio": 0.9734
+        },
+        {
+          "key": "electronics",
+          "field": "units_sold",
+          "expected": 2755,
+          "actual": 2767,
+          "delta": 12,
+          "ratio": 1.0044
+        },
+        {
+          "key": "electronics",
+          "field": "revenue",
+          "expected": 157079.54,
+          "actual": 160246.74,
+          "delta": 3167.2,
+          "ratio": 1.0202
+        },
+        {
+          "key": "electronics",
+          "field": "avg_review",
+          "expected": 4.09,
+          "actual": 4.08,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "fashio_female_clothing",
+          "field": "avg_review",
+          "expected": 3.69,
+          "actual": 3.7,
+          "delta": 0.01,
+          "ratio": 1.0027
+        },
+        {
+          "key": "fashion_bags_accessories",
+          "field": "units_sold",
+          "expected": 2025,
+          "actual": 2031,
+          "delta": 6,
+          "ratio": 1.003
+        },
+        {
+          "key": "fashion_bags_accessories",
+          "field": "revenue",
+          "expected": 151622.75,
+          "actual": 152823.54,
+          "delta": 1200.79,
+          "ratio": 1.0079
+        },
+        {
+          "key": "fashion_bags_accessories",
+          "field": "avg_review",
+          "expected": 4.18,
+          "actual": 4.17,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "fashion_male_clothing",
+          "field": "units_sold",
+          "expected": 131,
+          "actual": 132,
+          "delta": 1,
+          "ratio": 1.0076
+        },
+        {
+          "key": "fashion_male_clothing",
+          "field": "revenue",
+          "expected": 10748.82,
+          "actual": 10797.82,
+          "delta": 49.0,
+          "ratio": 1.0046
+        },
+        {
+          "key": "fashion_male_clothing",
+          "field": "avg_review",
+          "expected": 3.7,
+          "actual": 3.68,
+          "delta": -0.02,
+          "ratio": 0.9946
+        },
+        {
+          "key": "fashion_shoes",
+          "field": "units_sold",
+          "expected": 260,
+          "actual": 262,
+          "delta": 2,
+          "ratio": 1.0077
+        },
+        {
+          "key": "fashion_shoes",
+          "field": "revenue",
+          "expected": 23352.88,
+          "actual": 23562.77,
+          "delta": 209.89,
+          "ratio": 1.009
+        },
+        {
+          "key": "fashion_shoes",
+          "field": "avg_review",
+          "expected": 4.2,
+          "actual": 4.17,
+          "delta": -0.03,
+          "ratio": 0.9929
+        },
+        {
+          "key": "fixed_telephony",
+          "field": "units_sold",
+          "expected": 261,
+          "actual": 264,
+          "delta": 3,
+          "ratio": 1.0115
+        },
+        {
+          "key": "fixed_telephony",
+          "field": "revenue",
+          "expected": 57824.21,
+          "actual": 59583.0,
+          "delta": 1758.79,
+          "ratio": 1.0304
+        },
+        {
+          "key": "fixed_telephony",
+          "field": "avg_review",
+          "expected": 3.93,
+          "actual": 3.88,
+          "delta": -0.05,
+          "ratio": 0.9873
+        },
+        {
+          "key": "food",
+          "field": "units_sold",
+          "expected": 509,
+          "actual": 510,
+          "delta": 1,
+          "ratio": 1.002
+        },
+        {
+          "key": "food",
+          "field": "revenue",
+          "expected": 29243.51,
+          "actual": 29393.41,
+          "delta": 149.9,
+          "ratio": 1.0051
+        },
+        {
+          "key": "food",
+          "field": "avg_review",
+          "expected": 4.26,
+          "actual": 4.25,
+          "delta": -0.01,
+          "ratio": 0.9977
+        },
+        {
+          "key": "food_drink",
+          "field": "units_sold",
+          "expected": 276,
+          "actual": 278,
+          "delta": 2,
+          "ratio": 1.0072
+        },
+        {
+          "key": "food_drink",
+          "field": "revenue",
+          "expected": 15119.48,
+          "actual": 15179.48,
+          "delta": 60.0,
+          "ratio": 1.004
+        },
+        {
+          "key": "food_drink",
+          "field": "avg_review",
+          "expected": 4.4,
+          "actual": 4.37,
+          "delta": -0.03,
+          "ratio": 0.9932
+        },
+        {
+          "key": "furniture_decor",
+          "field": "units_sold",
+          "expected": 8298,
+          "actual": 8334,
+          "delta": 36,
+          "ratio": 1.0043
+        },
+        {
+          "key": "furniture_decor",
+          "field": "revenue",
+          "expected": 727465.05,
+          "actual": 729762.49,
+          "delta": 2297.44,
+          "ratio": 1.0032
+        },
+        {
+          "key": "furniture_decor",
+          "field": "avg_review",
+          "expected": 4.01,
+          "actual": 3.99,
+          "delta": -0.02,
+          "ratio": 0.995
+        },
+        {
+          "key": "furniture_living_room",
+          "field": "units_sold",
+          "expected": 501,
+          "actual": 503,
+          "delta": 2,
+          "ratio": 1.004
+        },
+        {
+          "key": "furniture_living_room",
+          "field": "revenue",
+          "expected": 68638.56,
+          "actual": 68916.56,
+          "delta": 278.0,
+          "ratio": 1.0041
+        },
+        {
+          "key": "furniture_living_room",
+          "field": "avg_review",
+          "expected": 4.01,
+          "actual": 4.0,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "garden_tools",
+          "field": "units_sold",
+          "expected": 4328,
+          "actual": 4347,
+          "delta": 19,
+          "ratio": 1.0044
+        },
+        {
+          "key": "garden_tools",
+          "field": "revenue",
+          "expected": 481009.94,
+          "actual": 485256.46,
+          "delta": 4246.52,
+          "ratio": 1.0088
+        },
+        {
+          "key": "garden_tools",
+          "field": "avg_review",
+          "expected": 4.13,
+          "actual": 4.12,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "health_beauty",
+          "field": "units_sold",
+          "expected": 9634,
+          "actual": 9670,
+          "delta": 36,
+          "ratio": 1.0037
+        },
+        {
+          "key": "health_beauty",
+          "field": "revenue",
+          "expected": 1255695.13,
+          "actual": 1258681.34,
+          "delta": 2986.21,
+          "ratio": 1.0024
+        },
+        {
+          "key": "health_beauty",
+          "field": "avg_review",
+          "expected": 4.17,
+          "actual": 4.16,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "home_appliances",
+          "field": "units_sold",
+          "expected": 769,
+          "actual": 771,
+          "delta": 2,
+          "ratio": 1.0026
+        },
+        {
+          "key": "home_appliances",
+          "field": "revenue",
+          "expected": 80001.24,
+          "actual": 80171.53,
+          "delta": 170.29,
+          "ratio": 1.0021
+        },
+        {
+          "key": "home_appliances",
+          "field": "avg_review",
+          "expected": 4.15,
+          "actual": 4.14,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "home_appliances_2",
+          "field": "units_sold",
+          "expected": 235,
+          "actual": 238,
+          "delta": 3,
+          "ratio": 1.0128
+        },
+        {
+          "key": "home_appliances_2",
+          "field": "revenue",
+          "expected": 110649.74,
+          "actual": 113317.74,
+          "delta": 2668.0,
+          "ratio": 1.0241
+        },
+        {
+          "key": "home_appliances_2",
+          "field": "avg_review",
+          "expected": 4.15,
+          "actual": 4.12,
+          "delta": -0.03,
+          "ratio": 0.9928
+        },
+        {
+          "key": "home_confort",
+          "field": "avg_review",
+          "expected": 3.86,
+          "actual": 3.85,
+          "delta": -0.01,
+          "ratio": 0.9974
+        },
+        {
+          "key": "home_construction",
+          "field": "units_sold",
+          "expected": 603,
+          "actual": 604,
+          "delta": 1,
+          "ratio": 1.0017
+        },
+        {
+          "key": "home_construction",
+          "field": "revenue",
+          "expected": 83010.12,
+          "actual": 83088.12,
+          "delta": 78.0,
+          "ratio": 1.0009
+        },
+        {
+          "key": "home_construction",
+          "field": "avg_review",
+          "expected": 3.96,
+          "actual": 3.97,
+          "delta": 0.01,
+          "ratio": 1.0025
+        },
+        {
+          "key": "housewares",
+          "field": "units_sold",
+          "expected": 6915,
+          "actual": 6964,
+          "delta": 49,
+          "ratio": 1.0071
+        },
+        {
+          "key": "housewares",
+          "field": "revenue",
+          "expected": 626825.8,
+          "actual": 632248.66,
+          "delta": 5422.86,
+          "ratio": 1.0087
+        },
+        {
+          "key": "housewares",
+          "field": "avg_review",
+          "expected": 4.14,
+          "actual": 4.12,
+          "delta": -0.02,
+          "ratio": 0.9952
+        },
+        {
+          "key": "kitchen_dining_laundry_garden_furniture",
+          "field": "units_sold",
+          "expected": 279,
+          "actual": 281,
+          "delta": 2,
+          "ratio": 1.0072
+        },
+        {
+          "key": "kitchen_dining_laundry_garden_furniture",
+          "field": "revenue",
+          "expected": 46070.37,
+          "actual": 46328.37,
+          "delta": 258.0,
+          "ratio": 1.0056
+        },
+        {
+          "key": "kitchen_dining_laundry_garden_furniture",
+          "field": "avg_review",
+          "expected": 4.05,
+          "actual": 4.03,
+          "delta": -0.02,
+          "ratio": 0.9951
+        },
+        {
+          "key": "luggage_accessories",
+          "field": "units_sold",
+          "expected": 1088,
+          "actual": 1092,
+          "delta": 4,
+          "ratio": 1.0037
+        },
+        {
+          "key": "luggage_accessories",
+          "field": "revenue",
+          "expected": 140111.38,
+          "actual": 140429.98,
+          "delta": 318.6,
+          "ratio": 1.0023
+        },
+        {
+          "key": "luggage_accessories",
+          "field": "avg_review",
+          "expected": 4.34,
+          "actual": 4.32,
+          "delta": -0.02,
+          "ratio": 0.9954
+        },
+        {
+          "key": "market_place",
+          "field": "units_sold",
+          "expected": 310,
+          "actual": 311,
+          "delta": 1,
+          "ratio": 1.0032
+        },
+        {
+          "key": "market_place",
+          "field": "revenue",
+          "expected": 28288.47,
+          "actual": 28378.47,
+          "delta": 90.0,
+          "ratio": 1.0032
+        },
+        {
+          "key": "market_place",
+          "field": "avg_review",
+          "expected": 4.02,
+          "actual": 4.01,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "musical_instruments",
+          "field": "units_sold",
+          "expected": 669,
+          "actual": 680,
+          "delta": 11,
+          "ratio": 1.0164
+        },
+        {
+          "key": "musical_instruments",
+          "field": "revenue",
+          "expected": 187788.44,
+          "actual": 191498.88,
+          "delta": 3710.44,
+          "ratio": 1.0198
+        },
+        {
+          "key": "musical_instruments",
+          "field": "avg_review",
+          "expected": 4.19,
+          "actual": 4.16,
+          "delta": -0.03,
+          "ratio": 0.9928
+        },
+        {
+          "key": "office_furniture",
+          "field": "units_sold",
+          "expected": 1690,
+          "actual": 1691,
+          "delta": 1,
+          "ratio": 1.0006
+        },
+        {
+          "key": "office_furniture",
+          "field": "revenue",
+          "expected": 273580.7,
+          "actual": 273960.7,
+          "delta": 380.0,
+          "ratio": 1.0014
+        },
+        {
+          "key": "pc_gamer",
+          "field": "units_sold",
+          "expected": 8,
+          "actual": 9,
+          "delta": 1,
+          "ratio": 1.125
+        },
+        {
+          "key": "pc_gamer",
+          "field": "revenue",
+          "expected": 1306.95,
+          "actual": 1545.95,
+          "delta": 239.0,
+          "ratio": 1.1829
+        },
+        {
+          "key": "pc_gamer",
+          "field": "avg_review",
+          "expected": 3.43,
+          "actual": 3.13,
+          "delta": -0.3,
+          "ratio": 0.9125
+        },
+        {
+          "key": "perfumery",
+          "field": "units_sold",
+          "expected": 3402,
+          "actual": 3419,
+          "delta": 17,
+          "ratio": 1.005
+        },
+        {
+          "key": "perfumery",
+          "field": "revenue",
+          "expected": 396599.31,
+          "actual": 399124.87,
+          "delta": 2525.56,
+          "ratio": 1.0064
+        },
+        {
+          "key": "perfumery",
+          "field": "avg_review",
+          "expected": 4.21,
+          "actual": 4.2,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "pet_shop",
+          "field": "units_sold",
+          "expected": 1942,
+          "actual": 1947,
+          "delta": 5,
+          "ratio": 1.0026
+        },
+        {
+          "key": "pet_shop",
+          "field": "revenue",
+          "expected": 213766.63,
+          "actual": 214315.41,
+          "delta": 548.78,
+          "ratio": 1.0026
+        },
+        {
+          "key": "pet_shop",
+          "field": "avg_review",
+          "expected": 4.24,
+          "actual": 4.23,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "portateis_cozinha_e_preparadores_de_alimentos",
+          "field": "units_sold",
+          "expected": 14,
+          "actual": 15,
+          "delta": 1,
+          "ratio": 1.0714
+        },
+        {
+          "key": "portateis_cozinha_e_preparadores_de_alimentos",
+          "field": "revenue",
+          "expected": 3933.63,
+          "actual": 3968.53,
+          "delta": 34.9,
+          "ratio": 1.0089
+        },
+        {
+          "key": "portateis_cozinha_e_preparadores_de_alimentos",
+          "field": "avg_review",
+          "expected": 3.62,
+          "actual": 3.43,
+          "delta": -0.19,
+          "ratio": 0.9475
+        },
+        {
+          "key": "small_appliances",
+          "field": "units_sold",
+          "expected": 671,
+          "actual": 679,
+          "delta": 8,
+          "ratio": 1.0119
+        },
+        {
+          "key": "small_appliances",
+          "field": "revenue",
+          "expected": 187907.26,
+          "actual": 190648.58,
+          "delta": 2741.32,
+          "ratio": 1.0146
+        },
+        {
+          "key": "small_appliances",
+          "field": "avg_review",
+          "expected": 4.18,
+          "actual": 4.15,
+          "delta": -0.03,
+          "ratio": 0.9928
+        },
+        {
+          "key": "sports_leisure",
+          "field": "units_sold",
+          "expected": 8590,
+          "actual": 8641,
+          "delta": 51,
+          "ratio": 1.0059
+        },
+        {
+          "key": "sports_leisure",
+          "field": "revenue",
+          "expected": 979740.92,
+          "actual": 988048.97,
+          "delta": 8308.05,
+          "ratio": 1.0085
+        },
+        {
+          "key": "sports_leisure",
+          "field": "avg_review",
+          "expected": 4.17,
+          "actual": 4.15,
+          "delta": -0.02,
+          "ratio": 0.9952
+        },
+        {
+          "key": "stationery",
+          "field": "units_sold",
+          "expected": 2505,
+          "actual": 2517,
+          "delta": 12,
+          "ratio": 1.0048
+        },
+        {
+          "key": "stationery",
+          "field": "revenue",
+          "expected": 229593.84,
+          "actual": 230943.23,
+          "delta": 1349.39,
+          "ratio": 1.0059
+        },
+        {
+          "key": "stationery",
+          "field": "avg_review",
+          "expected": 4.25,
+          "actual": 4.23,
+          "delta": -0.02,
+          "ratio": 0.9953
+        },
+        {
+          "key": "telephony",
+          "field": "units_sold",
+          "expected": 4527,
+          "actual": 4545,
+          "delta": 18,
+          "ratio": 1.004
+        },
+        {
+          "key": "telephony",
+          "field": "revenue",
+          "expected": 322342.64,
+          "actual": 323667.53,
+          "delta": 1324.89,
+          "ratio": 1.0041
+        },
+        {
+          "key": "telephony",
+          "field": "avg_review",
+          "expected": 4.0,
+          "actual": 3.99,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "toys",
+          "field": "units_sold",
+          "expected": 4083,
+          "actual": 4117,
+          "delta": 34,
+          "ratio": 1.0083
+        },
+        {
+          "key": "toys",
+          "field": "revenue",
+          "expected": 479808.54,
+          "actual": 483946.6,
+          "delta": 4138.06,
+          "ratio": 1.0086
+        },
+        {
+          "key": "toys",
+          "field": "avg_review",
+          "expected": 4.19,
+          "actual": 4.17,
+          "delta": -0.02,
+          "ratio": 0.9952
+        },
+        {
+          "key": "uncategorised",
+          "field": "units_sold",
+          "expected": 1589,
+          "actual": 1603,
+          "delta": 14,
+          "ratio": 1.0088
+        },
+        {
+          "key": "uncategorised",
+          "field": "revenue",
+          "expected": 178572.55,
+          "actual": 179535.28,
+          "delta": 962.73,
+          "ratio": 1.0054
+        },
+        {
+          "key": "uncategorised",
+          "field": "avg_review",
+          "expected": 3.91,
+          "actual": 3.89,
+          "delta": -0.02,
+          "ratio": 0.9949
+        },
+        {
+          "key": "watches_gifts",
+          "field": "units_sold",
+          "expected": 5970,
+          "actual": 5991,
+          "delta": 21,
+          "ratio": 1.0035
+        },
+        {
+          "key": "watches_gifts",
+          "field": "revenue",
+          "expected": 1198185.21,
+          "actual": 1205005.68,
+          "delta": 6820.47,
+          "ratio": 1.0057
+        },
+        {
+          "key": "watches_gifts",
+          "field": "avg_review",
+          "expected": 4.06,
+          "actual": 4.05,
+          "delta": -0.01,
+          "ratio": 0.9975
+        }
+      ],
+      "seconds": 0.74
+    },
+    {
+      "id": "sellers-top-revenue",
+      "kind": "question",
+      "title": "Top 20 sellers by item revenue (at least 50 orders)",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "avg_review",
+        "avg_days_late"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "revenue",
+        "min_orders": 50,
+        "limit": 20
+      },
+      "expected": {
+        "rows": 20
+      },
+      "actual": {
+        "rows": 20
+      },
+      "diffs": [
+        {
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "field": "orders",
+          "expected": 1131,
+          "actual": 1132,
+          "delta": 1,
+          "ratio": 1.0009
+        },
+        {
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "field": "revenue",
+          "expected": 229237.63,
+          "actual": 229472.63,
+          "delta": 235.0,
+          "ratio": 1.001
+        },
+        {
+          "key": "4869f7a5dfa277a7dca6462dcf3b52b2",
+          "field": "avg_review",
+          "expected": 4.13,
+          "actual": 4.12,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "orders",
+          "expected": 1804,
+          "actual": 1806,
+          "delta": 2,
+          "ratio": 1.0011
+        },
+        {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "revenue",
+          "expected": 200326.12,
+          "actual": 200472.92,
+          "delta": 146.8,
+          "ratio": 1.0007
+        },
+        {
+          "key": "4a3ca9315b744ce9f8e9374361493884",
+          "field": "avg_review",
+          "expected": 3.81,
+          "actual": 3.8,
+          "delta": -0.01,
+          "ratio": 0.9974
+        },
+        {
+          "key": "fa1c13f2614d7b5c4749cbc52fecda94",
+          "field": "orders",
+          "expected": 584,
+          "actual": 585,
+          "delta": 1,
+          "ratio": 1.0017
+        },
+        {
+          "key": "fa1c13f2614d7b5c4749cbc52fecda94",
+          "field": "revenue",
+          "expected": 192842.13,
+          "actual": 194042.03,
+          "delta": 1199.9,
+          "ratio": 1.0062
+        },
+        {
+          "key": "7e93a43ef30c4f03f38b393420bc753a",
+          "field": "orders",
+          "expected": 332,
+          "actual": 336,
+          "delta": 4,
+          "ratio": 1.012
+        },
+        {
+          "key": "7e93a43ef30c4f03f38b393420bc753a",
+          "field": "revenue",
+          "expected": 172583.88,
+          "actual": 176431.87,
+          "delta": 3847.99,
+          "ratio": 1.0223
+        },
+        {
+          "key": "7e93a43ef30c4f03f38b393420bc753a",
+          "field": "avg_review",
+          "expected": 4.24,
+          "actual": 4.21,
+          "delta": -0.03,
+          "ratio": 0.9929
+        },
+        {
+          "key": "7a67c85e85bb2ce8582c35f2203ad736",
+          "field": "orders",
+          "expected": 1159,
+          "actual": 1160,
+          "delta": 1,
+          "ratio": 1.0009
+        },
+        {
+          "key": "7a67c85e85bb2ce8582c35f2203ad736",
+          "field": "revenue",
+          "expected": 141715.54,
+          "actual": 141745.53,
+          "delta": 29.99,
+          "ratio": 1.0002
+        },
+        {
+          "key": "7a67c85e85bb2ce8582c35f2203ad736",
+          "field": "avg_review",
+          "expected": 4.23,
+          "actual": 4.22,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "955fee9216a65b617aa5c0531780ce60",
+          "field": "orders",
+          "expected": 1286,
+          "actual": 1287,
+          "delta": 1,
+          "ratio": 1.0008
+        },
+        {
+          "key": "955fee9216a65b617aa5c0531780ce60",
+          "field": "revenue",
+          "expected": 135159.7,
+          "actual": 135171.7,
+          "delta": 12.0,
+          "ratio": 1.0001
+        },
+        {
+          "key": "955fee9216a65b617aa5c0531780ce60",
+          "field": "avg_review",
+          "expected": 4.15,
+          "actual": 4.14,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "46dc3b2cc0980fb8ec44634e21d2718e",
+          "field": "orders",
+          "expected": 518,
+          "actual": 521,
+          "delta": 3,
+          "ratio": 1.0058
+        },
+        {
+          "key": "46dc3b2cc0980fb8ec44634e21d2718e",
+          "field": "revenue",
+          "expected": 127161.22,
+          "actual": 128111.19,
+          "delta": 949.97,
+          "ratio": 1.0075
+        },
+        {
+          "key": "46dc3b2cc0980fb8ec44634e21d2718e",
+          "field": "avg_review",
+          "expected": 4.18,
+          "actual": 4.17,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "46dc3b2cc0980fb8ec44634e21d2718e",
+          "field": "avg_days_late",
+          "expected": -11.2,
+          "actual": -11.3,
+          "delta": -0.1,
+          "ratio": 1.0089
+        },
+        {
+          "key": "6560211a19b47992c3666cc44a7e94c0",
+          "field": "orders",
+          "expected": 1847,
+          "actual": 1854,
+          "delta": 7,
+          "ratio": 1.0038
+        },
+        {
+          "key": "6560211a19b47992c3666cc44a7e94c0",
+          "field": "revenue",
+          "expected": 122776.83,
+          "actual": 123304.83,
+          "delta": 528.0,
+          "ratio": 1.0043
+        },
+        {
+          "key": "6560211a19b47992c3666cc44a7e94c0",
+          "field": "avg_review",
+          "expected": 3.93,
+          "actual": 3.92,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "620c87c171fb2a6dd6e8bb4dec959fc6",
+          "field": "orders",
+          "expected": 732,
+          "actual": 740,
+          "delta": 8,
+          "ratio": 1.0109
+        },
+        {
+          "key": "620c87c171fb2a6dd6e8bb4dec959fc6",
+          "field": "revenue",
+          "expected": 113659.4,
+          "actual": 114774.5,
+          "delta": 1115.1,
+          "ratio": 1.0098
+        },
+        {
+          "key": "620c87c171fb2a6dd6e8bb4dec959fc6",
+          "field": "avg_review",
+          "expected": 4.26,
+          "actual": 4.24,
+          "delta": -0.02,
+          "ratio": 0.9953
+        },
+        {
+          "key": "620c87c171fb2a6dd6e8bb4dec959fc6",
+          "field": "avg_days_late",
+          "expected": -12.9,
+          "actual": -13.0,
+          "delta": -0.1,
+          "ratio": 1.0078
+        },
+        {
+          "key": "5dceca129747e92ff8ef7a997dc4f8ca",
+          "field": "orders",
+          "expected": 324,
+          "actual": 325,
+          "delta": 1,
+          "ratio": 1.0031
+        },
+        {
+          "key": "5dceca129747e92ff8ef7a997dc4f8ca",
+          "field": "revenue",
+          "expected": 112085.63,
+          "actual": 112155.53,
+          "delta": 69.9,
+          "ratio": 1.0006
+        },
+        {
+          "key": "5dceca129747e92ff8ef7a997dc4f8ca",
+          "field": "avg_review",
+          "expected": 3.98,
+          "actual": 3.97,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "orders",
+          "expected": 1403,
+          "actual": 1404,
+          "delta": 1,
+          "ratio": 1.0007
+        },
+        {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "revenue",
+          "expected": 106889.31,
+          "actual": 106939.21,
+          "delta": 49.9,
+          "ratio": 1.0005
+        },
+        {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "avg_review",
+          "expected": 4.13,
+          "actual": 4.12,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "avg_days_late",
+          "expected": -9.5,
+          "actual": -9.4,
+          "delta": 0.1,
+          "ratio": 0.9895
+        },
+        {
+          "key": "cc419e0650a3c5ba77189a1882b7556a",
+          "field": "orders",
+          "expected": 1697,
+          "actual": 1706,
+          "delta": 9,
+          "ratio": 1.0053
+        },
+        {
+          "key": "cc419e0650a3c5ba77189a1882b7556a",
+          "field": "revenue",
+          "expected": 103634.51,
+          "actual": 104288.42,
+          "delta": 653.91,
+          "ratio": 1.0063
+        },
+        {
+          "key": "cc419e0650a3c5ba77189a1882b7556a",
+          "field": "avg_review",
+          "expected": 4.08,
+          "actual": 4.06,
+          "delta": -0.02,
+          "ratio": 0.9951
+        },
+        {
+          "key": "a1043bafd471dff536d0c462352beb48",
+          "field": "orders",
+          "expected": 715,
+          "actual": 718,
+          "delta": 3,
+          "ratio": 1.0042
+        },
+        {
+          "key": "a1043bafd471dff536d0c462352beb48",
+          "field": "revenue",
+          "expected": 101483.16,
+          "actual": 101901.16,
+          "delta": 418.0,
+          "ratio": 1.0041
+        },
+        {
+          "key": "a1043bafd471dff536d0c462352beb48",
+          "field": "avg_review",
+          "expected": 4.23,
+          "actual": 4.21,
+          "delta": -0.02,
+          "ratio": 0.9953
+        },
+        {
+          "key": "3d871de0142ce09b7081e2b9d1733cb1",
+          "field": "orders",
+          "expected": 1076,
+          "actual": 1080,
+          "delta": 4,
+          "ratio": 1.0037
+        },
+        {
+          "key": "3d871de0142ce09b7081e2b9d1733cb1",
+          "field": "revenue",
+          "expected": 94508.2,
+          "actual": 94914.2,
+          "delta": 406.0,
+          "ratio": 1.0043
+        }
+      ],
+      "seconds": 0.637
+    },
+    {
+      "id": "sellers-worst-reviewed",
+      "kind": "question",
+      "title": "The 10 worst-reviewed sellers (at least 100 orders)",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "item_revenue",
+        "avg_review",
+        "avg_days_late"
+      ],
+      "tool": "seller_performance",
+      "arguments": {
+        "sort": "avg_review",
+        "min_orders": 100,
+        "limit": 10
+      },
+      "expected": {
+        "rows": 10
+      },
+      "actual": {
+        "rows": 10
+      },
+      "diffs": [
+        {
+          "key": "(ranking)",
+          "field": "avg_review",
+          "expected": [
+            "1ca7077d890b907f89be8c954a02686a",
+            "2eb70248d66e0e3ef83659f71b244378",
+            "710e3548e02bc1d2831dfc4f1b5b14d4",
+            "88460e8ebdecbfecb5f9601833981930",
+            "b2479f944e1b90cf8a5de1bbfde284d6",
+            "18a349e75d307f4b4cc646a691ed4216",
+            "7c67e1448b00f6e969d365cea6b010ab",
+            "229c3efbfb0ea2058de4ccdfbc3d784a",
+            "897060da8b9a21f655304d50fd935913",
+            "1835b56ce799e6a4dc4eddc053f04066"
+          ],
+          "actual": [
+            "1ca7077d890b907f89be8c954a02686a",
+            "2eb70248d66e0e3ef83659f71b244378",
+            "710e3548e02bc1d2831dfc4f1b5b14d4",
+            "88460e8ebdecbfecb5f9601833981930",
+            "18a349e75d307f4b4cc646a691ed4216",
+            "b2479f944e1b90cf8a5de1bbfde284d6",
+            "7c67e1448b00f6e969d365cea6b010ab",
+            "7040e82f899a04d1b434b795a43b4617",
+            "229c3efbfb0ea2058de4ccdfbc3d784a",
+            "897060da8b9a21f655304d50fd935913"
+          ]
+        },
+        {
+          "key": "2eb70248d66e0e3ef83659f71b244378",
+          "field": "avg_days_late",
+          "expected": -9.2,
+          "actual": -9.1,
+          "delta": 0.1,
+          "ratio": 0.9891
+        },
+        {
+          "key": "88460e8ebdecbfecb5f9601833981930",
+          "field": "orders",
+          "expected": 247,
+          "actual": 248,
+          "delta": 1,
+          "ratio": 1.004
+        },
+        {
+          "key": "88460e8ebdecbfecb5f9601833981930",
+          "field": "revenue",
+          "expected": 31396.65,
+          "actual": 31546.55,
+          "delta": 149.9,
+          "ratio": 1.0048
+        },
+        {
+          "key": "88460e8ebdecbfecb5f9601833981930",
+          "field": "avg_review",
+          "expected": 3.41,
+          "actual": 3.4,
+          "delta": -0.01,
+          "ratio": 0.9971
+        },
+        {
+          "key": "88460e8ebdecbfecb5f9601833981930",
+          "field": "avg_days_late",
+          "expected": -10.3,
+          "actual": -10.2,
+          "delta": 0.1,
+          "ratio": 0.9903
+        },
+        {
+          "key": "b2479f944e1b90cf8a5de1bbfde284d6",
+          "field": "orders",
+          "expected": 102,
+          "actual": 103,
+          "delta": 1,
+          "ratio": 1.0098
+        },
+        {
+          "key": "b2479f944e1b90cf8a5de1bbfde284d6",
+          "field": "revenue",
+          "expected": 4716.52,
+          "actual": 4752.51,
+          "delta": 35.99,
+          "ratio": 1.0076
+        },
+        {
+          "key": "b2479f944e1b90cf8a5de1bbfde284d6",
+          "field": "avg_review",
+          "expected": 3.46,
+          "actual": 3.45,
+          "delta": -0.01,
+          "ratio": 0.9971
+        },
+        {
+          "key": "b2479f944e1b90cf8a5de1bbfde284d6",
+          "field": "avg_days_late",
+          "expected": -7.3,
+          "actual": -7.4,
+          "delta": -0.1,
+          "ratio": 1.0137
+        },
+        {
+          "key": "18a349e75d307f4b4cc646a691ed4216",
+          "field": "orders",
+          "expected": 119,
+          "actual": 121,
+          "delta": 2,
+          "ratio": 1.0168
+        },
+        {
+          "key": "18a349e75d307f4b4cc646a691ed4216",
+          "field": "revenue",
+          "expected": 8631.03,
+          "actual": 8711.53,
+          "delta": 80.5,
+          "ratio": 1.0093
+        },
+        {
+          "key": "18a349e75d307f4b4cc646a691ed4216",
+          "field": "avg_review",
+          "expected": 3.47,
+          "actual": 3.43,
+          "delta": -0.04,
+          "ratio": 0.9885
+        },
+        {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "orders",
+          "expected": 316,
+          "actual": 317,
+          "delta": 1,
+          "ratio": 1.0032
+        },
+        {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "revenue",
+          "expected": 22723.92,
+          "actual": 23023.92,
+          "delta": 300.0,
+          "ratio": 1.0132
+        },
+        {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "avg_review",
+          "expected": 3.61,
+          "actual": 3.6,
+          "delta": -0.01,
+          "ratio": 0.9972
+        },
+        {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "avg_days_late",
+          "expected": -8.9,
+          "actual": -9.0,
+          "delta": -0.1,
+          "ratio": 1.0112
+        }
+      ],
+      "seconds": 0.592
+    },
+    {
+      "id": "delivery-by-bucket",
+      "kind": "question",
+      "title": "Delivery lateness bands and their review scores",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "late_orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_delivery_days",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "expected": {
+        "rows": 4
+      },
+      "actual": {
+        "rows": 4
+      },
+      "diffs": [
+        {
+          "key": "1-3 days late",
+          "field": "orders",
+          "expected": 2544,
+          "actual": 2551,
+          "delta": 7,
+          "ratio": 1.0028
+        },
+        {
+          "key": "1-3 days late",
+          "field": "late_orders",
+          "expected": 2544,
+          "actual": 2551,
+          "delta": 7,
+          "ratio": 1.0028
+        },
+        {
+          "key": "1-3 days late",
+          "field": "avg_delivery_days",
+          "expected": 21.2,
+          "actual": 21.3,
+          "delta": 0.1,
+          "ratio": 1.0047
+        },
+        {
+          "key": "4-7 days late",
+          "field": "orders",
+          "expected": 1827,
+          "actual": 1828,
+          "delta": 1,
+          "ratio": 1.0005
+        },
+        {
+          "key": "4-7 days late",
+          "field": "late_orders",
+          "expected": 1827,
+          "actual": 1828,
+          "delta": 1,
+          "ratio": 1.0005
+        },
+        {
+          "key": "more than a week late",
+          "field": "orders",
+          "expected": 3274,
+          "actual": 3285,
+          "delta": 11,
+          "ratio": 1.0034
+        },
+        {
+          "key": "more than a week late",
+          "field": "late_orders",
+          "expected": 3274,
+          "actual": 3285,
+          "delta": 11,
+          "ratio": 1.0034
+        },
+        {
+          "key": "more than a week late",
+          "field": "avg_review",
+          "expected": 1.71,
+          "actual": 1.72,
+          "delta": 0.01,
+          "ratio": 1.0058
+        },
+        {
+          "key": "on time or early",
+          "field": "orders",
+          "expected": 88825,
+          "actual": 89008,
+          "delta": 183,
+          "ratio": 1.0021
+        }
+      ],
+      "seconds": 0.226
+    },
+    {
+      "id": "delivery-by-state",
+      "kind": "question",
+      "title": "Delivery performance by customer state",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "late_orders",
+        "late_rate",
+        "avg_days_late",
+        "avg_delivery_days",
+        "avg_review"
+      ],
+      "tool": "delivery_performance",
+      "arguments": {
+        "group_by": "state",
+        "min_orders": 1,
+        "limit": 50
+      },
+      "expected": {
+        "rows": 27
+      },
+      "actual": {
+        "rows": 27
+      },
+      "diffs": [
+        {
+          "key": "AL",
+          "field": "orders",
+          "expected": 397,
+          "actual": 398,
+          "delta": 1,
+          "ratio": 1.0025
+        },
+        {
+          "key": "AL",
+          "field": "late_rate",
+          "expected": 23.7,
+          "actual": 23.6,
+          "delta": -0.1,
+          "ratio": 0.9958
+        },
+        {
+          "key": "BA",
+          "field": "orders",
+          "expected": 3256,
+          "actual": 3264,
+          "delta": 8,
+          "ratio": 1.0025
+        },
+        {
+          "key": "BA",
+          "field": "late_orders",
+          "expected": 449,
+          "actual": 452,
+          "delta": 3,
+          "ratio": 1.0067
+        },
+        {
+          "key": "CE",
+          "field": "orders",
+          "expected": 1279,
+          "actual": 1281,
+          "delta": 2,
+          "ratio": 1.0016
+        },
+        {
+          "key": "CE",
+          "field": "avg_review",
+          "expected": 3.94,
+          "actual": 3.93,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "DF",
+          "field": "orders",
+          "expected": 2080,
+          "actual": 2087,
+          "delta": 7,
+          "ratio": 1.0034
+        },
+        {
+          "key": "DF",
+          "field": "late_orders",
+          "expected": 145,
+          "actual": 146,
+          "delta": 1,
+          "ratio": 1.0069
+        },
+        {
+          "key": "DF",
+          "field": "avg_review",
+          "expected": 4.13,
+          "actual": 4.12,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "ES",
+          "field": "orders",
+          "expected": 1995,
+          "actual": 1997,
+          "delta": 2,
+          "ratio": 1.001
+        },
+        {
+          "key": "ES",
+          "field": "late_orders",
+          "expected": 244,
+          "actual": 245,
+          "delta": 1,
+          "ratio": 1.0041
+        },
+        {
+          "key": "ES",
+          "field": "late_rate",
+          "expected": 12.2,
+          "actual": 12.3,
+          "delta": 0.1,
+          "ratio": 1.0082
+        },
+        {
+          "key": "GO",
+          "field": "orders",
+          "expected": 1957,
+          "actual": 1967,
+          "delta": 10,
+          "ratio": 1.0051
+        },
+        {
+          "key": "GO",
+          "field": "late_orders",
+          "expected": 156,
+          "actual": 157,
+          "delta": 1,
+          "ratio": 1.0064
+        },
+        {
+          "key": "MA",
+          "field": "orders",
+          "expected": 717,
+          "actual": 718,
+          "delta": 1,
+          "ratio": 1.0014
+        },
+        {
+          "key": "MA",
+          "field": "avg_days_late",
+          "expected": -8.7,
+          "actual": -8.8,
+          "delta": -0.1,
+          "ratio": 1.0115
+        },
+        {
+          "key": "MG",
+          "field": "orders",
+          "expected": 11354,
+          "actual": 11373,
+          "delta": 19,
+          "ratio": 1.0017
+        },
+        {
+          "key": "MG",
+          "field": "late_orders",
+          "expected": 619,
+          "actual": 621,
+          "delta": 2,
+          "ratio": 1.0032
+        },
+        {
+          "key": "MS",
+          "field": "orders",
+          "expected": 701,
+          "actual": 705,
+          "delta": 4,
+          "ratio": 1.0057
+        },
+        {
+          "key": "MS",
+          "field": "avg_delivery_days",
+          "expected": 15.5,
+          "actual": 15.6,
+          "delta": 0.1,
+          "ratio": 1.0065
+        },
+        {
+          "key": "MT",
+          "field": "orders",
+          "expected": 886,
+          "actual": 887,
+          "delta": 1,
+          "ratio": 1.0011
+        },
+        {
+          "key": "PA",
+          "field": "orders",
+          "expected": 946,
+          "actual": 949,
+          "delta": 3,
+          "ratio": 1.0032
+        },
+        {
+          "key": "PA",
+          "field": "late_rate",
+          "expected": 12.4,
+          "actual": 12.3,
+          "delta": -0.1,
+          "ratio": 0.9919
+        },
+        {
+          "key": "PE",
+          "field": "orders",
+          "expected": 1593,
+          "actual": 1598,
+          "delta": 5,
+          "ratio": 1.0031
+        },
+        {
+          "key": "PE",
+          "field": "late_rate",
+          "expected": 10.7,
+          "actual": 10.6,
+          "delta": -0.1,
+          "ratio": 0.9907
+        },
+        {
+          "key": "PR",
+          "field": "orders",
+          "expected": 4923,
+          "actual": 4930,
+          "delta": 7,
+          "ratio": 1.0014
+        },
+        {
+          "key": "RJ",
+          "field": "orders",
+          "expected": 12350,
+          "actual": 12389,
+          "delta": 39,
+          "ratio": 1.0032
+        },
+        {
+          "key": "RJ",
+          "field": "late_orders",
+          "expected": 1643,
+          "actual": 1648,
+          "delta": 5,
+          "ratio": 1.003
+        },
+        {
+          "key": "RJ",
+          "field": "avg_review",
+          "expected": 3.95,
+          "actual": 3.94,
+          "delta": -0.01,
+          "ratio": 0.9975
+        },
+        {
+          "key": "RN",
+          "field": "orders",
+          "expected": 474,
+          "actual": 475,
+          "delta": 1,
+          "ratio": 1.0021
+        },
+        {
+          "key": "RN",
+          "field": "late_rate",
+          "expected": 10.8,
+          "actual": 10.7,
+          "delta": -0.1,
+          "ratio": 0.9907
+        },
+        {
+          "key": "RS",
+          "field": "orders",
+          "expected": 5344,
+          "actual": 5357,
+          "delta": 13,
+          "ratio": 1.0024
+        },
+        {
+          "key": "RS",
+          "field": "late_orders",
+          "expected": 368,
+          "actual": 371,
+          "delta": 3,
+          "ratio": 1.0082
+        },
+        {
+          "key": "SC",
+          "field": "orders",
+          "expected": 3546,
+          "actual": 3551,
+          "delta": 5,
+          "ratio": 1.0014
+        },
+        {
+          "key": "SC",
+          "field": "avg_review",
+          "expected": 4.12,
+          "actual": 4.11,
+          "delta": -0.01,
+          "ratio": 0.9976
+        },
+        {
+          "key": "SP",
+          "field": "orders",
+          "expected": 40494,
+          "actual": 40568,
+          "delta": 74,
+          "ratio": 1.0018
+        },
+        {
+          "key": "SP",
+          "field": "late_orders",
+          "expected": 2305,
+          "actual": 2308,
+          "delta": 3,
+          "ratio": 1.0013
+        }
+      ],
+      "seconds": 0.205
+    },
+    {
+      "id": "search-all-placed",
+      "kind": "question",
+      "title": "How many orders are there?",
+      "status": "fail",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "expected": 99441,
+      "actual": 100000,
+      "diffs": [
+        {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 99441,
+          "actual": 100000,
+          "delta": 559,
+          "ratio": 1.0056
+        }
+      ],
+      "seconds": 0.05
+    },
+    {
+      "id": "search-rj-one-star",
+      "kind": "question",
+      "title": "How many Rio de Janeiro orders got a one-star review?",
+      "status": "fail",
+      "metrics": [
+        "total_matches"
+      ],
+      "tool": "search_orders",
+      "arguments": {
+        "customer_state": "RJ",
+        "max_review_score": 1
+      },
+      "expected": 2254,
+      "actual": 2272,
+      "diffs": [
+        {
+          "key": "total_matches",
+          "field": "total_matches",
+          "expected": 2254,
+          "actual": 2272,
+          "delta": 18,
+          "ratio": 1.008
+        }
+      ],
+      "seconds": 0.058
+    },
+    {
+      "id": "customer-with-multi-review-order",
+      "kind": "question",
+      "title": "Order count, lifetime value and review score for a customer with a twice-reviewed order",
+      "status": "fail",
+      "metrics": [
+        "orders",
+        "lifetime_value",
+        "avg_review"
+      ],
+      "tool": "find_customer",
+      "arguments": {
+        "email": "000bfa1d2f1a41876493be685390d6d3@olist.invalid"
+      },
+      "expected": {
+        "orders": 1,
+        "lifetime_value": 46.85,
+        "avg_review": 4.0
+      },
+      "actual": {
+        "orders": 2,
+        "lifetime_value": 93.7,
+        "avg_review": 4.5
+      },
+      "diffs": [
+        {
+          "key": "(record)",
+          "field": "orders",
+          "expected": 1,
+          "actual": 2,
+          "delta": 1,
+          "ratio": 2.0
+        },
+        {
+          "key": "(record)",
+          "field": "lifetime_value",
+          "expected": 46.85,
+          "actual": 93.7,
+          "delta": 46.85,
+          "ratio": 2.0
+        },
+        {
+          "key": "(record)",
+          "field": "avg_review",
+          "expected": 4.0,
+          "actual": 4.5,
+          "delta": 0.5,
+          "ratio": 1.125
+        }
+      ],
+      "seconds": 0.018
+    },
+    {
+      "id": "adjacent-date-windows-partition",
+      "kind": "invariant",
+      "title": "Adjacent date windows add up to the window that spans them",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 25
+      },
+      "seconds": 1.529
+    },
+    {
+      "id": "complete-listing-matches-count",
+      "kind": "invariant",
+      "title": "A one-page search lists exactly total_matches distinct orders",
+      "status": "fail",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 13,
+        "cases": 100
+      },
+      "diffs": [
+        {
+          "arguments": {
+            "from": "2017-05-06",
+            "to": "2017-05-06",
+            "limit": 50,
+            "customer_state": "SP"
+          },
+          "total_matches": 41,
+          "rows": 41,
+          "distinct": 40
+        },
+        {
+          "arguments": {
+            "from": "2017-12-10",
+            "to": "2017-12-10",
+            "limit": 50,
+            "customer_state": "RJ"
+          },
+          "total_matches": 34,
+          "rows": 34,
+          "distinct": 33
+        },
+        {
+          "arguments": {
+            "from": "2017-12-01",
+            "to": "2017-12-01",
+            "limit": 50,
+            "customer_state": "RJ"
+          },
+          "total_matches": 48,
+          "rows": 48,
+          "distinct": 47
+        },
+        {
+          "arguments": {
+            "from": "2018-03-12",
+            "to": "2018-03-12",
+            "limit": 50,
+            "customer_state": "RJ"
+          },
+          "total_matches": 38,
+          "rows": 38,
+          "distinct": 36
+        },
+        {
+          "arguments": {
+            "from": "2017-07-22",
+            "to": "2017-07-22",
+            "limit": 50,
+            "customer_state": "SP"
+          },
+          "total_matches": 38,
+          "rows": 38,
+          "distinct": 35
+        },
+        {
+          "arguments": {
+            "from": "2018-01-18",
+            "to": "2018-01-18",
+            "limit": 50,
+            "customer_state": "RJ"
+          },
+          "total_matches": 36,
+          "rows": 36,
+          "distinct": 35
+        },
+        {
+          "arguments": {
+            "from": "2017-10-08",
+            "to": "2017-10-08",
+            "limit": 50,
+            "customer_state": "SP"
+          },
+          "total_matches": 49,
+          "rows": 49,
+          "distinct": 47
+        },
+        {
+          "arguments": {
+            "from": "2018-02-07",
+            "to": "2018-02-07",
+            "limit": 50,
+            "customer_state": "RJ"
+          },
+          "total_matches": 34,
+          "rows": 34,
+          "distinct": 33
+        },
+        {
+          "arguments": {
+            "from": "2017-01-21",
+            "to": "2017-01-21",
+            "limit": 50
+          },
+          "total_matches": 25,
+          "rows": 25,
+          "distinct": 24
+        },
+        {
+          "arguments": {
+            "from": "2017-02-14",
+            "to": "2017-02-14",
+            "limit": 50,
+            "customer_state": "SP"
+          },
+          "total_matches": 26,
+          "rows": 26,
+          "distinct": 25
+        }
+      ],
+      "seconds": 2.752
+    },
+    {
+      "id": "find-customer-exact-match",
+      "kind": "invariant",
+      "title": "A customer lookup resolves only an exact email",
+      "status": "fail",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 4,
+        "cases": 6
+      },
+      "diffs": [
+        {
+          "probe": "%",
+          "should_resolve": false,
+          "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+        },
+        {
+          "probe": "_",
+          "should_resolve": false,
+          "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+        },
+        {
+          "probe": "olist.invalid",
+          "should_resolve": false,
+          "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+        },
+        {
+          "probe": "861eff47",
+          "should_resolve": false,
+          "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+        }
+      ],
+      "seconds": 0.025
+    },
+    {
+      "id": "narrower-filter-never-counts-more",
+      "kind": "invariant",
+      "title": "Narrowing a date window never increases a count or a sum",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 25
+      },
+      "seconds": 4.051
+    },
+    {
+      "id": "overlapping-groups-not-additive",
+      "kind": "invariant",
+      "title": "Order counts are never summed across overlapping buckets (category, seller, payment method)",
+      "status": "fail",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 3,
+        "cases": 3
+      },
+      "diffs": [
+        {
+          "group_by": "category",
+          "claims": [
+            "structured totals.orders=97729",
+            "text states an order total"
+          ]
+        },
+        {
+          "group_by": "seller",
+          "claims": [
+            "structured totals.orders=28953",
+            "text states an order total"
+          ]
+        },
+        {
+          "group_by": "payment_method",
+          "claims": [
+            "structured totals.orders=100412",
+            "text states an order total"
+          ]
+        }
+      ],
+      "seconds": 1.012
+    },
+    {
+      "id": "partitions-sum-to-total",
+      "kind": "invariant",
+      "title": "Partitions of the same population agree on its total",
+      "status": "fail",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 1,
+        "cases": 3
+      },
+      "diffs": [
+        {
+          "comparison": "item revenue: list_categories vs revenue_report(month)",
+          "problem": "no tool reports this total",
+          "values": [
+            null,
+            13591643.7
+          ]
+        }
+      ],
+      "seconds": 0.851
+    },
+    {
+      "id": "same-metric-same-number",
+      "kind": "invariant",
+      "title": "Two tools reporting the same named metric agree",
+      "status": "fail",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 96,
+        "cases": 2
+      },
+      "diffs": [
+        {
+          "metric": "category item revenue",
+          "key": "Health Beauty",
+          "list_categories": 1258681.34,
+          "revenue_report": 1445137.23
+        },
+        {
+          "metric": "category item revenue",
+          "key": "Watches Gifts",
+          "list_categories": 1205005.68,
+          "revenue_report": 1303548.7
+        },
+        {
+          "metric": "category item revenue",
+          "key": "Bed Bath Table",
+          "list_categories": 1036988.68,
+          "revenue_report": 1263988.59
+        },
+        {
+          "metric": "category item revenue",
+          "key": "Sports Leisure",
+          "list_categories": 988048.97,
+          "revenue_report": 1156548.06
+        },
+        {
+          "metric": "category item revenue",
+          "key": "Computers Accessories",
+          "list_categories": 911954.32,
+          "revenue_report": 1057810.31
+        },
+        {
+          "metric": "category item revenue",
+          "key": "Furniture Decor",
+          "list_categories": 729762.49,
+          "revenue_report": 929190.19
+        }
+      ],
+      "seconds": 1.807
+    },
+    {
+      "id": "unique-keys",
+      "kind": "invariant",
+      "title": "Every grouped result has exactly one row per key",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 11
+      },
+      "seconds": 3.358
+    },
+    {
+      "id": "value-bounds",
+      "kind": "invariant",
+      "title": "Scores within 1-5, rates within 0-100, no negative counts or money",
+      "status": "pass",
+      "arguments": {
+        "seed": 20260928,
+        "cases": 25
+      },
+      "expected": {
+        "violations": 0
+      },
+      "actual": {
+        "violations": 0,
+        "cases": 410
+      },
+      "seconds": 0.001
+    },
+    {
+      "id": "reconcile-row-counts",
+      "kind": "reconciliation",
+      "title": "Every source row was imported, table by table",
+      "status": "pass",
+      "expected": {
+        "orders": 99441,
+        "items": 112650,
+        "products": 32951,
+        "customers": 99441,
+        "sellers": 3095,
+        "payments": 103886,
+        "reviews": 100000,
+        "customer_people": 96096
+      },
+      "seconds": 0.508
+    },
+    {
+      "id": "reconcile-value-sums",
+      "kind": "reconciliation",
+      "title": "Imported money, scores and statuses sum to the source's",
+      "status": "pass",
+      "expected": {
+        "item_price": 13591643.7,
+        "freight": 2251909.54,
+        "order_totals": 15843553.24,
+        "payment_value": 16008872.12,
+        "review_scores": 407089,
+        "completed_orders": 98202
+      },
+      "seconds": 0.216
+    }
+  ],
+  "regressions": [
+    {
+      "id": "H1-category-revenue-fan-out",
+      "kind": "historical",
+      "title": "Category revenue summed over a line-item x review join (the 42x bug)",
+      "provenance": "reconstructed from the article; reproduces its R$52,545,084 exactly",
+      "caught": true,
+      "caught_by": [
+        "categories-all",
+        "partitions-sum-to-total",
+        "same-metric-same-number"
+      ],
+      "failing": [
+        "categories-all",
+        "partitions-sum-to-total",
+        "same-metric-same-number"
+      ],
+      "evidence": {
+        "categories-all": {
+          "key": "garden_tools",
+          "field": "units_sold",
+          "expected": 4328,
+          "actual": 801988,
+          "ratio": 185.3022
+        },
+        "partitions-sum-to-total": {
+          "comparison": "item revenue: list_categories vs revenue_report(month)",
+          "values": [
+            null,
+            386160753.39
+          ]
+        },
+        "same-metric-same-number": {
+          "key": "Health Beauty",
+          "metric": "category item revenue",
+          "list_categories": 52545084.05,
+          "revenue_report": 1445137.23
+        }
+      }
+    },
+    {
+      "id": "H2-seller-average-fan-out",
+      "kind": "historical",
+      "title": "Seller review average taken over line items instead of orders (3.81 reported as 2.57)",
+      "provenance": "reconstructed from the article; reproduces its 3.81 -> 2.57 exactly",
+      "caught": true,
+      "caught_by": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed"
+      ],
+      "failing": [
+        "sellers-top-revenue",
+        "sellers-worst-reviewed"
+      ],
+      "evidence": {
+        "sellers-top-revenue": {
+          "key": "1f50f920176fa81dab994f9023523100",
+          "field": "avg_days_late",
+          "expected": -9.5,
+          "actual": -9.9,
+          "ratio": 1.0421
+        },
+        "sellers-worst-reviewed": {
+          "key": "897060da8b9a21f655304d50fd935913",
+          "field": "avg_review",
+          "expected": 3.61,
+          "actual": 3.37,
+          "ratio": 0.9335
+        }
+      }
+    },
+    {
+      "id": "H3-silently-dropped-payments",
+      "kind": "historical",
+      "title": "33 payment rows silently missing after import (the insert_all bug)",
+      "provenance": "simulated effect; the original index/column combination is not recoverable",
+      "caught": true,
+      "caught_by": [
+        "reconcile-row-counts",
+        "reconcile-value-sums"
+      ],
+      "failing": [
+        "reconcile-row-counts",
+        "reconcile-value-sums"
+      ],
+      "evidence": {
+        "reconcile-row-counts": {
+          "key": "payments",
+          "field": "payments",
+          "expected": 103886,
+          "actual": 103853,
+          "ratio": 0.9997
+        },
+        "reconcile-value-sums": {
+          "key": "payment_value",
+          "field": "payment_value",
+          "expected": 16008872.12,
+          "actual": 16008272.1,
+          "ratio": 1.0
+        }
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "title": "Orders with several reviews fan out every order-level join",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F2",
+      "title": "No review-per-order policy",
+      "triage": "definition_gap",
+      "scope": "definition",
+      "status": "open"
+    },
+    {
+      "id": "F3",
+      "title": "Two tools, two different \"category revenue\"",
+      "triage": "definition_gap",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F4",
+      "title": "Sellers credited with other sellers' items",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F5",
+      "title": "Cancelled orders counted as sales in product, category and seller figures",
+      "triage": "definition_gap",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F6",
+      "title": "Overlapping buckets presented as additive",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F7",
+      "title": "Payment-method revenue double-counts split payments",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F8",
+      "title": "Delivery metrics include cancelled orders",
+      "triage": "definition_gap",
+      "scope": "definition",
+      "status": "open"
+    },
+    {
+      "id": "F9",
+      "title": "find_customer matches email as a substring",
+      "triage": "tool_bug",
+      "scope": "fix",
+      "status": "open"
+    },
+    {
+      "id": "F10",
+      "title": "Preview-then-confirm is enforced by the prompt, not the server",
+      "triage": "security",
+      "scope": "separate",
+      "status": "deferred"
+    },
+    {
+      "id": "F11",
+      "title": "Customer lookup is not scoped to the store",
+      "triage": "security",
+      "scope": "out_of_scope",
+      "status": "deferred"
+    }
+  ]
+}
