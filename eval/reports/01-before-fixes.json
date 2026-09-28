@@ -3,8 +3,8 @@
     "seed": 20260928,
     "cases_per_invariant": 25,
     "database": "mcp_server_test",
-    "git_commit": "5c66677",
-    "git_dirty": true,
+    "git_commit": "de1cda9",
+    "git_dirty": false,
     "dataset": {
       "olist_orders_dataset": "8df58ef3d2d7",
       "olist_order_items_dataset": "0bc4d068c4fe",
@@ -16,9 +16,9 @@
       "product_category_name_translation": "9da093e114e5"
     },
     "ruby": "3.4.7",
-    "started_at": "2026-09-28T17:11:15Z",
+    "started_at": "2026-09-28T17:12:34Z",
     "fingerprint": "914cfc05da423748",
-    "seconds": 59.0,
+    "seconds": 60.3,
     "passed": false
   },
   "summary": {
@@ -62,7 +62,7 @@
       "actual": {
         "rows": 24
       },
-      "seconds": 0.496
+      "seconds": 0.277
     },
     {
       "id": "revenue-by-state",
@@ -84,7 +84,7 @@
       "actual": {
         "rows": 27
       },
-      "seconds": 0.253
+      "seconds": 0.238
     },
     {
       "id": "revenue-by-category-top20",
@@ -308,7 +308,7 @@
           "ratio": 1.0328
         }
       ],
-      "seconds": 0.431
+      "seconds": 0.409
     },
     {
       "id": "revenue-by-seller-top20",
@@ -532,7 +532,7 @@
           "ratio": 1.0025
         }
       ],
-      "seconds": 0.439
+      "seconds": 0.423
     },
     {
       "id": "revenue-by-payment-method",
@@ -587,7 +587,7 @@
           "ratio": 1.4022
         }
       ],
-      "seconds": 0.265
+      "seconds": 0.271
     },
     {
       "id": "categories-all",
@@ -1793,7 +1793,7 @@
           "ratio": 0.9975
         }
       ],
-      "seconds": 0.74
+      "seconds": 0.665
     },
     {
       "id": "sellers-top-revenue",
@@ -2164,7 +2164,7 @@
           "ratio": 1.0043
         }
       ],
-      "seconds": 0.637
+      "seconds": 0.573
     },
     {
       "id": "sellers-worst-reviewed",
@@ -2347,7 +2347,7 @@
           "ratio": 1.0112
         }
       ],
-      "seconds": 0.592
+      "seconds": 0.569
     },
     {
       "id": "delivery-by-bucket",
@@ -2443,7 +2443,7 @@
           "ratio": 1.0021
         }
       ],
-      "seconds": 0.226
+      "seconds": 0.203
     },
     {
       "id": "delivery-by-state",
@@ -2768,7 +2768,7 @@
           "ratio": 1.0013
         }
       ],
-      "seconds": 0.205
+      "seconds": 0.207
     },
     {
       "id": "search-all-placed",
@@ -2791,7 +2791,7 @@
           "ratio": 1.0056
         }
       ],
-      "seconds": 0.05
+      "seconds": 0.045
     },
     {
       "id": "search-rj-one-star",
@@ -2818,7 +2818,7 @@
           "ratio": 1.008
         }
       ],
-      "seconds": 0.058
+      "seconds": 0.052
     },
     {
       "id": "customer-with-multi-review-order",
@@ -2870,7 +2870,7 @@
           "ratio": 1.125
         }
       ],
-      "seconds": 0.018
+      "seconds": 0.016
     },
     {
       "id": "adjacent-date-windows-partition",
@@ -2888,7 +2888,7 @@
         "violations": 0,
         "cases": 25
       },
-      "seconds": 1.529
+      "seconds": 1.303
     },
     {
       "id": "complete-listing-matches-count",
@@ -3017,7 +3017,7 @@
           "distinct": 25
         }
       ],
-      "seconds": 2.752
+      "seconds": 2.914
     },
     {
       "id": "find-customer-exact-match",
@@ -3057,7 +3057,7 @@
           "resolved_to": "861eff4711a542e4b93843c6dd7febb0@olist.invalid"
         }
       ],
-      "seconds": 0.025
+      "seconds": 0.045
     },
     {
       "id": "narrower-filter-never-counts-more",
@@ -3075,7 +3075,7 @@
         "violations": 0,
         "cases": 25
       },
-      "seconds": 4.051
+      "seconds": 3.95
     },
     {
       "id": "overlapping-groups-not-additive",
@@ -3116,7 +3116,7 @@
           ]
         }
       ],
-      "seconds": 1.012
+      "seconds": 0.978
     },
     {
       "id": "partitions-sum-to-total",
@@ -3144,7 +3144,7 @@
           ]
         }
       ],
-      "seconds": 0.851
+      "seconds": 0.846
     },
     {
       "id": "same-metric-same-number",
@@ -3200,7 +3200,7 @@
           "revenue_report": 929190.19
         }
       ],
-      "seconds": 1.807
+      "seconds": 1.623
     },
     {
       "id": "unique-keys",
@@ -3218,7 +3218,7 @@
         "violations": 0,
         "cases": 11
       },
-      "seconds": 3.358
+      "seconds": 3.647
     },
     {
       "id": "value-bounds",
@@ -3236,7 +3236,7 @@
         "violations": 0,
         "cases": 410
       },
-      "seconds": 0.001
+      "seconds": 0.005
     },
     {
       "id": "reconcile-row-counts",
@@ -3253,7 +3253,7 @@
         "reviews": 100000,
         "customer_people": 96096
       },
-      "seconds": 0.508
+      "seconds": 0.47
     },
     {
       "id": "reconcile-value-sums",
@@ -3268,7 +3268,7 @@
         "review_scores": 407089,
         "completed_orders": 98202
       },
-      "seconds": 0.216
+      "seconds": 0.228
     }
   ],
   "regressions": [
