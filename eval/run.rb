@@ -38,8 +38,11 @@ module Eval
       invariants = Invariants.new(client: client, seed: @seed, cases: @cases)
       only = tools && Invariants::TOOLS.select { |_, ts| ts.intersect?(tools) }.keys.map { |k| k.to_s.delete_prefix("check_") }
 
+      differential = Differential.new(runner: runner, truth: truth, seed: @seed, cases: @cases)
+
       questions.map { |q| runner.run(q) } +
         (only&.empty? ? [] : invariants.run(only: only)) +
+        differential.run(only: tools) +
         (reconcile ? Reconciliation.new(truth).run : [])
     end
 

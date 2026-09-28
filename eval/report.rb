@@ -11,7 +11,7 @@ module Eval
   # start time. Two runs against the same data, code and seed produce the
   # same fingerprint, and that is how determinism is verified.
   class Report
-    KINDS = %w[question invariant reconciliation].freeze
+    KINDS = %w[question invariant differential reconciliation].freeze
 
     def initialize(result, findings: YAML.safe_load_file(File.join(ROOT, "findings.yml")))
       @result = result
@@ -57,7 +57,9 @@ module Eval
         next if checks.empty?
 
         s = tally(checks)
-        io.puts format("%-16s %3d   pass %3d   fail %3d   error %d", "#{kind.capitalize}s", checks.size, s["pass"], s["fail"], s["error"])
+        cases = checks.sum { |c| c.actual.is_a?(Hash) ? c.actual[:seeded_cases].to_i : 0 }
+        extra = cases.positive? ? format("   (%d seeded cases)", cases) : ""
+        io.puts format("%-16s %3d   pass %3d   fail %3d   error %d%s", "#{kind.capitalize}s", checks.size, s["pass"], s["fail"], s["error"], extra)
         checks.each { |c| io.puts line(c) }
         io.puts
       end

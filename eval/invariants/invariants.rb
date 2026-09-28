@@ -36,9 +36,9 @@ module Eval
     TOOLS = {
       check_unique_keys: %w[revenue_report list_categories seller_performance delivery_performance],
       check_value_bounds: %w[revenue_report list_categories seller_performance delivery_performance],
-      check_partitions_sum_to_total: %w[revenue_report list_categories],
+      check_partitions_sum_to_total: %w[revenue_report list_categories delivery_performance],
       check_overlapping_groups_not_additive: %w[revenue_report],
-      check_same_metric_same_number: %w[revenue_report list_categories seller_performance],
+      check_same_metric_same_number: %w[revenue_report list_categories seller_performance search_products get_product],
       check_complete_listing_matches_count: %w[search_orders],
       check_narrower_filter_never_counts_more: %w[search_orders revenue_report],
       check_adjacent_date_windows_partition: %w[search_orders revenue_report],
@@ -82,14 +82,18 @@ module Eval
       month = rows("revenue_report", group_by: "month")
       state = rows("revenue_report", group_by: "state", limit: 50)
       categories = rows("list_categories", {}, "categories")
+      buckets = rows("delivery_performance", group_by: "bucket")
+      delivery_states = rows("delivery_performance", group_by: "state", min_orders: 1, limit: 50)
       failures = []
       failures << compare_totals("orders: month vs state", sum(month, "orders"), sum(state, "orders"))
       failures << compare_totals("revenue: month vs state", sum(month, "revenue"), sum(state, "revenue"))
       month_items = month.all? { |r| r.key?("item_revenue") } ? sum(month, "item_revenue") : nil
       failures << compare_totals("item revenue: list_categories vs revenue_report(month)",
                                  month_items, sum(categories, "revenue"))
+      failures << compare_totals("delivered orders: lateness bands vs customer states",
+                                 sum(buckets, "orders"), sum(delivery_states, "orders"))
       verdict("partitions-sum-to-total", "Partitions of the same population agree on its total",
-              failures.compact, cases: 3)
+              failures.compact, cases: 4)
     end
 
     # A grouping where orders overlap must not present an additive order
@@ -136,8 +140,18 @@ module Eval
                       seller_performance: ranked[r["seller"]], revenue_report: other }
       end
 
+      # Product revenue and units: the catalogue listing against the product page.
+      rows("search_products", { sort: "revenue", limit: 15 }, "products").each do |p|
+        detail = @client.call("get_product", "sku" => p["sku"]).structured || {}
+        %w[revenue units_sold].each do |f|
+          next if detail[f] == p[f]
+
+          failures << { metric: "product #{f}", key: p["sku"], search_products: p[f], get_product: detail[f] }
+        end
+      end
+
       verdict("same-metric-same-number", "Two tools reporting the same named metric agree", failures,
-              cases: 2, sample: failures.first(6))
+              cases: 3, sample: failures.first(6))
     end
 
     # A search that fits in one page must list exactly `total_matches`
@@ -171,7 +185,7 @@ module Eval
         failures << { arguments: args, total_matches: total, rows: numbers.size, distinct: numbers.uniq.size }
       end
       verdict("complete-listing-matches-count",
-              "A one-page search lists exactly total_matches distinct orders", failures, cases: checked)
+              "A one-page search lists exactly total_matches distinct orders", failures, cases: checked, seeded: true)
     end
 
     # Narrowing a date window can never increase a count or a revenue sum.
@@ -196,7 +210,7 @@ module Eval
         end
       end
       verdict("narrower-filter-never-counts-more", "Narrowing a date window never increases a count or a sum",
-              failures, cases: @cases)
+              failures, cases: @cases, seeded: true)
     end
 
     # [d1, d2] and [d2+1, d3] partition [d1, d3]: counts and revenue must add
@@ -224,7 +238,7 @@ module Eval
         end
       end
       verdict("adjacent-date-windows-partition", "Adjacent date windows add up to the window that spans them",
-              failures, cases: @cases)
+              failures, cases: @cases, seeded: true)
     end
 
     # A customer lookup either finds the customer whose email it was given or
@@ -287,9 +301,11 @@ module Eval
 
     def random_day(rng) = FIRST_DAY + rng.rand(0..(LAST_DAY - FIRST_DAY).to_i)
 
-    def verdict(id, title, failures, cases:, sample: nil)
+    def verdict(id, title, failures, cases:, sample: nil, seeded: false)
+      actual = { violations: failures.size, cases: cases }
+      actual[:seeded_cases] = cases if seeded
       Check.new(id: id, kind: "invariant", title: title, status: failures.empty? ? "pass" : "fail",
-                expected: { violations: 0 }, actual: { violations: failures.size, cases: cases },
+                expected: { violations: 0 }, actual: actual,
                 diffs: (sample || failures).first(10), arguments: { seed: @seed, cases: @cases })
     end
 
