@@ -1,6 +1,8 @@
-# Triage of everything the harness has found. When a check fails, the report
-# looks it up here. A failure listed under no finding is reported as
-# UNTRIAGED, meaning a new problem nobody has looked at yet.
+# The findings register: everything the harness has found, and what was
+# done about it. When a check fails, the report looks it up here; a failure
+# listed under no finding is reported as UNTRIAGED, meaning a new problem
+# nobody has looked at yet. Findings are never deleted once fixed. The
+# fixed ones are the evidence that the harness finds real problems.
 #
 # triage: what was actually wrong
 #   tool_bug        the tool's SQL does not compute its own stated metric
@@ -10,142 +12,216 @@
 #   security        a trust-boundary problem, not a correctness one
 #
 # scope: what we decided to do about it
-#   harness         part of the truth harness itself
 #   fix             required correctness fix, in scope
 #   definition      resolved by a decision recorded in docs/METRICS.md
 #   separate        real, but needs its own scope decision
 #   out_of_scope    acknowledged, deliberately not addressed
+#
+# status: discovered -> reproduced -> fixed -> verified, or deferred /
+#   out_of_scope. "verified" means the fix is in, the checks listed pass, and
+#   the pre-fix code is kept as a regression the harness catches.
+#
+# reports: eval/reports/01-before-fixes.txt (day 1 bank, unfixed),
+#          01b-before-fixes-full.txt (full harness, unfixed),
+#          02-after-fixes.txt (full harness, fixed)
 
 - id: F1
   title: Orders with several reviews fan out every order-level join
+  severity: high
   triage: tool_bug
   scope: fix
-  status: open
-  checks: [search-all-placed, search-rj-one-star, delivery-by-bucket, delivery-by-state,
-           customer-with-multi-review-order, complete-listing-matches-count]
+  status: reproduced
+  tools: [search_orders, delivery_performance, find_customer]
+  definition: "METRICS.md: Reviews (one review score per order); Counts (total_matches)"
   summary: >
-    555 orders carry more than one review. search_orders, delivery_performance
-    and find_customer LEFT JOIN olist_reviews at order grain, so those orders
-    appear once per review. search_orders reports 100,000 matches for 99,441
-    orders; a customer with one twice-reviewed order shows 2 orders and double
-    their lifetime value.
+    555 orders carry more than one review (1,114 rows). search_orders,
+    delivery_performance and find_customer LEFT JOIN olist_reviews at order
+    grain, so those orders appear once per review. search_orders reports
+    100,000 matches for 99,441 orders and shows the same order twice on a
+    page. A customer with one twice-reviewed order shows 2 orders and double
+    their lifetime value (R$93.70 for R$46.85).
+  checks: [search-all-placed, search-rj-one-star, search-black-friday-day, search-very-late, search-big-sp-orders,
+           search-late-and-unhappy, search-cancelled-in-2018, delivery-by-bucket, delivery-by-state,
+           delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4,
+           customer-with-multi-review-order, customer-most-orders, complete-listing-matches-count,
+           search-orders-random-filters, delivery-random-windows, customers-random]
+  regression: [P1-search-orders, P3-delivery-performance, P4-find-customer]
 
 - id: F2
   title: No review-per-order policy
+  severity: medium
   triage: definition_gap
   scope: definition
-  status: open
-  checks: [categories-all, sellers-top-revenue, sellers-worst-reviewed, delivery-by-bucket, delivery-by-state,
-           customer-with-multi-review-order]
+  status: reproduced
+  tools: [list_categories, seller_performance, delivery_performance, find_customer, get_order, get_product]
+  definition: "METRICS.md: Reviews. An order's score is its most recent review"
   summary: >
-    When an order has two reviews with different scores (209 orders), every
-    average silently used both. Decision (METRICS.md): an order's score is its
-    most recent review.
+    When an order has reviews with different scores (209 orders), averages
+    used every one of them and get_order showed whichever row the database
+    returned first. For order 5cb890a6... that is the 4-star review, not the
+    later 5-star one. Decision: an order's score is its most recent review
+    (latest creation date, then latest answer, then review id).
+  checks: [categories-all, categories-worst-reviewed, sellers-top-revenue, sellers-worst-reviewed,
+           sellers-latest-deliverers, sellers-in-rio-by-revenue, delivery-by-bucket, delivery-by-state,
+           delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, search-late-and-unhappy,
+           customer-with-multi-review-order, customer-most-orders, order-multi-seller-multi-review,
+           product-best-seller, products-random, sellers-random-states, customers-random]
+  regression: [P2-list-categories, P3-delivery-performance, P5-seller-performance, P6-get-order, P7-get-product]
 
 - id: F3
   title: Two tools, two different "category revenue"
+  severity: high
   triage: definition_gap
   scope: fix
-  status: open
-  checks: [revenue-by-category-top20, categories-all, same-metric-same-number, partitions-sum-to-total]
+  status: reproduced
+  tools: [revenue_report, list_categories]
+  definition: "METRICS.md: Money (item_revenue, gross_revenue); Dimensions (category)"
   summary: >
-    list_categories reports item revenue over all orders (Health Beauty
-    R$1,258,681); revenue_report(category) credits each category with the
+    list_categories reported item revenue over all orders (Health Beauty
+    R$1,258,681); revenue_report(category) credited each category with the
     whole order total, freight included, of every completed order touching it
-    (R$1,445,137). Both are labelled "revenue". No tool exposed total item
-    revenue, so category revenue could not be reconciled against anything.
+    (R$1,445,137). Both were labelled "revenue". revenue_report exposed no
+    item revenue or freight at all, so category revenue could not be
+    reconciled against any total. Correct under the definitions: item revenue
+    R$1,255,695.13, gross R$1,437,665.78.
+  checks: [revenue-by-category-top20, revenue-by-category-split, revenue-by-month-split, categories-all,
+           categories-worst-reviewed, same-metric-same-number, partitions-sum-to-total, revenue-report-random-windows]
+  regression: [P8-revenue-report]
 
 - id: F4
   title: Sellers credited with other sellers' items
+  severity: high
   triage: tool_bug
   scope: fix
-  status: open
-  checks: [revenue-by-seller-top20, same-metric-same-number]
+  status: reproduced
+  tools: [revenue_report]
+  definition: "METRICS.md: Principles (allocate at the grain the data has); Dimensions (seller)"
   summary: >
-    revenue_report(seller) sums whole order totals, so in the 1,278
-    multi-seller orders each seller is credited with every other seller's
-    items and all the freight. The top seller shows R$253,122 there and
-    R$229,473 in seller_performance.
+    revenue_report(seller) summed whole order totals, so in the 1,278
+    multi-seller orders each seller was credited with every other seller's
+    items and all the freight. The top seller showed R$253,122 there against
+    R$229,473 in seller_performance; under the definitions it is R$249,393.44
+    gross, R$229,237.63 item revenue.
+  checks: [revenue-by-seller-top20, revenue-by-seller-split, same-metric-same-number]
+  regression: [P8-revenue-report]
 
 - id: F5
   title: Cancelled orders counted as sales in product, category and seller figures
+  severity: medium
   triage: definition_gap
   scope: fix
-  status: open
-  checks: [categories-all, sellers-top-revenue, sellers-worst-reviewed]
+  status: reproduced
+  tools: [list_categories, get_product, search_products, seller_performance]
+  definition: "METRICS.md: Populations (completed orders)"
   summary: >
     The importer's product sales counters (units_sold_count, revenue), which
     list_categories, get_product and search_products read, and
-    seller_performance's revenue, include items from cancelled and unavailable
-    orders. revenue_report excludes them, so the same product's revenue
-    depended on which tool asked.
+    seller_performance's revenue and order count, included items from
+    cancelled and unavailable orders. revenue_report excluded them, so the
+    same product's revenue depended on which tool was asked.
+  checks: [categories-all, categories-worst-reviewed, sellers-top-revenue, sellers-worst-reviewed,
+           sellers-latest-deliverers, sellers-in-rio-by-revenue, products-top-health-beauty, product-best-seller,
+           products-random, sellers-random-states]
+  regression: [P5-seller-performance, P9-product-counters]
 
 - id: F6
   title: Overlapping buckets presented as additive
+  severity: medium
   triage: tool_bug
   scope: fix
-  status: open
-  checks: [overlapping-groups-not-additive]
+  status: reproduced
+  tools: [revenue_report]
+  definition: "METRICS.md: Principles (say whether a breakdown adds up); Counts (orders)"
   summary: >
-    revenue_report prints "Total across shown rows: N orders" and returns
-    totals.orders for category, seller and payment-method groupings, where one
-    order sits in several buckets. The total is larger than the number of
-    orders, and it invites the model to repeat it.
+    revenue_report printed "Total across shown rows: N orders" and returned
+    totals.orders for category, seller and payment-method groupings, where
+    one order sits in several buckets. Across all categories that "total" is
+    97,729 orders. The figure is inflated, and it invites the model to repeat
+    it.
+  checks: [overlapping-groups-not-additive]
+  regression: [P8-revenue-report]
 
 - id: F7
   title: Payment-method revenue double-counts split payments
+  severity: high
   triage: tool_bug
   scope: fix
-  status: open
-  checks: [revenue-by-payment-method]
+  status: reproduced
+  tools: [revenue_report]
+  definition: "METRICS.md: Money (payment_value)"
   summary: >
-    revenue_report(payment_method) credits the whole order total to every
-    payment type the order used, so a voucher plus credit card order is
-    counted in full twice. Credit card comes out R$185k high. Decision: this
-    grouping reports payment_value.
+    revenue_report(payment_method) credited the whole order total to every
+    payment type the order used, so a voucher plus card order counted in full
+    twice. Credit card came out R$185,429 high (R$12,534,959 against
+    R$12,349,530 collected) and voucher 1.4x high. Decision: this grouping
+    reports payment_value.
+  checks: [revenue-by-payment-method, revenue-by-payment-method-2018]
+  regression: [P8-revenue-report]
 
 - id: F8
   title: Delivery metrics include cancelled orders
+  severity: low
   triage: definition_gap
   scope: definition
-  status: open
-  checks: [delivery-by-bucket, delivery-by-state]
+  status: reproduced
+  tools: [delivery_performance]
+  definition: "METRICS.md: Populations (delivered orders); Delivery"
   summary: >
     Six cancelled orders have a delivery timestamp and an estimate.
     delivery_performance counted them. Decision: delivery metrics cover
-    completed orders only.
+    completed orders only; days_late itself stays a fact of the timestamps, so
+    search_orders can still find those six.
+  checks: [delivery-by-bucket, delivery-by-state, delivery-by-category-worst, delivery-by-seller-worst,
+           delivery-buckets-2017-q4, delivery-random-windows]
+  regression: [P3-delivery-performance]
 
 - id: F9
   title: find_customer matches email as a substring
+  severity: medium
   triage: tool_bug
   scope: fix
-  status: open
-  checks: [find-customer-exact-match]
+  status: reproduced
+  tools: [find_customer]
+  definition: "METRICS.md: Customers (exact, case-insensitive match)"
   summary: >
-    LIKE '%term%' with the user's input, so "%" or a fragment returns an
-    arbitrary customer's history. The answer is about the wrong person, and
-    it is a way to enumerate customers. Fix: exact, case-insensitive match.
+    LIKE '%term%' on the caller's input, so "%", "_" or a fragment of an id
+    returned an arbitrary customer's order history. The answer is about the
+    wrong person, and the tool can be used to enumerate customers. Fix: exact,
+    case-insensitive match.
+  checks: [find-customer-exact-match]
+  regression: [P4-find-customer]
 
 - id: F10
   title: Preview-then-confirm is enforced by the prompt, not the server
+  severity: medium
   triage: security
   scope: separate
   status: deferred
-  checks: []
+  tools: [update_product_price, update_order_status]
+  definition: null
   summary: >
     Nothing server-side ties a confirm:true call to an earlier preview; a
-    model can confirm first. Writes are disabled on the public deployment
-    (verified by the HTTP boundary tests), so there is no live exposure. The
+    model can confirm first. Writes are disabled on the public deployment,
+    and the HTTP boundary tests pin that a write tool cannot be reached there
+    even with a stale write-scoped token, so there is no live exposure. The
     fix is a signed, expiring preview token with stale-preview rejection.
     That is write-safety work, deliberately outside the correctness scope.
+  checks: []
+  regression: []
 
 - id: F11
   title: Customer lookup is not scoped to the store
+  severity: low
   triage: security
   scope: out_of_scope
-  status: deferred
-  checks: []
+  status: out_of_scope
+  tools: [find_customer]
+  definition: null
   summary: >
     Spree users are global. find_customer scopes the customer's orders to the
-    store but not the user row. With one store this cannot leak anything;
-    real multi-tenancy would need it.
+    store but not the user row. With one store this cannot leak anything, and
+    the boundary tests show another store's server resolves none of this
+    store's orders. Real multi-tenancy would need it. The F9 fix does not
+    widen or narrow this.
+  checks: []
+  regression: []
