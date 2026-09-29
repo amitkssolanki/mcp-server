@@ -1,0 +1,180 @@
+{
+  "note": "Expected answers for eval/agent/questions.yml, computed by the oracle from the raw CSVs and committed before any agent run.",
+  "questions": [
+    {
+      "id": "A01-orders-placed",
+      "prompt": "How many orders has the store received in total, counting every order whatever its status?",
+      "answer_type": "count",
+      "expected": 99441,
+      "alternates": {
+        "completed_orders": 98202
+      },
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with no status, date, state, total, lateness or review filter"
+    },
+    {
+      "id": "A02-cancelled-2018",
+      "prompt": "How many orders placed in 2018 were cancelled?",
+      "answer_type": "count",
+      "expected": 334,
+      "alternates": {},
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with status canceled, from 2018-01-01, and to absent or on/after 2018-10-17 (the last purchase date)"
+    },
+    {
+      "id": "A03-revenue-nov-2017",
+      "prompt": "What was the store's revenue in November 2017?",
+      "answer_type": "money",
+      "expected": 1172191.68,
+      "alternates": {
+        "item_revenue": 1003862.14
+      },
+      "acceptable_tools": [
+        "revenue_report"
+      ],
+      "arg_rule": "revenue_report grouped by month (or default), with any date window that covers all of November 2017"
+    },
+    {
+      "id": "A04-top-category",
+      "prompt": "Which product category brought in the most revenue?",
+      "answer_type": "key",
+      "expected": "health_beauty",
+      "alternates": {},
+      "acceptable_tools": [
+        "revenue_report",
+        "list_categories"
+      ],
+      "arg_rule": "revenue_report grouped by category with no date window, or list_categories sorted by revenue (or default)"
+    },
+    {
+      "id": "A05-health-beauty-merchandise",
+      "prompt": "How much did the Health Beauty category sell in merchandise alone, not counting shipping?",
+      "answer_type": "money",
+      "expected": 1255695.13,
+      "alternates": {
+        "gross_revenue": 1437665.78
+      },
+      "acceptable_tools": [
+        "list_categories",
+        "revenue_report"
+      ],
+      "arg_rule": "list_categories, or revenue_report grouped by category with no date window"
+    },
+    {
+      "id": "A06-top-seller",
+      "prompt": "Which seller has the highest sales revenue? Give their seller id.",
+      "answer_type": "key",
+      "expected": "4869f7a5dfa277a7dca6462dcf3b52b2",
+      "alternates": {},
+      "acceptable_tools": [
+        "seller_performance",
+        "revenue_report"
+      ],
+      "arg_rule": "seller_performance sorted by revenue (or default), or revenue_report grouped by seller with no date window"
+    },
+    {
+      "id": "A07-credit-card-2018",
+      "prompt": "How much was paid by credit card for orders placed in 2018?",
+      "answer_type": "money",
+      "expected": 6791660.43,
+      "alternates": {},
+      "acceptable_tools": [
+        "revenue_report"
+      ],
+      "arg_rule": "revenue_report grouped by payment_method, from 2018-01-01, and to absent or on/after 2018-10-17"
+    },
+    {
+      "id": "A08-very-late-review",
+      "prompt": "What is the average review score for orders that were delivered more than a week late?",
+      "answer_type": "score",
+      "expected": 1.71,
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by lateness band (or default), with no date window"
+    },
+    {
+      "id": "A09-late-rate",
+      "prompt": "What percentage of delivered orders arrived after their estimated delivery date?",
+      "answer_type": "percent",
+      "expected": 7.92,
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by lateness band (or default), with no date window"
+    },
+    {
+      "id": "A10-worst-state-reviews",
+      "prompt": "Among customer states with at least 500 delivered orders, which has the lowest average review score?",
+      "answer_type": "key",
+      "expected": "MA",
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by state"
+    },
+    {
+      "id": "A11-customer-lifetime-value",
+      "prompt": "What is the lifetime value of the customer 000bfa1d2f1a41876493be685390d6d3@olist.invalid?",
+      "answer_type": "money",
+      "expected": 46.85,
+      "alternates": {},
+      "acceptable_tools": [
+        "find_customer"
+      ],
+      "arg_rule": "find_customer with exactly that email (any case)"
+    },
+    {
+      "id": "A12-order-review-score",
+      "prompt": "What review score did order OL000087289 receive?",
+      "answer_type": "integer",
+      "expected": 5,
+      "alternates": {},
+      "acceptable_tools": [
+        "get_order"
+      ],
+      "arg_rule": "get_order with that order number"
+    },
+    {
+      "id": "A13-product-units",
+      "prompt": "How many units of the product with SKU aca2eb7d00ea1a7b8ebd4e68314663af have been sold?",
+      "answer_type": "count",
+      "expected": 527,
+      "alternates": {},
+      "acceptable_tools": [
+        "get_product",
+        "search_products"
+      ],
+      "arg_rule": "get_product with that SKU, or search_products with that SKU as the query"
+    },
+    {
+      "id": "A14-worst-seller",
+      "prompt": "Among sellers with at least 100 orders, which has the worst average review score? Give their seller id.",
+      "answer_type": "key",
+      "expected": "1ca7077d890b907f89be8c954a02686a",
+      "alternates": {},
+      "acceptable_tools": [
+        "seller_performance"
+      ],
+      "arg_rule": "seller_performance sorted by avg_review, with min_orders 100"
+    },
+    {
+      "id": "A15-big-sao-paulo-orders",
+      "prompt": "How many orders from customers in Sao Paulo state were worth R$1,000 or more?",
+      "answer_type": "count",
+      "expected": 359,
+      "alternates": {},
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with customer_state SP and min_total 1000"
+    }
+  ]
+}

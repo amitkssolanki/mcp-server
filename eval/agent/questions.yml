@@ -1,0 +1,160 @@
+# Day 3 agent evaluation: 15 natural-language questions put to Claude with
+# the store's MCP tools and nothing else.
+#
+# PRE-REGISTERED. Everything a run is graded on is fixed here, and in
+# eval/agent/grader.rb (argument rules), before any agent run:
+#
+#   expected     the oracle query that computes the answer from the raw CSVs
+#                (eval/oracle/). Nothing about grading comes from the model.
+#   answer       the answer's type, which decides how it is compared:
+#                  count    exact integer
+#                  money    within 0.1% of the oracle value. A figure rounded
+#                           for a reader is right; a different metric is not,
+#                           because the nearest alternative metric is always
+#                           more than 5% away
+#                  score    within 0.01 (review averages, 2 dp)
+#                  percent  within 0.1 percentage points
+#                  key      the same category/state/seller; a seller id may be
+#                           given as a prefix of 8+ characters, since tool text
+#                           shows ids truncated to 12
+#                  integer  exact (a single review score)
+#   alternates   other *defined* metrics (docs/METRICS.md) the answer might
+#                match instead, e.g. item revenue where gross revenue was
+#                asked. A match is graded wrong, but labelled, so a wrong
+#                answer that used the wrong definition is told apart from a
+#                wrong number.
+#   tools        tools that can answer the question. Tool selection is correct
+#                when at least one of them is called.
+#   args         a plain-English statement of the rule in grader.rb.
+#
+# `risk` says which distinction the question exists to test.
+
+- id: A01-orders-placed
+  prompt: How many orders has the store received in total, counting every order whatever its status?
+  risk: placed orders (search_orders) vs completed orders (revenue_report counts only completed)
+  answer: count
+  expected: { oracle: orders_placed }
+  alternates: { completed_orders: { oracle: orders_completed } }
+  tools: [search_orders]
+  args: search_orders with no status, date, state, total, lateness or review filter
+
+- id: A02-cancelled-2018
+  prompt: How many orders placed in 2018 were cancelled?
+  risk: status filter plus a year window on the tool that covers every status
+  answer: count
+  expected: { oracle: search_count, params: { status: canceled, from: "2018-01-01", to: "2018-12-31" } }
+  tools: [search_orders]
+  args: search_orders with status canceled, from 2018-01-01, and to absent or on/after 2018-10-17 (the last purchase date)
+
+- id: A03-revenue-nov-2017
+  prompt: What was the store's revenue in November 2017?
+  risk: revenue here means gross revenue (items plus freight), not merchandise alone
+  answer: money
+  expected: { oracle: revenue_field, params: { dimension: month, key: "2017-11", field: gross_revenue } }
+  alternates: { item_revenue: { oracle: revenue_field, params: { dimension: month, key: "2017-11", field: item_revenue } } }
+  tools: [revenue_report]
+  args: revenue_report grouped by month (or default), with any date window that covers all of November 2017
+
+- id: A04-top-category
+  prompt: Which product category brought in the most revenue?
+  risk: two tools report category revenue; both rank the same category first
+  answer: key
+  key: category
+  expected: { oracle: top_key, params: { query: category_gross, rank: desc } }
+  tools: [revenue_report, list_categories]
+  args: revenue_report grouped by category with no date window, or list_categories sorted by revenue (or default)
+
+- id: A05-health-beauty-merchandise
+  prompt: How much did the Health Beauty category sell in merchandise alone, not counting shipping?
+  risk: item revenue vs gross revenue for a category; which tool exposes which
+  answer: money
+  expected: { oracle: category_field, params: { category: health_beauty, field: item_revenue } }
+  alternates: { gross_revenue: { oracle: category_gross_field, params: { category: health_beauty } } }
+  tools: [list_categories, revenue_report]
+  args: list_categories, or revenue_report grouped by category with no date window
+
+- id: A06-top-seller
+  prompt: Which seller has the highest sales revenue? Give their seller id.
+  risk: seller revenue in two tools; item-level allocation ranks the same seller first either way
+  answer: key
+  key: seller
+  expected: { oracle: top_key, params: { query: seller_item, rank: desc } }
+  tools: [seller_performance, revenue_report]
+  args: seller_performance sorted by revenue (or default), or revenue_report grouped by seller with no date window
+
+- id: A07-credit-card-2018
+  prompt: How much was paid by credit card for orders placed in 2018?
+  risk: payment-method breakdown (payment value) within a date window
+  answer: money
+  expected: { oracle: payment_value, params: { method: credit_card, from: "2018-01-01", to: "2018-12-31" } }
+  tools: [revenue_report]
+  args: revenue_report grouped by payment_method, from 2018-01-01, and to absent or on/after 2018-10-17
+
+- id: A08-very-late-review
+  prompt: What is the average review score for orders that were delivered more than a week late?
+  risk: delivery lateness bands and their review average
+  answer: score
+  expected: { oracle: delivery_field, params: { dimension: bucket, key: more than a week late, field: avg_review } }
+  tools: [delivery_performance]
+  args: delivery_performance grouped by lateness band (or default), with no date window
+
+- id: A09-late-rate
+  prompt: What percentage of delivered orders arrived after their estimated delivery date?
+  risk: the tool gives per-band rates; the overall rate needs combining bands by order count
+  answer: percent
+  expected: { oracle: overall_late_rate }
+  tools: [delivery_performance]
+  args: delivery_performance grouped by lateness band (or default), with no date window
+
+- id: A10-worst-state-reviews
+  prompt: Among customer states with at least 500 delivered orders, which has the lowest average review score?
+  risk: delivery population by state, with a minimum-order threshold
+  answer: key
+  key: state
+  expected: { oracle: worst_delivery_state, params: { min_orders: 500 } }
+  tools: [delivery_performance]
+  args: delivery_performance grouped by state
+
+- id: A11-customer-lifetime-value
+  prompt: "What is the lifetime value of the customer %{unique_id}@olist.invalid?"
+  risk: exact customer lookup; lifetime value over completed orders
+  answer: money
+  pick: multi_review_customer
+  expected: { oracle: customer_field, params: { unique_id: "%{unique_id}", field: lifetime_value } }
+  tools: [find_customer]
+  args: find_customer with exactly that email (any case)
+
+- id: A12-order-review-score
+  prompt: "What review score did order %{number} receive?"
+  risk: single-order lookup where the order has two reviews and the policy decides
+  answer: integer
+  pick: multi_seller_reviewed_order
+  expected: { oracle: order_field, params: { order_id: "%{order_id}", field: review_score } }
+  tools: [get_order]
+  args: get_order with that order number
+
+- id: A13-product-units
+  prompt: "How many units of the product with SKU %{sku} have been sold?"
+  risk: product lookup by SKU; units over completed orders
+  answer: count
+  pick: best_selling_product
+  expected: { oracle: product_field, params: { product_id: "%{sku}", field: units_sold } }
+  tools: [get_product, search_products]
+  args: get_product with that SKU, or search_products with that SKU as the query
+
+- id: A14-worst-seller
+  prompt: Among sellers with at least 100 orders, which has the worst average review score? Give their seller id.
+  risk: seller_performance (completed orders) is the seller tool; delivery_performance by seller is a different population
+  answer: key
+  key: seller
+  expected: { oracle: worst_seller, params: { min_orders: 100 } }
+  tools: [seller_performance]
+  args: seller_performance sorted by avg_review, with min_orders 100
+
+- id: A15-big-sao-paulo-orders
+  prompt: How many orders from customers in Sao Paulo state were worth R$1,000 or more?
+  risk: two search filters combined (state code SP, inclusive minimum total)
+  answer: count
+  expected: { oracle: search_count, params: { customer_state: SP, min_total: 1000 } }
+  tools: [search_orders]
+  args: search_orders with customer_state SP and min_total 1000
