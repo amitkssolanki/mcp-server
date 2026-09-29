@@ -275,3 +275,10 @@ both host checks, `DEMO_NOINDEX`, and the hostname alias kept during a move
   trail of who approved which OAuth grant.
 - **SDK:** the protocol pin (F12) stays until the MCP Ruby SDK is upgraded to a version that
   implements 2026-07-28.
+
+## License
+
+The code in this repository is MIT-licensed ([LICENSE](LICENSE)). Spree, Rails and the other
+gems it builds on keep their own licences. The Olist dataset is not part of this repository or
+its licence: it is downloaded at run time under CC BY-NC-SA 4.0 (see
+[db/olist/README.md](db/olist/README.md)).
