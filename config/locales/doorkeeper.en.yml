@@ -19,6 +19,9 @@ en:
               not_match_configured: "doesn't match those configured on the server."
 
   doorkeeper:
+    scopes:
+      "mcp:read": "Read the store's products, orders, customers and revenue (read-only)"
+
     applications:
       confirmations:
         destroy: 'Are you sure?'

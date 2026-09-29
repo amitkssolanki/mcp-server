@@ -1,0 +1,31 @@
+<%# Overrides Doorkeeper's bare layout for the OAuth pages (consent, error, code).
+    Presentation only: the forms and hidden fields come from Doorkeeper's own views. %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title><%= t('doorkeeper.layouts.application.title') %> · MCP-Server demo</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <%= csrf_meta_tags %>
+  <%= stylesheet_link_tag "oauth" %>
+</head>
+<body class="oauth">
+<div class="oauth-shell">
+  <p class="oauth-brand"><span class="oauth-mark" aria-hidden="true"></span>MCP-Server <span>read-only demo store</span></p>
+
+  <div id="container" class="oauth-card">
+    <%- if flash[:notice].present? %>
+      <div class="alert alert-info">
+        <%= flash[:notice] %>
+      </div>
+    <% end -%>
+
+    <%= yield %>
+  </div>
+
+  <p class="oauth-foot">This demo is read-only. An authorized client can read the store's data but cannot change it.</p>
+</div>
+</body>
+</html>
