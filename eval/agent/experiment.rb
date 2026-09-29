@@ -89,14 +89,17 @@ module Eval
       end
 
       # Run one case first and refuse to go on unless it used the
-      # subscription login. An experiment must never quietly bill an API key.
+      # subscription login and worked. An experiment must never quietly bill
+      # an API key, or burn through every run on a broken setup.
       def guard_billing!(runner, (plan, index))
         @first_result = run_one(runner, plan, index)
         source = @first_result[:run][:api_key_source]
-        return if source == "none" || ENV["ALLOW_API_KEY"] == "1"
+        unless source == "none" || ENV["ALLOW_API_KEY"] == "1"
+          raise "first run reported apiKeySource=#{source.inspect}, not the subscription login; stopping."
+        end
+        return unless (error = @first_result[:run][:error])
 
-        raise "first run reported apiKeySource=#{source.inspect}, not the subscription login; " \
-              "stopping. Error: #{@first_result[:run][:error]}"
+        raise "first run failed, stopping before the rest: #{error}"
       end
 
       def run_all(runner, jobs)
