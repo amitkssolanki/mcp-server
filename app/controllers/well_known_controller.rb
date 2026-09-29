@@ -18,7 +18,7 @@ class WellKnownController < ActionController::API
       resource: "#{request.base_url}/mcp",
       authorization_servers: [request.base_url],
       bearer_methods_supported: ["header"],
-      scopes_supported: %w[mcp:read mcp:write]
+      scopes_supported: supported_scopes
     }
   end
 
@@ -35,7 +35,7 @@ class WellKnownController < ActionController::API
       registration_endpoint: "#{request.base_url}/register",
       revocation_endpoint: "#{request.base_url}/oauth/revoke",
       introspection_endpoint: "#{request.base_url}/oauth/introspect",
-      scopes_supported: %w[mcp:read mcp:write],
+      scopes_supported: supported_scopes,
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
       # Doorkeeper also accepts the PKCE "plain" method; only S256 is
@@ -48,5 +48,15 @@ class WellKnownController < ActionController::API
       # client via either of the other two.
       token_endpoint_auth_methods_supported: %w[none client_secret_basic client_secret_post]
     }
+  end
+
+  private
+
+  # Read from Doorkeeper's configured scopes rather than hard-coded, so a
+  # read-only deployment (MCP_ALLOW_WRITE_SCOPE=false) advertises only
+  # mcp:read. Advertising a scope the authorization endpoint would then refuse
+  # sends a well-behaved client into a flow that cannot succeed.
+  def supported_scopes
+    Doorkeeper.config.scopes.map(&:to_s)
   end
 end

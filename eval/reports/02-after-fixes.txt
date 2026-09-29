@@ -1,0 +1,162 @@
+Running (seed 20260928)
+  oracle built from CSVs          7.6s
+  checks                         66.4s
+  regressions                    55.6s
+
+MCP truth harness
+  database mcp_server_test  commit b1c49a2  seed 20260928
+
+Questions         35   pass  35   fail   0   error 0
+  PASS  revenue-by-month                            0.37s
+  PASS  revenue-by-state                            0.17s
+  PASS  revenue-by-category-top20                   0.26s
+  PASS  revenue-by-seller-top20                     0.27s
+  PASS  revenue-by-payment-method                   0.18s
+  PASS  categories-all                              0.30s
+  PASS  sellers-top-revenue                         0.60s
+  PASS  sellers-worst-reviewed                      0.61s
+  PASS  delivery-by-bucket                          0.20s
+  PASS  delivery-by-state                           0.19s
+  PASS  search-all-placed                           0.55s
+  PASS  search-rj-one-star                          0.14s
+  PASS  customer-with-multi-review-order            0.08s
+  PASS  revenue-black-friday-week-by-state          0.15s
+  PASS  revenue-2018-h1-by-month                    0.13s
+  PASS  search-black-friday-day                     0.06s
+  PASS  revenue-by-month-split                      0.28s
+  PASS  revenue-by-category-split                   0.20s
+  PASS  revenue-by-seller-split                     0.28s
+  PASS  revenue-by-payment-method-2018              0.12s
+  PASS  categories-worst-reviewed                   0.33s
+  PASS  sellers-latest-deliverers                   0.59s
+  PASS  sellers-in-rio-by-revenue                   0.15s
+  PASS  delivery-by-category-worst                  0.23s
+  PASS  delivery-by-seller-worst                    0.33s
+  PASS  delivery-buckets-2017-q4                    0.10s
+  PASS  search-very-late                            0.51s
+  PASS  search-big-sp-orders                        0.10s
+  PASS  search-late-and-unhappy                     0.31s
+  PASS  search-cancelled-in-2018                    0.05s
+  PASS  customer-most-orders                        0.09s
+  PASS  order-multi-seller-multi-review             0.04s
+  PASS  product-best-seller                         0.13s
+  PASS  products-top-health-beauty                  0.04s
+  PASS  products-count-pc-gamer                     0.01s
+
+Invariants         9   pass   9   fail   0   error 0   (150 seeded cases)
+  PASS  adjacent-date-windows-partition             3.36s
+  PASS  complete-listing-matches-count             12.35s
+  PASS  find-customer-exact-match                   0.26s
+  PASS  narrower-filter-never-counts-more           4.52s
+  PASS  overlapping-groups-not-additive             0.62s
+  PASS  partitions-sum-to-total                     1.02s
+  PASS  same-metric-same-number                     2.25s
+  PASS  unique-keys                                 2.66s
+  PASS  value-bounds                                0.00s
+
+Differentials      6   pass   6   fail   0   error 0   (200 seeded cases)
+  PASS  search-orders-random-filters                9.32s
+  PASS  revenue-report-random-windows               4.70s
+  PASS  delivery-random-windows                     3.40s
+  PASS  customers-random                            1.95s
+  PASS  products-random                             3.07s
+  PASS  sellers-random-states                       3.00s
+
+Reconciliations    2   pass   2   fail   0   error 0
+  PASS  reconcile-row-counts                        0.47s
+  PASS  reconcile-value-sums                        0.19s
+
+Regressions       12   caught 12   missed 0   (historical 3/3, pre-fix 9/9)
+  CAUGHT  H1-category-revenue-fan-out      Category revenue summed over a line-item x review join (the 42x bug)
+          by categories-all, partitions-sum-to-total, same-metric-same-number
+          categories-all: garden_tools units_sold: expected 4328, got 801366 (x185.2)
+          partitions-sum-to-total: comparison="item revenue: list_categories vs revenue_report(month)" values=[13494400.74, 385401581.61]
+          same-metric-same-number: metric="category item revenue" list_categories=52474005.02 revenue_report=1255695.13
+          provenance: reconstructed from the article; on the pre-fix product counters it reproduces the article's R$52,545,084 exactly (R$52,474,005 on today's counters, still ~42x)
+  CAUGHT  H2-seller-average-fan-out        Seller review average taken over line items instead of orders (3.81 reported as 2.57)
+          by sellers-top-revenue, sellers-worst-reviewed, same-metric-same-number
+          sellers-top-revenue: 1f50f920176fa81dab994f9023523100 avg_days_late: expected -9.5, got -9.9 (x1.042)
+          sellers-worst-reviewed: 897060da8b9a21f655304d50fd935913 avg_review: expected 3.61, got 3.37 (x0.9335)
+          same-metric-same-number: metric="seller item revenue" seller_performance=229472.63 revenue_report=229237.63
+          provenance: reconstructed from the article; reproduces its 3.81 -> 2.57 exactly
+  CAUGHT  H3-silently-dropped-payments     33 payment rows silently missing after import (the insert_all bug)
+          by revenue-by-payment-method, reconcile-row-counts, reconcile-value-sums
+          revenue-by-payment-method: voucher revenue: expected 349874.4, got 349407.03 (x0.9987)
+          reconcile-row-counts: payments payments: expected 103886, got 103853 (x0.9997)
+          reconcile-value-sums: payment_value payment_value: expected 16008872.12, got 16008272.1 (x1)
+          provenance: simulated effect; the original index/column combination is not recoverable
+  CAUGHT  P1-search-orders                 search_orders joined every review, listing twice-reviewed orders twice
+          by search-all-placed, search-rj-one-star, search-black-friday-day, search-very-late, search-big-sp-orders, search-late-and-unhappy, search-cancelled-in-2018, complete-listing-matches-count, search-orders-random-filters
+          search-all-placed: total_matches total_matches: expected 99441, got 100000 (x1.006)
+          search-rj-one-star: total_matches total_matches: expected 2254, got 2272 (x1.008)
+          search-black-friday-day: total_matches total_matches: expected 1176, got 1185 (x1.008)
+          search-very-late: total_matches total_matches: expected 2485, got 2499 (x1.006)
+          search-big-sp-orders: total_matches total_matches: expected 359, got 361 (x1.006)
+          search-late-and-unhappy: total_matches total_matches: expected 4255, got 4274 (x1.004)
+          search-cancelled-in-2018: total_matches total_matches: expected 334, got 336 (x1.006)
+          complete-listing-matches-count: arguments={"from" => "2017-05-06", "to" => "2017-05-06", "limit" => 50, "customer_state" => "SP"} total_matches=41 rows=41 distinct=40
+          search-orders-random-filters: total_matches total_matches: expected 232, got 234 (x1.009)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P2-list-categories               list_categories averaged reviews over every order and every review
+          by categories-all, categories-worst-reviewed
+          categories-all: pc_gamer avg_review: expected 3.43, got 3.13 (x0.9125)
+          categories-worst-reviewed: pc_gamer avg_review: expected 3.43, got 3.13 (x0.9125)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P3-delivery-performance          delivery_performance counted twice-reviewed orders twice, and cancelled orders
+          by delivery-by-bucket, delivery-by-state, delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, delivery-random-windows
+          delivery-by-bucket: more than a week late avg_review: expected 1.71, got 1.72 (x1.006)
+          delivery-by-state: MA avg_days_late: expected -8.7, got -8.8 (x1.012)
+          delivery-by-category-worst: bed_bath_table late_rate: expected 8.6, got 8.7 (x1.012)
+          delivery-by-seller-worst: b2479f944e1b90cf8a5de1bbfde284d6 late_rate: expected 13.9, got 13.6 (x0.9784)
+          delivery-buckets-2017-q4: more than a week late avg_review: expected 1.65, got 1.66 (x1.006)
+          delivery-random-windows: 4-7 days late orders: expected 148, got 149 (x1.007)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P4-find-customer                 find_customer matched substrings and doubled twice-reviewed orders
+          by customer-with-multi-review-order, customer-most-orders, find-customer-exact-match, customers-random
+          customer-with-multi-review-order: (record) orders: expected 1, got 2 (x2)
+          customer-most-orders: (record) avg_review: expected 5.0, got 4.76 (x0.952)
+          find-customer-exact-match: probe="%" should_resolve=false resolved_to="861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+          customers-random: (record) orders: expected 1, got 2 (x2)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P5-seller-performance            seller_performance counted cancelled orders and every review
+          by sellers-top-revenue, sellers-worst-reviewed, sellers-latest-deliverers, sellers-in-rio-by-revenue, same-metric-same-number, sellers-random-states
+          sellers-top-revenue: 7e93a43ef30c4f03f38b393420bc753a revenue: expected 172583.88, got 176431.87 (x1.022)
+          sellers-worst-reviewed: 18a349e75d307f4b4cc646a691ed4216 orders: expected 119, got 121 (x1.017)
+          sellers-latest-deliverers: 2a1348e9addc1af5aaa619b1a3679d6b orders: expected 51, got 52 (x1.02)
+          sellers-in-rio-by-revenue: d05ae8f7a5bd1d2a690a44cd079e4e27 revenue: expected 13244.0, got 13436.0 (x1.014)
+          same-metric-same-number: metric="seller item revenue" seller_performance=229472.63 revenue_report=229237.63
+          sellers-random-states: 42bde9fef835393bb8a8849cb6b7f245 orders: expected 34, got 35 (x1.029)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P6-get-order                     get_order showed whichever review the database returned first
+          by order-multi-seller-multi-review
+          order-multi-seller-multi-review: (record) review.score: expected 5, got 4 (x0.8)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P7-get-product                   get_product averaged over line items and cancelled orders
+          by product-best-seller, products-random
+          product-best-seller: (record) avg_days_late: expected -9.3, got -9.1 (x0.9785)
+          products-random: (record) avg_review: expected 4.0, got 3.8 (x0.95)
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P8-revenue-report                revenue_report credited whole orders to categories, sellers and payment methods
+          by revenue-by-category-top20, revenue-by-seller-top20, revenue-by-payment-method, revenue-by-month-split, revenue-by-category-split, revenue-by-seller-split, revenue-by-payment-method-2018, overlapping-groups-not-additive, partitions-sum-to-total, same-metric-same-number, revenue-report-random-windows
+          revenue-by-category-top20: furniture_decor revenue: expected 899626.04, got 929190.19 (x1.033)
+          revenue-by-seller-top20: 4a3ca9315b744ce9f8e9374361493884 revenue: expected 235359.3, got 248435.14 (x1.056)
+          revenue-by-payment-method: voucher revenue: expected 349874.4, got 490583.08 (x1.402)
+          revenue-by-month-split: 2016-09 item_revenue: expected 207.86, got 
+          revenue-by-category-split: furniture_decor revenue: expected 899626.04, got 929190.19 (x1.033)
+          revenue-by-seller-split: 4a3ca9315b744ce9f8e9374361493884 revenue: expected 235359.3, got 248435.14 (x1.056)
+          revenue-by-payment-method-2018: voucher revenue: expected 181015.42, got 248104.78 (x1.371)
+          overlapping-groups-not-additive: group_by="category" claims=["structured totals.orders=97729", "text states an order total"]
+          partitions-sum-to-total: comparison="item revenue: list_categories vs revenue_report(month)" problem="no tool reports this total" values=[nil, 13494400.74]
+          same-metric-same-number: metric="category item revenue" list_categories=1255695.13 revenue_report=1445137.23
+          revenue-report-random-windows: 2017-01 item_revenue: expected 120098.27, got 
+          provenance: verbatim from git at 9fa9b02, the code the harness first ran against
+  CAUGHT  P9-product-counters              product sales counters included cancelled and unavailable orders
+          by categories-all, categories-worst-reviewed, products-top-health-beauty, products-random
+          categories-all: dvds_blu_ray revenue: expected 4559.49, got 5999.39 (x1.316)
+          categories-worst-reviewed: pc_gamer revenue: expected 1306.95, got 1545.95 (x1.183)
+          products-top-health-beauty: 8c292ca193d326152e335d77176746f0 units_sold: expected 90, got 92 (x1.022)
+          products-random: (record) units_sold: expected 122, got 123 (x1.008)
+          provenance: importer SQL verbatim from git at 9fa9b02, applied in a rolled-back transaction
+
+Findings register: 11 findings (9 verified, 1 deferred, 1 out_of_scope)
+Result: PASS   fingerprint f4841a48894b268d   129.8s

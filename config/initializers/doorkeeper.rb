@@ -279,8 +279,16 @@ Doorkeeper.configure do
   # these the presented token actually carries — see app/controllers/mcp_controller.rb.
   # Namespaced (mcp:*) rather than bare read/write since this Doorkeeper
   # install may end up protecting more than just the MCP endpoint someday.
+  #
+  # MCP_ALLOW_WRITE_SCOPE=false (set on the public demo deployment) removes
+  # mcp:write from the configured scope set entirely: a client that asks for it
+  # is refused at the authorization endpoint, so no new token can carry it.
+  # That is the deploy-time half. The runtime half is StoreMcp.write_enabled?,
+  # checked in McpController — needed because Doorkeeper validates scopes when
+  # a token is *issued*, not when it is presented, so a token minted while
+  # writes were enabled would otherwise keep them after the flag flipped.
   default_scopes  :"mcp:read"
-  optional_scopes :"mcp:write"
+  optional_scopes :"mcp:write" if ENV.fetch("MCP_ALLOW_WRITE_SCOPE", "true") != "false"
 
   # Allows to restrict only certain scopes for grant_type.
   # By default, all the scopes will be available for all the grant types.
@@ -324,6 +332,18 @@ Doorkeeper.configure do
   # force_ssl_in_redirect_uri !Rails.env.development?
   #
   # force_ssl_in_redirect_uri { |uri| uri.host != 'localhost' }
+  #
+  # HTTPS everywhere except the loopback interface (finding F14). Native
+  # clients such as Claude Code receive the authorization code on a local port
+  # (http://localhost:<port>/callback): the OAuth 2.0 for Native Apps rule
+  # (RFC 8252 §7.3) that OAuth 2.1 adopts. With Doorkeeper's default of
+  # HTTPS-only outside development, their dynamic registration failed with
+  # "Redirect URI must be an HTTPS/SSL URI", so only web clients such as
+  # claude.ai could connect. A loopback redirect never leaves the user's
+  # machine, and the code is still bound to its PKCE verifier (force_pkce
+  # above) and still needs the admin's consent. Every other redirect URI
+  # stays HTTPS-only.
+  force_ssl_in_redirect_uri { |uri| !%w[localhost 127.0.0.1 [::1] ::1].include?(uri.host) }
 
   # Specify what redirect URI's you want to block during Application creation.
   # Any redirect URI is allowed by default.

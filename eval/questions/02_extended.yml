@@ -1,0 +1,269 @@
+# Canonical questions, day 2 set. The day 1 set (01_core.yml) is kept
+# exactly as it was run against the unfixed tools. These add the risks it
+# did not cover: date windows and their boundaries, the item/freight split,
+# per-item allocation for categories and sellers, ranking directions, filter
+# combinations, single-record lookups and the catalogue.
+#
+# Each question's `risk` says what it exists to catch. A question that
+# catches nothing the others don't is filler, and has no place here.
+
+# --- date windows ---------------------------------------------------------
+
+- id: revenue-black-friday-week-by-state
+  title: Revenue by state for Black Friday week 2017 (20-26 November)
+  risk: inclusive date window on both ends; the busiest week in the dataset
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: state, from: "2017-11-20", to: "2017-11-26", limit: 50 }
+  rows: rows
+  key: state
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: state, from: "2017-11-20", to: "2017-11-26" } }
+  match: all
+
+- id: revenue-2018-h1-by-month
+  title: Monthly revenue for the first half of 2018
+  risk: a window that starts and ends exactly on month boundaries
+  metrics: [orders, gross_revenue]
+  tool: revenue_report
+  args: { group_by: month, from: "2018-01-01", to: "2018-06-30" }
+  rows: rows
+  key: month
+  fields: { orders: orders, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: month, from: "2018-01-01", to: "2018-06-30" } }
+  match: all
+
+- id: search-black-friday-day
+  title: How many orders were placed on Black Friday 2017?
+  risk: a single-day window must include orders placed at 23:59:59
+  metrics: [total_matches]
+  tool: search_orders
+  args: { from: "2017-11-24", to: "2017-11-24" }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { from: "2017-11-24", to: "2017-11-24" } }
+
+# --- item / freight split -------------------------------------------------
+
+- id: revenue-by-month-split
+  title: Merchandise, freight and average order value by month
+  risk: gross revenue can be right while its item/freight split is wrong
+  metrics: [item_revenue, freight, avg_order_value]
+  tool: revenue_report
+  args: { group_by: month }
+  rows: rows
+  key: month
+  fields: { item_revenue: item_revenue, freight: freight, avg_order_value: avg_order_value }
+  expected: { oracle: revenue_by, params: { dimension: month } }
+  match: all
+
+- id: revenue-by-category-split
+  title: Top 20 categories with merchandise and freight separated
+  risk: category revenue must be allocated per item, not taken from order totals
+  metrics: [orders, item_revenue, freight, gross_revenue]
+  tool: revenue_report
+  args: { group_by: category, limit: 20 }
+  rows: rows
+  key: category
+  key_format: category
+  fields: { item_revenue: item_revenue, freight: freight, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: category } }
+  match: { top: 20, rank_by: gross_revenue, order: desc }
+
+- id: revenue-by-seller-split
+  title: Top 20 sellers with merchandise and freight separated
+  risk: a seller must not be credited with another seller's items in a shared order
+  metrics: [orders, item_revenue, freight, gross_revenue]
+  tool: revenue_report
+  args: { group_by: seller, limit: 20 }
+  rows: rows
+  key: seller
+  fields: { item_revenue: item_revenue, freight: freight, revenue: gross_revenue }
+  expected: { oracle: revenue_by, params: { dimension: seller } }
+  match: { top: 20, rank_by: gross_revenue, order: desc }
+
+- id: revenue-by-payment-method-2018
+  title: Payments collected by method in 2018
+  risk: split payments within a date window
+  metrics: [orders, payment_value]
+  tool: revenue_report
+  args: { group_by: payment_method, from: "2018-01-01", to: "2018-12-31" }
+  rows: rows
+  key: method
+  fields: { orders: orders, revenue: payment_value }
+  expected: { oracle: revenue_by, params: { dimension: payment_method, from: "2018-01-01", to: "2018-12-31" } }
+  match: all
+
+# --- rankings in the other direction ----------------------------------------
+
+- id: categories-worst-reviewed
+  title: The 10 worst-reviewed categories
+  risk: ascending sort with categories that have no review at all (nulls last)
+  metrics: [products, units_sold, item_revenue, avg_review]
+  tool: list_categories
+  args: { sort: avg_review }
+  rows: categories
+  key: category
+  key_format: category
+  fields: { units_sold: units_sold, revenue: item_revenue, avg_review: avg_review }
+  expected: { oracle: categories }
+  match: { top: 10, rank_by: avg_review, order: asc }
+
+- id: sellers-latest-deliverers
+  title: The 10 sellers whose deliveries run latest (at least 50 orders)
+  risk: lateness averaged per order, not per line item
+  metrics: [orders, avg_days_late, avg_review]
+  tool: seller_performance
+  args: { sort: days_late, min_orders: 50, limit: 10 }
+  rows: sellers
+  key: seller
+  fields: { orders: orders, avg_days_late: avg_days_late, avg_review: avg_review }
+  expected: { oracle: sellers, params: { min_orders: 50 } }
+  match: { top: 10, rank_by: avg_days_late, order: desc }
+
+- id: sellers-in-rio-by-revenue
+  title: Top Rio de Janeiro sellers by revenue (at least 20 orders)
+  risk: the seller-state filter combined with the order threshold
+  metrics: [orders, item_revenue, avg_review]
+  tool: seller_performance
+  args: { sort: revenue, state: RJ, min_orders: 20, limit: 20 }
+  rows: sellers
+  key: seller
+  fields: { orders: orders, revenue: item_revenue, avg_review: avg_review }
+  expected: { oracle: sellers, params: { min_orders: 20, seller_state: RJ } }
+  match: { top: 20, rank_by: item_revenue, order: desc }
+
+# --- delivery ---------------------------------------------------------------
+
+- id: delivery-by-category-worst
+  title: The 20 categories whose customers review deliveries worst (at least 30 orders)
+  risk: an order with items in two categories counts once in each, and once only
+  metrics: [orders, late_rate, avg_days_late, avg_review]
+  tool: delivery_performance
+  args: { group_by: category, min_orders: 30, limit: 20 }
+  rows: rows
+  key: category
+  key_format: category
+  fields: { orders: orders, late_rate: late_rate, avg_days_late: avg_days_late, avg_review: avg_review }
+  expected: { oracle: delivery_by, params: { dimension: category, min_orders: 30 } }
+  match: { top: 20, rank_by: avg_review, order: asc }
+
+- id: delivery-by-seller-worst
+  title: The 10 worst-reviewed sellers by delivery (at least 100 delivered orders)
+  risk: the per-seller delivery population and its review average
+  metrics: [orders, late_rate, avg_days_late, avg_review]
+  tool: delivery_performance
+  args: { group_by: seller, min_orders: 100, limit: 10 }
+  rows: rows
+  key: seller
+  fields: { orders: orders, late_rate: late_rate, avg_days_late: avg_days_late, avg_review: avg_review }
+  expected: { oracle: delivery_by, params: { dimension: seller, min_orders: 100 } }
+  match: { top: 10, rank_by: avg_review, order: asc }
+
+- id: delivery-buckets-2017-q4
+  title: Lateness bands for orders placed in Q4 2017
+  risk: the delivery population inside a date window, around the Black Friday backlog
+  metrics: [orders, late_orders, late_rate, avg_days_late, avg_review]
+  tool: delivery_performance
+  args: { from: "2017-10-01", to: "2017-12-31" }
+  rows: rows
+  key: delivery
+  fields: { orders: orders, late_orders: late_orders, late_rate: late_rate, avg_days_late: avg_days_late,
+            avg_review: avg_review }
+  expected: { oracle: delivery_by, params: { dimension: bucket, from: "2017-10-01", to: "2017-12-31" } }
+  match: all
+
+# --- search filters ---------------------------------------------------------
+
+- id: search-very-late
+  title: How many orders arrived ten or more days late?
+  risk: days_late is a fact of the timestamps, so it includes the six cancelled-but-delivered orders
+  metrics: [total_matches]
+  tool: search_orders
+  args: { min_days_late: 10 }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { min_days_late: 10 } }
+
+- id: search-big-sp-orders
+  title: How many Sao Paulo orders totalled R$1,000 or more?
+  risk: the order-total filter is items plus freight, inclusive
+  metrics: [total_matches]
+  tool: search_orders
+  args: { customer_state: SP, min_total: 1000 }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { customer_state: SP, min_total: 1000 } }
+
+- id: search-late-and-unhappy
+  title: How many late orders got two stars or fewer?
+  risk: the review filter must use the order's one score, not any of its reviews
+  metrics: [total_matches]
+  tool: search_orders
+  args: { min_days_late: 1, max_review_score: 2 }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { min_days_late: 1, max_review_score: 2 } }
+
+- id: search-cancelled-in-2018
+  title: How many 2018 orders were cancelled?
+  risk: search covers placed orders, so a status filter reaches orders revenue excludes
+  metrics: [total_matches]
+  tool: search_orders
+  args: { status: canceled, from: "2018-01-01", to: "2018-12-31" }
+  scalar: total_matches
+  expected: { oracle: search_count, params: { status: canceled, from: "2018-01-01", to: "2018-12-31" } }
+
+# --- single records ---------------------------------------------------------
+
+- id: customer-most-orders
+  title: Order count, lifetime value and review score for the store's most frequent customer
+  risk: a long history with a mix of statuses; count is all orders, value is completed ones
+  metrics: [orders, lifetime_value, avg_review]
+  tool: find_customer
+  pick: most_frequent_customer
+  args: { email: "%{unique_id}@olist.invalid" }
+  record: true
+  fields: { orders: orders, lifetime_value: lifetime_value, avg_review: avg_review }
+  expected: { oracle: customer, params: { unique_id: "%{unique_id}" } }
+
+- id: order-multi-seller-multi-review
+  title: Totals, items and review score of an order with two sellers and two reviews
+  risk: one order's own figures, and which of its reviews counts
+  metrics: [item_revenue, freight, gross_revenue, review score]
+  tool: get_order
+  pick: multi_seller_reviewed_order
+  args: { order_number: "%{number}" }
+  record: true
+  fields: { olist_status: status, item_total: item_total, shipment_total: freight, total: total,
+            "line_items#count": line_items, review.score: review_score, timeline.days_late: days_late }
+  expected: { oracle: order_summary, params: { order_id: "%{order_id}" } }
+
+- id: product-best-seller
+  title: Sales, orders, review score and lateness for the best-selling product
+  risk: the product's own counters and its order-level averages
+  metrics: [units_sold, item_revenue, orders, avg_review, avg_days_late]
+  tool: get_product
+  pick: best_selling_product
+  args: { sku: "%{sku}" }
+  record: true
+  fields: { units_sold: units_sold, revenue: item_revenue, orders: orders, avg_review: avg_review,
+            avg_days_late: avg_days_late }
+  expected: { oracle: product, params: { product_id: "%{sku}" } }
+
+- id: products-top-health-beauty
+  title: The 20 best-selling Health Beauty products by revenue
+  risk: catalogue search reads the same counters list_categories sums
+  metrics: [units_sold, item_revenue]
+  tool: search_products
+  args: { category: Health Beauty, sort: revenue, limit: 20 }
+  rows: products
+  key: sku
+  fields: { units_sold: units_sold, revenue: item_revenue }
+  expected: { oracle: products_in_category, params: { category: health_beauty } }
+  match: { top: 20, rank_by: item_revenue, order: desc }
+
+- id: products-count-pc-gamer
+  title: How many products are in the untranslated Pc Gamer category?
+  risk: the catalogue counts products whether or not they sold
+  metrics: [products]
+  tool: search_products
+  args: { category: Pc Gamer }
+  scalar: total_matches
+  expected: { oracle: products_in_category_count, params: { category: pc_gamer } }

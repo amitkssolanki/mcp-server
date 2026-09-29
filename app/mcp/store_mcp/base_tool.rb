@@ -19,6 +19,17 @@ module StoreMcp
     MAX_LIMIT = 50
     DEFAULT_LIMIT = 20
 
+    # One review score per order: its most recent review (docs/METRICS.md,
+    # "Reviews"). 555 orders carry more than one review, so joining
+    # olist_reviews directly at order grain counts those orders once per
+    # review. Join this instead, anywhere a query is about orders.
+    ORDER_REVIEWS = <<~SQL.squish
+      (SELECT DISTINCT ON (spree_order_id) spree_order_id, score, title, message
+         FROM olist_reviews
+        ORDER BY spree_order_id, reviewed_at DESC NULLS LAST, answered_at DESC NULLS LAST,
+                 olist_review_id COLLATE "C" DESC)
+    SQL
+
     class << self
       # Every tool signature is `call(server_context:, **args)` so that an
       # unexpected argument from the model is ignored rather than raising

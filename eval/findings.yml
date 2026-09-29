@@ -1,0 +1,328 @@
+# The findings register: everything the harness has found, and what was
+# done about it. When a check fails, the report looks it up here; a failure
+# listed under no finding is reported as UNTRIAGED, meaning a new problem
+# nobody has looked at yet. Findings are never deleted once fixed. The
+# fixed ones are the evidence that the harness finds real problems.
+#
+# triage: what was actually wrong
+#   tool_bug        the tool's SQL does not compute its own stated metric
+#   definition_gap  the tools disagree because no definition existed
+#   import_bug      the data in Postgres does not match the source
+#   oracle_bug      the oracle was wrong (a finding about the harness itself)
+#   security        a trust-boundary problem, not a correctness one
+#
+# scope: what we decided to do about it
+#   fix             required correctness fix, in scope
+#   definition      resolved by a decision recorded in docs/METRICS.md
+#   separate        real, but needs its own scope decision
+#   out_of_scope    acknowledged, deliberately not addressed
+#
+# status: discovered -> reproduced -> fixed -> verified, or deferred /
+#   out_of_scope. "verified" means the fix is in, the checks listed pass, and
+#   the pre-fix code is kept as a regression the harness catches.
+#
+# reports: eval/reports/01-before-fixes.txt (day 1 bank, unfixed),
+#          01b-before-fixes-full.txt (full harness, unfixed),
+#          02-after-fixes.txt (full harness, fixed)
+
+- id: F1
+  title: Orders with several reviews fan out every order-level join
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  fixed_in: 948ce4c
+  tools: [search_orders, delivery_performance, find_customer]
+  definition: "METRICS.md: Reviews (one review score per order); Counts (total_matches)"
+  summary: >
+    555 orders carry more than one review (1,114 rows). search_orders,
+    delivery_performance and find_customer LEFT JOIN olist_reviews at order
+    grain, so those orders appear once per review. search_orders reports
+    100,000 matches for 99,441 orders and shows the same order twice on a
+    page. A customer with one twice-reviewed order shows 2 orders and double
+    their lifetime value (R$93.70 for R$46.85).
+  checks: [search-all-placed, search-rj-one-star, search-black-friday-day, search-very-late, search-big-sp-orders,
+           search-late-and-unhappy, search-cancelled-in-2018, delivery-by-bucket, delivery-by-state,
+           delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4,
+           customer-with-multi-review-order, customer-most-orders, complete-listing-matches-count,
+           search-orders-random-filters, delivery-random-windows, customers-random]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P1-search-orders, P3-delivery-performance, P4-find-customer]
+
+- id: F2
+  title: No review-per-order policy
+  severity: medium
+  triage: definition_gap
+  scope: definition
+  status: verified
+  fixed_in: 948ce4c
+  tools: [list_categories, seller_performance, delivery_performance, find_customer, get_order, get_product]
+  definition: "METRICS.md: Reviews. An order's score is its most recent review"
+  summary: >
+    When an order has reviews with different scores (209 orders), averages
+    used every one of them and get_order showed whichever row the database
+    returned first. For order 5cb890a6... that is the 4-star review, not the
+    later 5-star one. Decision: an order's score is its most recent review
+    (latest creation date, then latest answer, then review id).
+  checks: [categories-all, categories-worst-reviewed, sellers-top-revenue, sellers-worst-reviewed,
+           sellers-latest-deliverers, sellers-in-rio-by-revenue, delivery-by-bucket, delivery-by-state,
+           delivery-by-category-worst, delivery-by-seller-worst, delivery-buckets-2017-q4, search-late-and-unhappy,
+           customer-with-multi-review-order, customer-most-orders, order-multi-seller-multi-review,
+           product-best-seller, products-random, sellers-random-states, customers-random]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P2-list-categories, P3-delivery-performance, P5-seller-performance, P6-get-order, P7-get-product]
+
+- id: F3
+  title: Two tools, two different "category revenue"
+  severity: high
+  triage: definition_gap
+  scope: fix
+  status: verified
+  fixed_in: 5fa9bf3
+  tools: [revenue_report, list_categories]
+  definition: "METRICS.md: Money (item_revenue, gross_revenue); Dimensions (category)"
+  summary: >
+    list_categories reported item revenue over all orders (Health Beauty
+    R$1,258,681); revenue_report(category) credited each category with the
+    whole order total, freight included, of every completed order touching it
+    (R$1,445,137). Both were labelled "revenue". revenue_report exposed no
+    item revenue or freight at all, so category revenue could not be
+    reconciled against any total. Correct under the definitions: item revenue
+    R$1,255,695.13, gross R$1,437,665.78.
+  checks: [revenue-by-category-top20, revenue-by-category-split, revenue-by-month-split, categories-all,
+           categories-worst-reviewed, same-metric-same-number, partitions-sum-to-total, revenue-report-random-windows]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P8-revenue-report]
+
+- id: F4
+  title: Sellers credited with other sellers' items
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  fixed_in: 5fa9bf3
+  tools: [revenue_report]
+  definition: "METRICS.md: Principles (allocate at the grain the data has); Dimensions (seller)"
+  summary: >
+    revenue_report(seller) summed whole order totals, so in the 1,278
+    multi-seller orders each seller was credited with every other seller's
+    items and all the freight. The top seller showed R$253,122 there against
+    R$229,473 in seller_performance; under the definitions it is R$249,393.44
+    gross, R$229,237.63 item revenue.
+  checks: [revenue-by-seller-top20, revenue-by-seller-split, same-metric-same-number]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P8-revenue-report]
+
+- id: F5
+  title: Cancelled orders counted as sales in product, category and seller figures
+  severity: medium
+  triage: definition_gap
+  scope: fix
+  status: verified
+  fixed_in: 383453d
+  tools: [list_categories, get_product, search_products, seller_performance]
+  definition: "METRICS.md: Populations (completed orders)"
+  summary: >
+    The importer's product sales counters (units_sold_count, revenue), which
+    list_categories, get_product and search_products read, and
+    seller_performance's revenue and order count, included items from
+    cancelled and unavailable orders. revenue_report excluded them, so the
+    same product's revenue depended on which tool was asked.
+  checks: [categories-all, categories-worst-reviewed, sellers-top-revenue, sellers-worst-reviewed,
+           sellers-latest-deliverers, sellers-in-rio-by-revenue, products-top-health-beauty, product-best-seller,
+           products-random, sellers-random-states]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P5-seller-performance, P9-product-counters]
+
+- id: F6
+  title: Overlapping buckets presented as additive
+  severity: medium
+  triage: tool_bug
+  scope: fix
+  status: verified
+  fixed_in: 5fa9bf3
+  tools: [revenue_report]
+  definition: "METRICS.md: Principles (say whether a breakdown adds up); Counts (orders)"
+  summary: >
+    revenue_report printed "Total across shown rows: N orders" and returned
+    totals.orders for category, seller and payment-method groupings, where
+    one order sits in several buckets. Across all categories that "total" is
+    97,729 orders. The figure is inflated, and it invites the model to repeat
+    it.
+  checks: [overlapping-groups-not-additive]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P8-revenue-report]
+
+- id: F7
+  title: Payment-method revenue double-counts split payments
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  fixed_in: 5fa9bf3
+  tools: [revenue_report]
+  definition: "METRICS.md: Money (payment_value)"
+  summary: >
+    revenue_report(payment_method) credited the whole order total to every
+    payment type the order used, so a voucher plus card order counted in full
+    twice. Credit card came out R$185,429 high (R$12,534,959 against
+    R$12,349,530 collected) and voucher 1.4x high. Decision: this grouping
+    reports payment_value.
+  checks: [revenue-by-payment-method, revenue-by-payment-method-2018]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P8-revenue-report]
+
+- id: F8
+  title: Delivery metrics include cancelled orders
+  severity: low
+  triage: definition_gap
+  scope: definition
+  status: verified
+  fixed_in: 383453d
+  tools: [delivery_performance]
+  definition: "METRICS.md: Populations (delivered orders); Delivery"
+  summary: >
+    Six cancelled orders have a delivery timestamp and an estimate.
+    delivery_performance counted them. Decision: delivery metrics cover
+    completed orders only; days_late itself stays a fact of the timestamps, so
+    search_orders can still find those six.
+  checks: [delivery-by-bucket, delivery-by-state, delivery-by-category-worst, delivery-by-seller-worst,
+           delivery-buckets-2017-q4, delivery-random-windows]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P3-delivery-performance]
+
+- id: F9
+  title: find_customer matches email as a substring
+  severity: medium
+  triage: tool_bug
+  scope: fix
+  status: verified
+  fixed_in: 77c4a70
+  tools: [find_customer]
+  definition: "METRICS.md: Customers (exact, case-insensitive match)"
+  summary: >
+    LIKE '%term%' on the caller's input, so "%", "_" or a fragment of an id
+    returned an arbitrary customer's order history. The answer is about the
+    wrong person, and the tool can be used to enumerate customers. Fix: exact,
+    case-insensitive match.
+  checks: [find-customer-exact-match]
+  reports: [01b-before-fixes-full.txt (failing), 02-after-fixes.txt (passing)]
+  regression: [P4-find-customer]
+
+- id: F10
+  title: Preview-then-confirm is enforced by the prompt, not the server
+  severity: medium
+  triage: security
+  scope: separate
+  status: deferred
+  tools: [update_product_price, update_order_status]
+  definition: null
+  summary: >
+    Nothing server-side ties a confirm:true call to an earlier preview; a
+    model can confirm first. Writes are disabled on the public deployment,
+    and the HTTP boundary tests pin that a write tool cannot be reached there
+    even with a stale write-scoped token, so there is no live exposure. The
+    fix is a signed, expiring preview token with stale-preview rejection.
+    That is write-safety work, deliberately outside the correctness scope.
+  checks: []
+  regression: []
+
+- id: F11
+  title: Customer lookup is not scoped to the store
+  severity: low
+  triage: security
+  scope: out_of_scope
+  status: out_of_scope
+  tools: [find_customer]
+  definition: null
+  summary: >
+    Spree users are global. find_customer scopes the customer's orders to the
+    store but not the user row. With one store this cannot leak anything, and
+    the boundary tests show another store's server resolves none of this
+    store's orders. Real multi-tenancy would need it. The F9 fix does not
+    widen or narrow this.
+  checks: []
+  regression: []
+
+- id: F12
+  title: The server agreed to an MCP protocol revision it does not implement
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  tools: [all (protocol layer)]
+  definition: null
+  summary: >
+    Found on day 3, when the agent evaluation's first runs showed the store
+    server connected but exposing 0 tools. Logging in updated Claude Code
+    from 2.1.252 to 2.1.284, which negotiates MCP revision 2026-07-28. The
+    Ruby SDK (mcp 1.1.0) lists 2026-07-28 as its latest stable revision and
+    agreed to it on both initialize and server/discover, but does not
+    implement it: that revision requires a resultType on list results, and
+    1.1.0 sends none (the SDK's changelog adds it in 1.2.0). The client
+    rejected tools/list, the model saw no tools, wrote "Tool call:
+    search_orders" as prose, and in one probe invented a tool result (6
+    cancelled 2018 orders; the oracle says 334). The same SDK serves the
+    deployed HTTP endpoint, so any client negotiating 2026-07-28 would likely
+    get zero tools there too. That is not verified against production, which
+    was not touched. Fix: StoreMcp::Server pins the negotiated revision to
+    2025-11-25, the newest 1.1.0 implements, on both paths. The SDK was not
+    upgraded. Tool definitions and outputs are unchanged, and the day 2
+    harness fingerprint is identical. The agent runner now fails a run that
+    does not see exactly the nine read tools.
+  checks: [mcp_boundary_test (2026-07-28 negotiated down; discovery omits it), agent_grader_test (tool visibility)]
+  reports: [03-agent-baseline (the aborted first attempt is described there)]
+  regression: []
+
+- id: F13
+  title: Customer-written review text reaches the model unfenced in structured results
+  severity: low
+  triage: security
+  scope: separate
+  status: deferred
+  tools: [get_order]
+  definition: null
+  summary: >
+    Claude Code passes structuredContent to the model, not the text content.
+    get_order's text fences review title/message as customer-written data;
+    its structured review.title/message are bare strings. Probed with two
+    benign instruction-shaped payloads in a local test-database review, 3
+    runs each (claude-sonnet-5, Claude Code 2.1.284): the payload reached the
+    model unfenced 6/6, and the model reported the true score, made no extra
+    tool call and explicitly identified the text as an embedded instruction
+    6/6. Classified F13-B, a defence-in-depth weakness: not demonstrated
+    exploitable, but the server's own defence is absent from the
+    representation clients use, so protection rests on the model alone.
+    Remediation: mark customer text as untrusted inside the structured
+    result and in get_order's description. Before any write-enabled
+    deployment, together with F10.
+  checks: []
+  reports: [05-f13-untrusted-text.md]
+  regression: []
+
+- id: F14
+  title: Native OAuth clients (Claude Code) could not register
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  tools: [all (OAuth layer)]
+  definition: null
+  summary: >
+    Found during the release, when Claude Code authenticated against the
+    deployed endpoint: dynamic client registration was rejected with
+    "Redirect URI must be an HTTPS/SSL URI". Doorkeeper's
+    force_ssl_in_redirect_uri defaults to HTTPS-only outside development,
+    which also rejects the loopback redirect (http://localhost:<port>/callback)
+    that native clients use (RFC 8252 section 7.3, adopted by OAuth 2.1). Only
+    web clients with an https callback, such as claude.ai, could connect. Fix:
+    http is allowed for loopback hosts only (localhost, 127.0.0.1, [::1]);
+    every other redirect stays HTTPS-only, and PKCE and admin consent still
+    apply. Two boundary tests: loopback registration succeeds while any other
+    http redirect is refused, and a loopback client still gets no grant
+    without consent. Both fail with the fix removed. Verified in the release:
+    Claude Code 2.1.284 registered with a loopback redirect and connected over
+    OAuth on both hostnames.
+  checks: [mcp_boundary_test (loopback registration; consent still required)]
+  reports: []
+  regression: []

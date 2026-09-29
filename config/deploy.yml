@@ -1,0 +1,130 @@
+# Kamal deploy config — Spree + MCP demo (portfolio).
+#
+# Server: the shared Hetzner demo box (91.98.193.40), alongside
+# spree-restaurant, spree-storefront-web, fieldnote and vrinda. kamal-proxy
+# already runs there and is shared by every app — this deploy registers its
+# own host/port with it rather than booting a second proxy.
+#
+# Postgres: its own accessory, NOT spree-restaurant's. That box's Postgres is
+# explicitly documented as reusable by later apps, and reusing it would save a
+# little RAM — but this app restores a 790MB dataset and then runs wide
+# aggregate queries (revenue_report, delivery_performance and seller_performance
+# each scan ~100k orders) on demand from an MCP client. Neither belongs in the
+# same Postgres instance as localtable-admin, which is shown to clients. Same
+# reasoning vrinda's config gives for not borrowing it: a demo must not be able
+# to drag a client-facing app down with it.
+
+service: mcp-server
+
+image: amitkssolanki/mcp-server
+
+servers:
+  web:
+    hosts:
+      - 91.98.193.40
+
+proxy:
+  ssl: true
+  # mcp-demo.railsfanatics.com is the canonical name. mcp-store.amitsolanki.com
+  # stays routed (with its own certificate) while clients move over, so the
+  # old endpoint keeps working until the new one is verified.
+  hosts:
+    - mcp-demo.railsfanatics.com
+    - mcp-store.amitsolanki.com
+  # Thruster (see the Dockerfile's CMD) fronts Puma inside the container and
+  # listens on 80 — kamal-proxy talks to that, not to Puma directly.
+  app_port: 80
+  healthcheck:
+    path: /up
+    interval: 5
+    timeout: 5
+  # Spree's admin pages and the Olist aggregate reports are both slower than
+  # kamal-proxy's 30s default; the MCP tools run their queries inside the same
+  # request. 60s is the ceiling before the proxy gives up on a response.
+  response_timeout: 60
+
+registry:
+  server: ghcr.io
+  username: amitkssolanki
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Cross-compiling from an Apple Silicon Mac to the x86_64 Hetzner box.
+builder:
+  arch: amd64
+
+env:
+  clear:
+    RAILS_ENV: production
+    RAILS_LOG_LEVEL: info
+    # kamal-proxy terminates TLS in front of this container — both already
+    # default true in config/environments/production.rb, set explicitly here
+    # for clarity. assume_ssl is what stops force_ssl's redirect from looping
+    # (it treats the already-terminated connection as SSL).
+    RAILS_ASSUME_SSL: "true"
+    RAILS_FORCE_SSL: "true"
+    # Drives config.hosts, the mailer host and Spree's own URL generation.
+    RAILS_HOST: mcp-demo.railsfanatics.com
+    # The previous hostname, still accepted by config.hosts during the move.
+    RAILS_ALIAS_HOSTS: mcp-store.amitsolanki.com
+    # The MCP Ruby SDK's streamable-HTTP transport has its own DNS-rebinding
+    # protection, defaulting to loopback hosts only, entirely separate from
+    # Rails' config.hosts check above — McpController reads these two env vars
+    # directly. Without them /mcp rejects every request from a real domain even
+    # though Rails itself let it through. This is the "known limitation" the
+    # README flags for a real deployment.
+    MCP_ALLOWED_HOSTS: mcp-demo.railsfanatics.com,mcp-store.amitsolanki.com
+    MCP_ALLOWED_ORIGINS: https://mcp-demo.railsfanatics.com,https://mcp-store.amitsolanki.com
+    # Read-only demo. The remote /mcp endpoint derives its tool set from the
+    # presented token's scopes, not from a process flag, so read-only has to be
+    # enforced where scopes are defined: this drops mcp:write from Doorkeeper's
+    # optional_scopes, meaning no token issued here can ever carry it and the
+    # two write tools are never published. Set to "true" to re-enable them.
+    MCP_ALLOW_WRITE_SCOPE: "false"
+    # Demo data: 32k products with synthesized names and anonymised Brazilian
+    # order history. Serve noindex + a disallow-all robots.txt so none of it
+    # ends up in search results under amitsolanki.com.
+    DEMO_NOINDEX: "true"
+    # config/puma.rb runs a single process (no workers) with this many threads.
+    RAILS_MAX_THREADS: "3"
+  secret:
+    # SECRET_KEY_BASE rather than RAILS_MASTER_KEY, as fieldnote and vrinda do:
+    # config/master.key is not in the repository and nothing here reads an
+    # encrypted credential.
+    - SECRET_KEY_BASE
+    - DATABASE_URL
+
+# DATABASE_URL is composed in .kamal/secrets rather than from discrete host/
+# user/name vars here, because Kamal cannot interpolate one secret (the
+# Postgres password) into a clear env var — the composition has to happen
+# where the secret is already in scope.
+
+volumes:
+  - "mcp_server_storage:/rails/storage"
+
+asset_path: /rails/public/assets
+
+accessories:
+  postgres:
+    image: postgres:18
+    host: 91.98.193.40
+    # 5433, not 5432: spree-restaurant's accessory already holds 5432 on this
+    # box. Bound to loopback either way — host-side psql only, never public.
+    port: "127.0.0.1:5433:5432"
+    env:
+      clear:
+        POSTGRES_USER: mcp_server
+        POSTGRES_DB: mcp_server_production
+      secret:
+        - POSTGRES_PASSWORD
+    # Postgres 18's image expects the volume at /var/lib/postgresql, with
+    # versioned subdirectories underneath — not /var/lib/postgresql/data as in
+    # pre-18 images. Mounting at the old path makes it refuse to start.
+    directories:
+      - data:/var/lib/postgresql
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  dbc: accessory exec postgres --interactive --reuse "psql -U mcp_server mcp_server_production"
+  logs: app logs -f

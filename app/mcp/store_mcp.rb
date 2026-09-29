@@ -50,10 +50,17 @@ module StoreMcp
   class << self
     # `read_only: true` publishes the read tools alone. Worth having: it is the
     # honest way to hand a client access without also handing them writes.
-    def server(store:, read_only: false)
-      tools = read_only ? READ_TOOLS : READ_TOOLS + WRITE_TOOLS
+    #
+    # `tools:` exists for the evaluation harness alone (eval/). It swaps in
+    # alternate implementations of existing tools, such as a known-buggy query
+    # kept as a regression case, by tool name. It can replace a tool but never
+    # add one, so it cannot widen what a read-only server exposes. The HTTP
+    # and stdio transports never pass it.
+    def server(store:, read_only: false, tools: nil)
+      published = read_only ? READ_TOOLS : READ_TOOLS + WRITE_TOOLS
+      tools = substitute(published, tools)
 
-      MCP::Server.new(
+      Server.new(
         name: "spree-store",
         title: "Spree Store Operations",
         version: StoreMcp::VERSION,
@@ -66,12 +73,37 @@ module StoreMcp
       )
     end
 
+    # The protocol revision is pinned too, as the fallback for a client that
+    # asks for a revision the SDK does not know at all (see StoreMcp::Server).
     def configuration
-      MCP::Configuration.new(validate_tool_call_arguments: true)
+      MCP::Configuration.new(validate_tool_call_arguments: true, protocol_version: Server::PROTOCOL_VERSION)
+    end
+
+    def substitute(published, replacements)
+      return published if replacements.blank?
+
+      by_name = replacements.index_by(&:name_value)
+      unknown = by_name.keys - published.map(&:name_value)
+      raise ArgumentError, "cannot substitute unpublished tools: #{unknown.join(', ')}" if unknown.any?
+
+      published.map { |tool| by_name.fetch(tool.name_value, tool) }
     end
 
     def default_store
       Spree::Store.default
+    end
+
+    # Whether this deployment publishes the two write tools at all.
+    #
+    # The public demo runs with MCP_ALLOW_WRITE_SCOPE=false. The Doorkeeper
+    # initializer already drops mcp:write from the configured scopes, which
+    # stops new tokens from carrying it — but Doorkeeper checks scopes when a
+    # token is issued, not when it is presented, so a token minted before the
+    # flag flipped would still pass includes_scope?("mcp:write"). This is the
+    # check that holds at request time, and it is why McpController consults
+    # both.
+    def write_enabled?
+      ENV.fetch("MCP_ALLOW_WRITE_SCOPE", "true") != "false"
     end
   end
 

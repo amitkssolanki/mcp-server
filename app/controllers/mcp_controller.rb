@@ -55,8 +55,11 @@ class McpController < ActionController::API
     )
   end
 
+  # Both halves have to agree: the deployment must publish writes at all, and
+  # this particular token must actually carry the scope. See
+  # StoreMcp.write_enabled? for why the token check alone is not enough.
   def write_scope_granted?
-    doorkeeper_token.includes_scope?("mcp:write")
+    StoreMcp.write_enabled? && doorkeeper_token.includes_scope?("mcp:write")
   end
 
   # Placeholder for real multi-tenancy. A deployment serving more than one

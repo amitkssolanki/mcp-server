@@ -17,7 +17,7 @@ module StoreMcp
 
       input_schema(
         properties: {
-          email: { type: "string", description: "Customer email address, exact or partial." },
+          email: { type: "string", description: "Customer email address. Exact match, case-insensitive." },
           limit: { type: "integer", description: "Max orders to list, 1-50. Defaults to 20." }
         },
         required: ["email"]
@@ -27,9 +27,12 @@ module StoreMcp
 
       def self.call(server_context:, **args)
         store_id = store(server_context).id
-        term = "%#{args[:email].to_s.downcase.strip}%"
-
-        user = Spree.user_class.where("LOWER(email) LIKE ?", term).first
+        # Exact, case-insensitive. A substring match (the previous LIKE
+        # '%term%') resolved "%", "_" or any fragment to an arbitrary
+        # customer: the answer was about the wrong person, and the tool could
+        # enumerate customers one probe at a time.
+        email = args[:email].to_s.strip.downcase
+        user = Spree.user_class.find_by("LOWER(email) = ?", email) if email.present?
         return failure("No customer matching #{args[:email]}.") if user.nil?
 
         limit = limit_for(args[:limit])
@@ -38,7 +41,7 @@ module StoreMcp
                  d.days_late, rev.score, a.city, a.state_name AS state
             FROM spree_orders o
             JOIN olist_order_details d ON d.spree_order_id = o.id
-       LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+       LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
        LEFT JOIN spree_addresses a ON a.id = o.bill_address_id
            WHERE o.user_id = #{user.id.to_i} AND o.store_id = #{store_id.to_i}
            ORDER BY d.purchased_at DESC
@@ -52,10 +55,11 @@ module StoreMcp
         end
 
         summary = sql(<<~SQL).first
-          SELECT COUNT(*) AS orders, COALESCE(SUM(o.total),0) AS lifetime,
-                 ROUND(AVG(rev.score), 2) AS avg_review
+          SELECT COUNT(*) AS orders,
+                 COALESCE(SUM(o.total) FILTER (WHERE o.state = 'complete'), 0) AS lifetime,
+                 ROUND(AVG(rev.score) FILTER (WHERE o.state = 'complete'), 2) AS avg_review
             FROM spree_orders o
-       LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+       LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
            WHERE o.user_id = #{user.id.to_i} AND o.store_id = #{store_id.to_i}
         SQL
 

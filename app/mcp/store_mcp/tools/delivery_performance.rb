@@ -64,7 +64,9 @@ module StoreMcp
                                else [BUCKET.strip, "", "DELIVERY"]
                                end
 
-        where = ["o.store_id = #{store_id.to_i}", "d.days_late IS NOT NULL"]
+        # Delivered orders: completed, with a delivery and an estimate. Six
+        # cancelled orders have both timestamps; they were not delivered sales.
+        where = ["o.store_id = #{store_id.to_i}", "o.state = 'complete'", "d.days_late IS NOT NULL"]
         where << "d.purchased_at >= #{quote(args[:from])}" if args[:from].present?
         where << "d.purchased_at < (#{quote(args[:to])}::date + 1)" if args[:to].present?
 
@@ -85,7 +87,7 @@ module StoreMcp
                      d.days_late, d.delivery_days, r.score
                 FROM spree_orders o
                 JOIN olist_order_details d ON d.spree_order_id = o.id
-           LEFT JOIN olist_reviews r ON r.spree_order_id = o.id
+           LEFT JOIN #{ORDER_REVIEWS} r ON r.spree_order_id = o.id
                 #{joins}
                WHERE #{where.join(' AND ')}
             ) grouped

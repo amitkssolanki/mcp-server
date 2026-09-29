@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Download the eight Olist CSVs the importer and the evaluation oracle read,
+# and verify each one against a pinned SHA-256.
+#
+# The dataset is "Brazilian E-Commerce Public Dataset by Olist", CC BY-NC-SA
+# 4.0 (https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). It is
+# fetched at run time from a public GitHub mirror, pinned to one commit, and
+# never committed to this repository or re-published by it. See
+# db/olist/README.md for the licence and the mirror's differences from Kaggle.
+#
+# The checksums matter as much as the download: the oracle's ground truth is
+# only as fixed as its input. If the mirror ever changed, every expected value
+# in the harness would move with it, silently. This script fails instead.
+#
+#   bin/olist-fetch                 # into db/olist/
+#   OLIST_DIR=/tmp/olist bin/olist-fetch
+set -euo pipefail
+
+MIRROR_COMMIT="fa0cc6d1aff713d3c8b9a1e633b56889881848bf"
+BASE="https://raw.githubusercontent.com/spdrio/Brazilian-E-Commerce-Public-Dataset-by-Olist/${MIRROR_COMMIT}/files"
+DIR="${OLIST_DIR:-$(cd "$(dirname "$0")/.." && pwd)/db/olist}"
+
+FILES=(
+  "olist_customers_dataset 983a422239e1712ded753b3bf9ecf47dc73f144d306029dcfa99e70a226883d2"
+  "olist_order_items_dataset 0bc4d068c4fe38cbb01bd90e8746e3c613fe7b4baef75fab7b0e329701c3e279"
+  "olist_order_payments_dataset 4f713964f2815dbbaa40b9488268c55aac3627bfce5aa96cf58d1f3616de3cc0"
+  "olist_order_reviews_dataset 0dff69f6fed33a13648020198ea94d7ae12afbdd4904186c6cd904e27a3e1ccd"
+  "olist_orders_dataset 8df58ef3d2d7e9944010f7beecd9b75367f5588ec6e3c91cec19ae3345ef9ecf"
+  "olist_products_dataset 3e6569628a17fbc75fd206ee357b59e20364b9afa90f5b6cd5b4d624c58aa9cc"
+  "olist_sellers_dataset 1f643d2b950373b85735e7794b20986f528d7a000432e7c6f9bcbb44d0846a0e"
+  "product_category_name_translation 9da093e114e517534d7a6903b253b0d24a582830b99ea9e8ef48a90b79d60967"
+)
+
+sha256() {
+  if command -v sha256sum >/dev/null; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi
+}
+
+mkdir -p "$DIR"
+for entry in "${FILES[@]}"; do
+  name="${entry% *}"
+  want="${entry#* }"
+  path="$DIR/$name.csv"
+
+  if [[ -f "$path" && "$(sha256 "$path")" == "$want" ]]; then
+    echo "ok        $name.csv"
+    continue
+  fi
+
+  curl -fsSL --retry 3 -o "$path.part" "$BASE/$name.csv"
+  got="$(sha256 "$path.part")"
+  if [[ "$got" != "$want" ]]; then
+    rm -f "$path.part"
+    echo "CHECKSUM MISMATCH for $name.csv: expected $want, got $got" >&2
+    exit 1
+  fi
+  mv "$path.part" "$path"
+  echo "fetched   $name.csv"
+done

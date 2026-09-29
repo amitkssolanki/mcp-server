@@ -60,18 +60,23 @@ module StoreMcp
               FROM category_products cp
               JOIN spree_variants v ON v.product_id = cp.product_id AND v.is_master = TRUE
               JOIN spree_line_items li ON li.variant_id = v.id
-              JOIN olist_reviews rev ON rev.spree_order_id = li.order_id
+              JOIN spree_orders o ON o.id = li.order_id AND o.state = 'complete'
+              JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = li.order_id
+          ),
+          category_reviews AS (
+            SELECT category, ROUND(AVG(score), 2) AS avg_review
+              FROM category_order_reviews
+             GROUP BY category
           )
           SELECT cp.category,
                  COUNT(DISTINCT cp.product_id) AS products,
                  SUM(cp.units_sold_count)      AS units,
                  SUM(cp.revenue)               AS revenue,
-                 (SELECT ROUND(AVG(cor.score), 2)
-                    FROM category_order_reviews cor
-                   WHERE cor.category = cp.category) AS avg_review
+                 MAX(cr.avg_review)            AS avg_review
             FROM category_products cp
+       LEFT JOIN category_reviews cr ON cr.category = cp.category
            GROUP BY cp.category
-           ORDER BY #{order_by}
+           ORDER BY #{order_by}, cp.category
         SQL
           {
             category: r["category"],

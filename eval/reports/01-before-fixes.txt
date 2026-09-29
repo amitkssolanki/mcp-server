@@ -1,0 +1,77 @@
+Running (seed 20260928)
+  oracle built from CSVs          7.7s
+  checks                         22.5s
+  regressions                    30.0s
+
+MCP truth harness
+  database mcp_server_test  commit de1cda9  seed 20260928
+
+Questions         13   pass   2   fail  11   error 0
+  PASS  revenue-by-month                            0.28s
+  PASS  revenue-by-state                            0.24s
+  FAIL  revenue-by-category-top20                   0.41s  20 diff(s); furniture_decor revenue: expected 899626.04, got 929190.19 (x1.033)
+  FAIL  revenue-by-seller-top20                     0.42s  20 diff(s); 4a3ca9315b744ce9f8e9374361493884 revenue: expected 235359.3, got 248435.14 (x1.056)
+  FAIL  revenue-by-payment-method                   0.27s  4 diff(s); voucher revenue: expected 349874.4, got 490583.08 (x1.402)
+  FAIL  categories-all                              0.66s  148 diff(s); dvds_blu_ray revenue: expected 4559.49, got 5999.39 (x1.316)
+  FAIL  sellers-top-revenue                         0.57s  43 diff(s); 7e93a43ef30c4f03f38b393420bc753a revenue: expected 172583.88, got 176431.87 (x1.022)
+  FAIL  sellers-worst-reviewed                      0.57s  17 diff(s); 18a349e75d307f4b4cc646a691ed4216 orders: expected 119, got 121 (x1.017)
+  FAIL  delivery-by-bucket                          0.20s  9 diff(s); more than a week late avg_review: expected 1.71, got 1.72 (x1.006)
+  FAIL  delivery-by-state                           0.21s  37 diff(s); MA avg_days_late: expected -8.7, got -8.8 (x1.012)
+  FAIL  search-all-placed                           0.04s  1 diff(s); total_matches total_matches: expected 99441, got 100000 (x1.006)
+  FAIL  search-rj-one-star                          0.05s  1 diff(s); total_matches total_matches: expected 2254, got 2272 (x1.008)
+  FAIL  customer-with-multi-review-order            0.02s  3 diff(s); (record) orders: expected 1, got 2 (x2)
+
+Invariants         9   pass   4   fail   5   error 0
+  PASS  adjacent-date-windows-partition             1.30s
+  FAIL  complete-listing-matches-count              2.91s  10 diff(s); arguments={"from" => "2017-05-06", "to" => "2017-05-06", "limit" => 50, "customer_state" => "SP"} total_matches=41 rows=41 distinct=40
+  FAIL  find-customer-exact-match                   0.04s  4 diff(s); probe="%" should_resolve=false resolved_to="861eff4711a542e4b93843c6dd7febb0@olist.invalid"
+  PASS  narrower-filter-never-counts-more           3.95s
+  FAIL  overlapping-groups-not-additive             0.98s  3 diff(s); group_by="category" claims=["structured totals.orders=97729", "text states an order total"]
+  FAIL  partitions-sum-to-total                     0.85s  1 diff(s); comparison="item revenue: list_categories vs revenue_report(month)" problem="no tool reports this total" values=[nil, 13591643.7]
+  FAIL  same-metric-same-number                     1.62s  6 diff(s); metric="category item revenue" list_categories=1258681.34 revenue_report=1445137.23
+  PASS  unique-keys                                 3.65s
+  PASS  value-bounds                                0.01s
+
+Reconciliations    2   pass   2   fail   0   error 0
+  PASS  reconcile-row-counts                        0.47s
+  PASS  reconcile-value-sums                        0.23s
+
+Regressions        3   caught 3   missed 0
+  CAUGHT  H1-category-revenue-fan-out      Category revenue summed over a line-item x review join (the 42x bug)
+          by categories-all, partitions-sum-to-total, same-metric-same-number
+          categories-all: garden_tools units_sold: expected 4328, got 801988 (x185.3)
+          partitions-sum-to-total: comparison="item revenue: list_categories vs revenue_report(month)" values=[nil, 386160753.39]
+          same-metric-same-number: metric="category item revenue" list_categories=52545084.05 revenue_report=1445137.23
+          provenance: reconstructed from the article; reproduces its R$52,545,084 exactly
+  CAUGHT  H2-seller-average-fan-out        Seller review average taken over line items instead of orders (3.81 reported as 2.57)
+          by sellers-top-revenue, sellers-worst-reviewed
+          sellers-top-revenue: 1f50f920176fa81dab994f9023523100 avg_days_late: expected -9.5, got -9.9 (x1.042)
+          sellers-worst-reviewed: 897060da8b9a21f655304d50fd935913 avg_review: expected 3.61, got 3.37 (x0.9335)
+          provenance: reconstructed from the article; reproduces its 3.81 -> 2.57 exactly
+  CAUGHT  H3-silently-dropped-payments     33 payment rows silently missing after import (the insert_all bug)
+          by reconcile-row-counts, reconcile-value-sums
+          reconcile-row-counts: payments payments: expected 103886, got 103853 (x0.9997)
+          reconcile-value-sums: payment_value payment_value: expected 16008872.12, got 16008272.1 (x1)
+          provenance: simulated effect; the original index/column combination is not recoverable
+
+Failures by finding (eval/findings.yml)
+  F1 [tool_bug/fix] Orders with several reviews fan out every order-level join
+      delivery-by-bucket, delivery-by-state, search-all-placed, search-rj-one-star, customer-with-multi-review-order, complete-listing-matches-count
+  F2 [definition_gap/definition] No review-per-order policy
+      categories-all, sellers-top-revenue, sellers-worst-reviewed, delivery-by-bucket, delivery-by-state, customer-with-multi-review-order
+  F3 [definition_gap/fix] Two tools, two different "category revenue"
+      revenue-by-category-top20, categories-all, partitions-sum-to-total, same-metric-same-number
+  F4 [tool_bug/fix] Sellers credited with other sellers' items
+      revenue-by-seller-top20, same-metric-same-number
+  F5 [definition_gap/fix] Cancelled orders counted as sales in product, category and seller figures
+      categories-all, sellers-top-revenue, sellers-worst-reviewed
+  F6 [tool_bug/fix] Overlapping buckets presented as additive
+      overlapping-groups-not-additive
+  F7 [tool_bug/fix] Payment-method revenue double-counts split payments
+      revenue-by-payment-method
+  F8 [definition_gap/definition] Delivery metrics include cancelled orders
+      delivery-by-bucket, delivery-by-state
+  F9 [tool_bug/fix] find_customer matches email as a substring
+      find-customer-exact-match
+
+Result: FAIL   fingerprint 914cfc05da423748   60.3s

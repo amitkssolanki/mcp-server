@@ -44,7 +44,9 @@ module StoreMcp
                    else "revenue DESC"
                    end
 
-        where = ["o.store_id = #{store_id.to_i}"]
+        # Completed orders only: a cancelled order is not a sale, and its review
+        # is not a verdict on a delivered product (docs/METRICS.md).
+        where = ["o.store_id = #{store_id.to_i}", "o.state = 'complete'"]
         where << "s.state = #{quote(args[:state].to_s.upcase)}" if args[:state].present?
 
         # AVG(rev.score) / AVG(d.days_late) must not be computed over the same
@@ -62,7 +64,7 @@ module StoreMcp
               JOIN spree_line_items li ON li.id = lid.spree_line_item_id
               JOIN spree_orders o ON o.id = li.order_id
               JOIN olist_order_details d ON d.spree_order_id = o.id
-         LEFT JOIN olist_reviews rev ON rev.spree_order_id = o.id
+         LEFT JOIN #{ORDER_REVIEWS} rev ON rev.spree_order_id = o.id
              WHERE #{where.join(' AND ')}
           ),
           seller_revenue AS (

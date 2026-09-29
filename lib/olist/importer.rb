@@ -82,6 +82,29 @@ module Olist
       stats
     end
 
+    # Product sales counters, the figures list_categories, get_product and
+    # search_products read. They count completed orders only, as Spree's own
+    # counters do: a cancelled or unavailable order was never a sale
+    # (docs/METRICS.md, "Populations"). Zeroed first so the method is also
+    # safe to re-run against an existing import (rake olist:recount_products).
+    def recount_products!
+      exec "UPDATE spree_products SET units_sold_count = 0, revenue = 0", "product sales counters (reset)"
+      exec <<~SQL, "product sales counters"
+        UPDATE spree_products p
+           SET units_sold_count = t.units, revenue = t.revenue
+          FROM (
+            SELECT v.product_id,
+                   SUM(li.quantity)             AS units,
+                   SUM(li.price * li.quantity)  AS revenue
+              FROM spree_line_items li
+              JOIN spree_variants v ON v.id = li.variant_id
+              JOIN spree_orders o ON o.id = li.order_id AND o.state = 'complete'
+             GROUP BY v.product_id
+          ) t
+         WHERE p.id = t.product_id
+      SQL
+    end
+
     private
 
     def log(msg) = @io.puts(msg)
@@ -645,19 +668,7 @@ module Olist
                shipment_state = CASE WHEN state = 'complete' THEN 'shipped' ELSE NULL END
       SQL
 
-      exec <<~SQL, "product sales counters"
-        UPDATE spree_products p
-           SET units_sold_count = t.units, revenue = t.revenue
-          FROM (
-            SELECT v.product_id,
-                   SUM(li.quantity)             AS units,
-                   SUM(li.price * li.quantity)  AS revenue
-              FROM spree_line_items li
-              JOIN spree_variants v ON v.id = li.variant_id
-             GROUP BY v.product_id
-          ) t
-         WHERE p.id = t.product_id
-      SQL
+      recount_products!
 
       exec <<~SQL, "taxon product counts"
         UPDATE spree_taxons tx
