@@ -121,6 +121,8 @@ those checks were already failing.
 | `eval/reports/01-before-fixes.txt` | Day 1 harness (13 questions) against the unfixed tools |
 | `eval/reports/01b-before-fixes-full.txt` | Full harness against the unfixed tools: the like-for-like baseline |
 | `eval/reports/02-after-fixes.txt` | Full harness after the fixes |
+| `eval/reports/03-agent-baseline.md` | Agent evaluation: 45 runs through Claude Code, graded against pre-registered oracle answers |
+| `eval/reports/05-f13-untrusted-text.md` | Investigation of customer-written text in structured results (F13) |
 
 Each has a JSON twin with every check's arguments, expected and actual
 values, and diffs.

@@ -305,7 +305,7 @@
   severity: high
   triage: tool_bug
   scope: fix
-  status: fixed
+  status: verified
   tools: [all (OAuth layer)]
   definition: null
   summary: >
@@ -320,7 +320,9 @@
     every other redirect stays HTTPS-only, and PKCE and admin consent still
     apply. Two boundary tests: loopback registration succeeds while any other
     http redirect is refused, and a loopback client still gets no grant
-    without consent. Both fail with the fix removed.
+    without consent. Both fail with the fix removed. Verified in the release:
+    Claude Code 2.1.284 registered with a loopback redirect and connected over
+    OAuth on both hostnames.
   checks: [mcp_boundary_test (loopback registration; consent still required)]
   reports: []
   regression: []
