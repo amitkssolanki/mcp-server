@@ -99,6 +99,21 @@ module Eval
         path
       end
 
+      # "Connected" is not enough. A server can connect and still expose no
+      # tools: that is how F12 surfaced, with the model then writing tool calls
+      # as prose and inventing their results. Every run must see exactly the
+      # read tools, or it is an error, and the experiment's first-run guard
+      # stops everything.
+      def init_error(event)
+        return "MCP server not connected" unless event["mcp_servers"].to_a.any? { |s| s["status"] == "connected" }
+
+        visible = event["tools"].to_a.select { |t| t.start_with?("mcp__store__") }.map { |t| t.delete_prefix("mcp__store__") }
+        expected = StoreMcp::READ_TOOLS.map(&:name_value)
+        return nil if visible.sort == expected.sort
+
+        "store tools visible: #{visible.size} of #{expected.size} (missing: #{(expected - visible).join(', ')})"
+      end
+
       def parse(question_id, run_index, stdout, raw_path)
         run = Run.new(question_id: question_id, run_index: run_index, model: @model, tool_calls: [],
                       final_text: nil, raw_path: raw_path)
@@ -109,7 +124,7 @@ module Eval
           when "system"
             if event["subtype"] == "init"
               run.api_key_source = event["apiKeySource"]
-              run.error = "MCP server not connected" unless event["mcp_servers"].to_a.any? { |s| s["status"] == "connected" }
+              run.error = init_error(event)
             end
           when "assistant"
             Array(event.dig("message", "content")).each do |block|

@@ -88,6 +88,19 @@ class AgentGraderTest < ActiveSupport::TestCase
     refute grade(q, "", expected: 1.0, picked: picked, calls: [["find_customer", { "email" => "abc123" }]])[:args_ok]
   end
 
+  # F12: the server connected but exposed no tools, and the model wrote tool
+  # calls as prose. A run like that must be an error, never a graded answer.
+  test "a run is an error unless it sees exactly the nine read tools" do
+    runner = Eval::Agent::ClaudeRunner.allocate
+    connected = { "mcp_servers" => [{ "name" => "store", "status" => "connected" }] }
+    all = StoreMcp::READ_TOOLS.map { |t| "mcp__store__#{t.name_value}" }
+
+    assert_nil runner.send(:init_error, connected.merge("tools" => all))
+    assert_match "0 of 9", runner.send(:init_error, connected.merge("tools" => []))
+    assert_match "missing: search_orders", runner.send(:init_error, connected.merge("tools" => all - ["mcp__store__search_orders"]))
+    assert_equal "MCP server not connected", runner.send(:init_error, { "mcp_servers" => [], "tools" => all })
+  end
+
   test "every agent question has an argument rule" do
     ids = YAML.safe_load_file(Rails.root.join("eval/agent/questions.yml")).map { |q| q["id"] }
     assert_equal ids.sort, Eval::Agent::Grader::ARG_RULES.keys.sort
