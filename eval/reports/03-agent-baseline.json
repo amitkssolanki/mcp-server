@@ -1,0 +1,2413 @@
+{
+  "experiment": "03-agent-baseline",
+  "method": {
+    "execution": "Claude Code headless (claude -p), subscription login",
+    "claude_code_version": "2.1.284 (Claude Code)",
+    "model": "claude-sonnet-5",
+    "runs_per_question": 3,
+    "questions": 15,
+    "total_runs": 45,
+    "api_key_sources": {
+      "none": 45
+    },
+    "system_prompt": "You help the operator of an online store answer questions about their business.\nUse the store's tools to find the answer; never guess or estimate a figure the\ntools can give you. Answer the question that was asked, in a sentence or two.\n",
+    "answer_instruction": "When you have the answer, end your reply with a single line containing only a\nJSON object of the form {\"answer\": <value>}, where <value> is the number or\nname that answers the question (a number without currency symbols or units).",
+    "tools": {
+      "digest": "dbd4ba554abeb036",
+      "matches_frozen_baseline": true,
+      "changed_tools": []
+    },
+    "git_commit": "8c983e1",
+    "started_at": "2026-09-29T00:57:06Z",
+    "finished_at": "2026-09-29T00:59:10Z",
+    "redaction": "Customer-written review title/message in stored tool results and final answers is replaced with a length placeholder. Grading used the unredacted run; verdicts and metrics are unchanged."
+  },
+  "metrics": {
+    "answer_accuracy_pct": 100.0,
+    "tool_selection_accuracy_pct": 100.0,
+    "argument_accuracy_pct": 100.0,
+    "questions_correct_every_run": 15,
+    "questions_consistent": 14,
+    "verdicts": {
+      "correct": 45
+    },
+    "mean_tool_calls": 1.0,
+    "mean_duration_s": 4.4,
+    "tokens": {
+      "input_tokens": 180,
+      "output_tokens": 8167,
+      "cache_read_input_tokens": 397337,
+      "cache_creation_input_tokens": 104014
+    },
+    "notional_cost_usd": 0.5776
+  },
+  "questions": [
+    {
+      "id": "A01-orders-placed",
+      "prompt": "How many orders has the store received in total, counting every order whatever its status?",
+      "risk": "placed orders (search_orders) vs completed orders (revenue_report counts only completed)",
+      "expected": 99441,
+      "alternates": {
+        "completed_orders": 98202
+      },
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with no status, date, state, total, lateness or review filter",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A02-cancelled-2018",
+      "prompt": "How many orders placed in 2018 were cancelled?",
+      "risk": "status filter plus a year window on the tool that covers every status",
+      "expected": 334,
+      "alternates": {},
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with status canceled, from 2018-01-01, and to absent or on/after 2018-10-17 (the last purchase date)",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A03-revenue-nov-2017",
+      "prompt": "What was the store's revenue in November 2017?",
+      "risk": "revenue here means gross revenue (items plus freight), not merchandise alone",
+      "expected": 1172191.68,
+      "alternates": {
+        "item_revenue": 1003862.14
+      },
+      "acceptable_tools": [
+        "revenue_report"
+      ],
+      "arg_rule": "revenue_report grouped by month (or default), with any date window that covers all of November 2017",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A04-top-category",
+      "prompt": "Which product category brought in the most revenue?",
+      "risk": "two tools report category revenue; both rank the same category first",
+      "expected": "health_beauty",
+      "alternates": {},
+      "acceptable_tools": [
+        "revenue_report",
+        "list_categories"
+      ],
+      "arg_rule": "revenue_report grouped by category with no date window, or list_categories sorted by revenue (or default)",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A05-health-beauty-merchandise",
+      "prompt": "How much did the Health Beauty category sell in merchandise alone, not counting shipping?",
+      "risk": "item revenue vs gross revenue for a category; which tool exposes which",
+      "expected": 1255695.13,
+      "alternates": {
+        "gross_revenue": 1437665.78
+      },
+      "acceptable_tools": [
+        "list_categories",
+        "revenue_report"
+      ],
+      "arg_rule": "list_categories, or revenue_report grouped by category with no date window",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A06-top-seller",
+      "prompt": "Which seller has the highest sales revenue? Give their seller id.",
+      "risk": "seller revenue in two tools; item-level allocation ranks the same seller first either way",
+      "expected": "4869f7a5dfa277a7dca6462dcf3b52b2",
+      "alternates": {},
+      "acceptable_tools": [
+        "seller_performance",
+        "revenue_report"
+      ],
+      "arg_rule": "seller_performance sorted by revenue (or default), or revenue_report grouped by seller with no date window",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A07-credit-card-2018",
+      "prompt": "How much was paid by credit card for orders placed in 2018?",
+      "risk": "payment-method breakdown (payment value) within a date window",
+      "expected": 6791660.43,
+      "alternates": {},
+      "acceptable_tools": [
+        "revenue_report"
+      ],
+      "arg_rule": "revenue_report grouped by payment_method, from 2018-01-01, and to absent or on/after 2018-10-17",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A08-very-late-review",
+      "prompt": "What is the average review score for orders that were delivered more than a week late?",
+      "risk": "delivery lateness bands and their review average",
+      "expected": 1.71,
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by lateness band (or default), with no date window",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A09-late-rate",
+      "prompt": "What percentage of delivered orders arrived after their estimated delivery date?",
+      "risk": "the tool gives per-band rates; the overall rate needs combining bands by order count",
+      "expected": 7.92,
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by lateness band (or default), with no date window",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 2,
+      "consistent": false
+    },
+    {
+      "id": "A10-worst-state-reviews",
+      "prompt": "Among customer states with at least 500 delivered orders, which has the lowest average review score?",
+      "risk": "delivery population by state, with a minimum-order threshold",
+      "expected": "MA",
+      "alternates": {},
+      "acceptable_tools": [
+        "delivery_performance"
+      ],
+      "arg_rule": "delivery_performance grouped by state",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A11-customer-lifetime-value",
+      "prompt": "What is the lifetime value of the customer 000bfa1d2f1a41876493be685390d6d3@olist.invalid?",
+      "risk": "exact customer lookup; lifetime value over completed orders",
+      "expected": 46.85,
+      "alternates": {},
+      "acceptable_tools": [
+        "find_customer"
+      ],
+      "arg_rule": "find_customer with exactly that email (any case)",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A12-order-review-score",
+      "prompt": "What review score did order OL000087289 receive?",
+      "risk": "single-order lookup where the order has two reviews and the policy decides",
+      "expected": 5,
+      "alternates": {},
+      "acceptable_tools": [
+        "get_order"
+      ],
+      "arg_rule": "get_order with that order number",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A13-product-units",
+      "prompt": "How many units of the product with SKU aca2eb7d00ea1a7b8ebd4e68314663af have been sold?",
+      "risk": "product lookup by SKU; units over completed orders",
+      "expected": 527,
+      "alternates": {},
+      "acceptable_tools": [
+        "get_product",
+        "search_products"
+      ],
+      "arg_rule": "get_product with that SKU, or search_products with that SKU as the query",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A14-worst-seller",
+      "prompt": "Among sellers with at least 100 orders, which has the worst average review score? Give their seller id.",
+      "risk": "seller_performance (completed orders) is the seller tool; delivery_performance by seller is a different population",
+      "expected": "1ca7077d890b907f89be8c954a02686a",
+      "alternates": {},
+      "acceptable_tools": [
+        "seller_performance"
+      ],
+      "arg_rule": "seller_performance sorted by avg_review, with min_orders 100",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    },
+    {
+      "id": "A15-big-sao-paulo-orders",
+      "prompt": "How many orders from customers in Sao Paulo state were worth R$1,000 or more?",
+      "risk": "two search filters combined (state code SP, inclusive minimum total)",
+      "expected": 359,
+      "alternates": {},
+      "acceptable_tools": [
+        "search_orders"
+      ],
+      "arg_rule": "search_orders with customer_state SP and min_total 1000",
+      "runs": 3,
+      "correct": 3,
+      "tool_ok": 3,
+      "args_ok": 3,
+      "verdicts": [
+        "correct",
+        "correct",
+        "correct"
+      ],
+      "distinct_answers": 1,
+      "consistent": true
+    }
+  ],
+  "runs": [
+    {
+      "question_id": "A01-orders-placed",
+      "run_index": 1,
+      "run": {
+        "question_id": "A01-orders-placed",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01Mma6rHJhCWsenCcNL43U1c",
+            "tool": "search_orders",
+            "arguments": {
+              "limit": 1
+            },
+            "result": "{\"total_matches\":99441,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store has received **99,441 orders** in total, across all statuses.\n\n{\"answer\": 99441}",
+        "turns": 2,
+        "duration_ms": 7650,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 291,
+          "cache_read_input_tokens": 8827,
+          "cache_creation_input_tokens": 1413
+        },
+        "cost_usd": 0.0103354,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A01-orders-placed.run1.jsonl"
+      },
+      "grade": {
+        "answer": 99441,
+        "expected": 99441,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A01-orders-placed",
+      "run_index": 2,
+      "run": {
+        "question_id": "A01-orders-placed",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_019vdeWVun6Qf6LDhfCCsf4C",
+            "tool": "search_orders",
+            "arguments": {
+              "limit": 1
+            },
+            "result": "{\"total_matches\":99441,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store has received **99,441 orders** in total, across all statuses.\n\n{\"answer\": 99441}",
+        "turns": 2,
+        "duration_ms": 4869,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 242,
+          "cache_read_input_tokens": 8827,
+          "cache_creation_input_tokens": 1363
+        },
+        "cost_usd": 0.0096454,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A01-orders-placed.run2.jsonl"
+      },
+      "grade": {
+        "answer": 99441,
+        "expected": 99441,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A01-orders-placed",
+      "run_index": 3,
+      "run": {
+        "question_id": "A01-orders-placed",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01An18DzY5KBba8LB92BgLGJ",
+            "tool": "search_orders",
+            "arguments": {
+              "limit": 1
+            },
+            "result": "{\"total_matches\":99441,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store has received **99,441 orders in total**, across every status (delivered, canceled, shipped, etc.).\n\n{\"answer\": 99441}",
+        "turns": 2,
+        "duration_ms": 5985,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 281,
+          "cache_read_input_tokens": 8827,
+          "cache_creation_input_tokens": 1388
+        },
+        "cost_usd": 0.010135400000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A01-orders-placed.run3.jsonl"
+      },
+      "grade": {
+        "answer": 99441,
+        "expected": 99441,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A02-cancelled-2018",
+      "run_index": 1,
+      "run": {
+        "question_id": "A02-cancelled-2018",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_014XY3sZ9MbTjfZLQBHzS61d",
+            "tool": "search_orders",
+            "arguments": {
+              "status": "canceled",
+              "from": "2018-01-01",
+              "to": "2018-12-31",
+              "limit": 50
+            },
+            "result": "{\"total_matches\":334,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000068374\",\"purchased_at\":\"2018-10-16\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Picos\",\"state\":\"PI\",\"delivery_days\":null,\"days_late\":null,\"review\":5},{\"number\":\"OL000031892\",\"purchased_at\":\"2018-10-03\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Registro\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000088501\",\"purchased_at\":\"2018-10-01\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Pirai\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000050388\",\"purchased_at\":\"2018-09-29\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Guarulhos\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000037004\",\"purchased_at\":\"2018-09-26\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Petropolis\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000033980\",\"purchased_at\":\"2018-09-25\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Belo Horizonte\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000001802\",\"purchased_at\":\"2018-09-20\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Santa Luzia\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000016367\",\"purchased_at\":\"2018-09-17\",\"status\":\"canceled\",\"total\"",
+            "is_error": false
+          }
+        ],
+        "final_text": "There were 334 canceled orders placed in 2018.\n\n{\"answer\": 334}",
+        "turns": 2,
+        "duration_ms": 3398,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 217,
+          "cache_read_input_tokens": 8823,
+          "cache_creation_input_tokens": 5175
+        },
+        "cost_usd": 0.0246426,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A02-cancelled-2018.run1.jsonl"
+      },
+      "grade": {
+        "answer": 334,
+        "expected": 334,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A02-cancelled-2018",
+      "run_index": 2,
+      "run": {
+        "question_id": "A02-cancelled-2018",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01XG6TsgtVcVkCCDRR11zzXR",
+            "tool": "search_orders",
+            "arguments": {
+              "status": "canceled",
+              "from": "2018-01-01",
+              "to": "2018-12-31",
+              "limit": 50
+            },
+            "result": "{\"total_matches\":334,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000068374\",\"purchased_at\":\"2018-10-16\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Picos\",\"state\":\"PI\",\"delivery_days\":null,\"days_late\":null,\"review\":5},{\"number\":\"OL000031892\",\"purchased_at\":\"2018-10-03\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Registro\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000088501\",\"purchased_at\":\"2018-10-01\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Pirai\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000050388\",\"purchased_at\":\"2018-09-29\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Guarulhos\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000037004\",\"purchased_at\":\"2018-09-26\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Petropolis\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000033980\",\"purchased_at\":\"2018-09-25\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Belo Horizonte\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000001802\",\"purchased_at\":\"2018-09-20\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Santa Luzia\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000016367\",\"purchased_at\":\"2018-09-17\",\"status\":\"canceled\",\"total\"",
+            "is_error": false
+          }
+        ],
+        "final_text": "The response reports a total of 334 matching orders for canceled status in 2018 (though only 50 are shown).\n\n{\"answer\": 334}",
+        "turns": 2,
+        "duration_ms": 4400,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 250,
+          "cache_read_input_tokens": 8824,
+          "cache_creation_input_tokens": 5192
+        },
+        "cost_usd": 0.025040800000000002,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A02-cancelled-2018.run2.jsonl"
+      },
+      "grade": {
+        "answer": 334,
+        "expected": 334,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A02-cancelled-2018",
+      "run_index": 3,
+      "run": {
+        "question_id": "A02-cancelled-2018",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01QioXMkv43MkHhBe4ginLGp",
+            "tool": "search_orders",
+            "arguments": {
+              "status": "canceled",
+              "from": "2018-01-01",
+              "to": "2018-12-31",
+              "limit": 50
+            },
+            "result": "{\"total_matches\":334,\"orders\":[{\"number\":\"OL000060939\",\"purchased_at\":\"2018-10-17\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Sorocaba\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000068374\",\"purchased_at\":\"2018-10-16\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Picos\",\"state\":\"PI\",\"delivery_days\":null,\"days_late\":null,\"review\":5},{\"number\":\"OL000031892\",\"purchased_at\":\"2018-10-03\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Registro\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000088501\",\"purchased_at\":\"2018-10-01\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Pirai\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000050388\",\"purchased_at\":\"2018-09-29\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Guarulhos\",\"state\":\"SP\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000037004\",\"purchased_at\":\"2018-09-26\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Petropolis\",\"state\":\"RJ\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000033980\",\"purchased_at\":\"2018-09-25\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Belo Horizonte\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":1},{\"number\":\"OL000001802\",\"purchased_at\":\"2018-09-20\",\"status\":\"canceled\",\"total\":0,\"items\":0,\"city\":\"Santa Luzia\",\"state\":\"MG\",\"delivery_days\":null,\"days_late\":null,\"review\":2},{\"number\":\"OL000016367\",\"purchased_at\":\"2018-09-17\",\"status\":\"canceled\",\"total\"",
+            "is_error": false
+          }
+        ],
+        "final_text": "The tool reports 334 total matching orders (canceled status, purchased in 2018).\n\n{\"answer\": 334}",
+        "turns": 2,
+        "duration_ms": 4240,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 244,
+          "cache_read_input_tokens": 8823,
+          "cache_creation_input_tokens": 5191
+        },
+        "cost_usd": 0.0249766,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A02-cancelled-2018.run3.jsonl"
+      },
+      "grade": {
+        "answer": 334,
+        "expected": 334,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A03-revenue-nov-2017",
+      "run_index": 1,
+      "run": {
+        "question_id": "A03-revenue-nov-2017",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_015bEnbAEAaVgHqL521XRm5J",
+            "tool": "revenue_report",
+            "arguments": {
+              "from": "2017-11-01",
+              "to": "2017-11-30",
+              "group_by": "month"
+            },
+            "result": "{\"group_by\":\"month\",\"metric\":\"gross_revenue\",\"orders_additive\":true,\"totals\":{\"revenue\":1172191.68,\"item_revenue\":1003862.14,\"freight\":168329.54,\"orders\":7421},\"rows\":[{\"month\":\"2017-11\",\"orders\":7421,\"item_revenue\":1003862.14,\"freight\":168329.54,\"revenue\":1172191.68,\"avg_order_value\":157.96}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store's revenue in November 2017 was **R$1,172,191.68** (from 7,421 orders).\n\n{\"answer\": 1172191.68}",
+        "turns": 2,
+        "duration_ms": 4192,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 180,
+          "cache_read_input_tokens": 8820,
+          "cache_creation_input_tokens": 1325
+        },
+        "cost_usd": 0.008872,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A03-revenue-nov-2017.run1.jsonl"
+      },
+      "grade": {
+        "answer": 1172191.68,
+        "expected": 1172191.68,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A03-revenue-nov-2017",
+      "run_index": 2,
+      "run": {
+        "question_id": "A03-revenue-nov-2017",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01DUFAfYAEMoTmN9QjPAruT2",
+            "tool": "revenue_report",
+            "arguments": {
+              "from": "2017-11-01",
+              "to": "2017-11-30",
+              "group_by": "month"
+            },
+            "result": "{\"group_by\":\"month\",\"metric\":\"gross_revenue\",\"orders_additive\":true,\"totals\":{\"revenue\":1172191.68,\"item_revenue\":1003862.14,\"freight\":168329.54,\"orders\":7421},\"rows\":[{\"month\":\"2017-11\",\"orders\":7421,\"item_revenue\":1003862.14,\"freight\":168329.54,\"revenue\":1172191.68,\"avg_order_value\":157.96}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store's revenue in November 2017 was **R$1,172,191.68** (from 7,421 orders).\n\n{\"answer\": 1172191.68}",
+        "turns": 2,
+        "duration_ms": 2321,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 158,
+          "cache_read_input_tokens": 8821,
+          "cache_creation_input_tokens": 1304
+        },
+        "cost_usd": 0.0085682,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A03-revenue-nov-2017.run2.jsonl"
+      },
+      "grade": {
+        "answer": 1172191.68,
+        "expected": 1172191.68,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A03-revenue-nov-2017",
+      "run_index": 3,
+      "run": {
+        "question_id": "A03-revenue-nov-2017",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01LoeyPqGXa6XBdBWgdC2zym",
+            "tool": "revenue_report",
+            "arguments": {
+              "from": "2017-11-01",
+              "to": "2017-11-30",
+              "group_by": "month"
+            },
+            "result": "{\"group_by\":\"month\",\"metric\":\"gross_revenue\",\"orders_additive\":true,\"totals\":{\"revenue\":1172191.68,\"item_revenue\":1003862.14,\"freight\":168329.54,\"orders\":7421},\"rows\":[{\"month\":\"2017-11\",\"orders\":7421,\"item_revenue\":1003862.14,\"freight\":168329.54,\"revenue\":1172191.68,\"avg_order_value\":157.96}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The store's revenue in November 2017 was **R$1,172,191.68** (across 7,421 orders).\n\n{\"answer\": 1172191.68}",
+        "turns": 2,
+        "duration_ms": 3650,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 158,
+          "cache_read_input_tokens": 8821,
+          "cache_creation_input_tokens": 1304
+        },
+        "cost_usd": 0.0085682,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A03-revenue-nov-2017.run3.jsonl"
+      },
+      "grade": {
+        "answer": 1172191.68,
+        "expected": 1172191.68,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A04-top-category",
+      "run_index": 1,
+      "run": {
+        "question_id": "A04-top-category",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_0164Ua1NU7VPRSZVgiz4zYKq",
+            "tool": "list_categories",
+            "arguments": {
+              "sort": "revenue"
+            },
+            "result": "{\"categories\":[{\"category\":\"Health Beauty\",\"products\":2444,\"units_sold\":9634,\"revenue\":1255695.13,\"avg_review\":4.17},{\"category\":\"Watches Gifts\",\"products\":1329,\"units_sold\":5970,\"revenue\":1198185.21,\"avg_review\":4.06},{\"category\":\"Bed Bath Table\",\"products\":3029,\"units_sold\":11097,\"revenue\":1035964.06,\"avg_review\":3.95},{\"category\":\"Sports Leisure\",\"products\":2867,\"units_sold\":8590,\"revenue\":979740.92,\"avg_review\":4.17},{\"category\":\"Computers Accessories\",\"products\":1639,\"units_sold\":7781,\"revenue\":904322.02,\"avg_review\":4.03},{\"category\":\"Furniture Decor\",\"products\":2657,\"units_sold\":8298,\"revenue\":727465.05,\"avg_review\":4.01},{\"category\":\"Housewares\",\"products\":2335,\"units_sold\":6915,\"revenue\":626825.8,\"avg_review\":4.14},{\"category\":\"Cool Stuff\",\"products\":789,\"units_sold\":3779,\"revenue\":620770.49,\"avg_review\":4.17},{\"category\":\"Auto\",\"products\":1900,\"units_sold\":4204,\"revenue\":586585.73,\"avg_review\":4.09},{\"category\":\"Garden Tools\",\"products\":753,\"units_sold\":4328,\"revenue\":481009.94,\"avg_review\":4.13},{\"category\":\"Toys\",\"products\":1411,\"units_sold\":4083,\"revenue\":479808.54,\"avg_review\":4.19},{\"category\":\"Baby\",\"products\":919,\"units_sold\":3043,\"revenue\":410312.2,\"avg_review\":4.04},{\"category\":\"Perfumery\",\"products\":868,\"units_sold\":3402,\"revenue\":396599.31,\"avg_review\":4.21},{\"category\":\"Telephony\",\"products\":1134,\"units_sold\":4527,\"revenue\":322342.64,\"avg_review\":4},{\"category\":\"Office Furniture\",\"products\":309,\"units_sold\":1690,\"revenue\":273580.7,\"avg_review\":3.61},{\"ca",
+            "is_error": false
+          }
+        ],
+        "final_text": "Health Beauty brought in the most revenue, at R$1,255,695.13.\n\n{\"answer\": \"Health Beauty\"}",
+        "turns": 2,
+        "duration_ms": 5773,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 100,
+          "cache_read_input_tokens": 8820,
+          "cache_creation_input_tokens": 4490
+        },
+        "cost_usd": 0.020732,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A04-top-category.run1.jsonl"
+      },
+      "grade": {
+        "answer": "Health Beauty",
+        "expected": "health_beauty",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "list_categories"
+        ]
+      }
+    },
+    {
+      "question_id": "A04-top-category",
+      "run_index": 2,
+      "run": {
+        "question_id": "A04-top-category",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01RpJraaFU67aiPN4HWx7Nbq",
+            "tool": "list_categories",
+            "arguments": {
+              "sort": "revenue"
+            },
+            "result": "{\"categories\":[{\"category\":\"Health Beauty\",\"products\":2444,\"units_sold\":9634,\"revenue\":1255695.13,\"avg_review\":4.17},{\"category\":\"Watches Gifts\",\"products\":1329,\"units_sold\":5970,\"revenue\":1198185.21,\"avg_review\":4.06},{\"category\":\"Bed Bath Table\",\"products\":3029,\"units_sold\":11097,\"revenue\":1035964.06,\"avg_review\":3.95},{\"category\":\"Sports Leisure\",\"products\":2867,\"units_sold\":8590,\"revenue\":979740.92,\"avg_review\":4.17},{\"category\":\"Computers Accessories\",\"products\":1639,\"units_sold\":7781,\"revenue\":904322.02,\"avg_review\":4.03},{\"category\":\"Furniture Decor\",\"products\":2657,\"units_sold\":8298,\"revenue\":727465.05,\"avg_review\":4.01},{\"category\":\"Housewares\",\"products\":2335,\"units_sold\":6915,\"revenue\":626825.8,\"avg_review\":4.14},{\"category\":\"Cool Stuff\",\"products\":789,\"units_sold\":3779,\"revenue\":620770.49,\"avg_review\":4.17},{\"category\":\"Auto\",\"products\":1900,\"units_sold\":4204,\"revenue\":586585.73,\"avg_review\":4.09},{\"category\":\"Garden Tools\",\"products\":753,\"units_sold\":4328,\"revenue\":481009.94,\"avg_review\":4.13},{\"category\":\"Toys\",\"products\":1411,\"units_sold\":4083,\"revenue\":479808.54,\"avg_review\":4.19},{\"category\":\"Baby\",\"products\":919,\"units_sold\":3043,\"revenue\":410312.2,\"avg_review\":4.04},{\"category\":\"Perfumery\",\"products\":868,\"units_sold\":3402,\"revenue\":396599.31,\"avg_review\":4.21},{\"category\":\"Telephony\",\"products\":1134,\"units_sold\":4527,\"revenue\":322342.64,\"avg_review\":4},{\"category\":\"Office Furniture\",\"products\":309,\"units_sold\":1690,\"revenue\":273580.7,\"avg_review\":3.61},{\"ca",
+            "is_error": false
+          }
+        ],
+        "final_text": "**Health Beauty** brought in the most revenue, at R$1,255,695.13.\n\n{\"answer\": \"Health Beauty\"}",
+        "turns": 2,
+        "duration_ms": 8096,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 102,
+          "cache_read_input_tokens": 8819,
+          "cache_creation_input_tokens": 4489
+        },
+        "cost_usd": 0.0207478,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A04-top-category.run2.jsonl"
+      },
+      "grade": {
+        "answer": "Health Beauty",
+        "expected": "health_beauty",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "list_categories"
+        ]
+      }
+    },
+    {
+      "question_id": "A04-top-category",
+      "run_index": 3,
+      "run": {
+        "question_id": "A04-top-category",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_0153LH3SqUcT9defknrQ6HpZ",
+            "tool": "revenue_report",
+            "arguments": {
+              "group_by": "category",
+              "limit": 1
+            },
+            "result": "{\"group_by\":\"category\",\"metric\":\"gross_revenue\",\"orders_additive\":false,\"totals\":{\"revenue\":1437665.78,\"item_revenue\":1255695.13,\"freight\":181970.65},\"rows\":[{\"category\":\"Health Beauty\",\"orders\":8800,\"item_revenue\":1255695.13,\"freight\":181970.65,\"revenue\":1437665.78,\"avg_order_value\":163.37}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The \"Health Beauty\" category brought in the most revenue, at R$1,437,665.78 (item revenue plus freight) across 8,800 orders.\n\n{\"answer\": \"Health Beauty\"}",
+        "turns": 2,
+        "duration_ms": 2452,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 145,
+          "cache_read_input_tokens": 8819,
+          "cache_creation_input_tokens": 1267
+        },
+        "cost_usd": 0.0082898,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A04-top-category.run3.jsonl"
+      },
+      "grade": {
+        "answer": "Health Beauty",
+        "expected": "health_beauty",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A05-health-beauty-merchandise",
+      "run_index": 1,
+      "run": {
+        "question_id": "A05-health-beauty-merchandise",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01G85zFSpifkBnWQgDofdGhL",
+            "tool": "revenue_report",
+            "arguments": {
+              "group_by": "category",
+              "limit": 50
+            },
+            "result": "{\"group_by\":\"category\",\"metric\":\"gross_revenue\",\"orders_additive\":false,\"totals\":{\"revenue\":15592260.03,\"item_revenue\":13376725.32,\"freight\":2215534.71},\"rows\":[{\"category\":\"Health Beauty\",\"orders\":8800,\"item_revenue\":1255695.13,\"freight\":181970.65,\"revenue\":1437665.78,\"avg_order_value\":163.37},{\"category\":\"Watches Gifts\",\"orders\":5604,\"item_revenue\":1198185.21,\"freight\":100107.26,\"revenue\":1298292.47,\"avg_order_value\":231.67},{\"category\":\"Bed Bath Table\",\"orders\":9399,\"item_revenue\":1035964.06,\"freight\":204422.07,\"revenue\":1240386.13,\"avg_order_value\":131.97},{\"category\":\"Sports Leisure\",\"orders\":7673,\"item_revenue\":979740.92,\"freight\":167503.71,\"revenue\":1147244.63,\"avg_order_value\":149.52},{\"category\":\"Computers Accessories\",\"orders\":6654,\"item_revenue\":904322.02,\"freight\":146619.56,\"revenue\":1050941.58,\"avg_order_value\":157.94},{\"category\":\"Furniture Decor\",\"orders\":6425,\"item_revenue\":727465.05,\"freight\":172160.99,\"revenue\":899626.04,\"avg_order_value\":140.02},{\"category\":\"Housewares\",\"orders\":5847,\"item_revenue\":626825.8,\"freight\":145209.34,\"revenue\":772035.14,\"avg_order_value\":132.04},{\"category\":\"Cool Stuff\",\"orders\":3616,\"item_revenue\":620770.49,\"freight\":83315.75,\"revenue\":704086.24,\"avg_order_value\":194.71},{\"category\":\"Auto\",\"orders\":3872,\"item_revenue\":586585.73,\"freight\":92020.91,\"revenue\":678606.64,\"avg_order_value\":175.26},{\"category\":\"Garden Tools\",\"orders\":3505,\"item_revenue\":481009.94,\"freight\":98515.26,\"revenue\":579525.2,\"avg_order_value\":165.34},{\"category",
+            "is_error": false
+          }
+        ],
+        "final_text": "Health Beauty's merchandise (item) revenue, excluding freight, was **R$1,255,695.13**.\n\n{\"answer\": 1255695.13}",
+        "turns": 2,
+        "duration_ms": 6644,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 234,
+          "cache_read_input_tokens": 8835,
+          "cache_creation_input_tokens": 4384
+        },
+        "cost_usd": 0.021651,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A05-health-beauty-merchandise.run1.jsonl"
+      },
+      "grade": {
+        "answer": 1255695.13,
+        "expected": 1255695.13,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A05-health-beauty-merchandise",
+      "run_index": 2,
+      "run": {
+        "question_id": "A05-health-beauty-merchandise",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_012dysD7K651jasvSQTypsQ1",
+            "tool": "list_categories",
+            "arguments": {
+              "sort": "revenue"
+            },
+            "result": "{\"categories\":[{\"category\":\"Health Beauty\",\"products\":2444,\"units_sold\":9634,\"revenue\":1255695.13,\"avg_review\":4.17},{\"category\":\"Watches Gifts\",\"products\":1329,\"units_sold\":5970,\"revenue\":1198185.21,\"avg_review\":4.06},{\"category\":\"Bed Bath Table\",\"products\":3029,\"units_sold\":11097,\"revenue\":1035964.06,\"avg_review\":3.95},{\"category\":\"Sports Leisure\",\"products\":2867,\"units_sold\":8590,\"revenue\":979740.92,\"avg_review\":4.17},{\"category\":\"Computers Accessories\",\"products\":1639,\"units_sold\":7781,\"revenue\":904322.02,\"avg_review\":4.03},{\"category\":\"Furniture Decor\",\"products\":2657,\"units_sold\":8298,\"revenue\":727465.05,\"avg_review\":4.01},{\"category\":\"Housewares\",\"products\":2335,\"units_sold\":6915,\"revenue\":626825.8,\"avg_review\":4.14},{\"category\":\"Cool Stuff\",\"products\":789,\"units_sold\":3779,\"revenue\":620770.49,\"avg_review\":4.17},{\"category\":\"Auto\",\"products\":1900,\"units_sold\":4204,\"revenue\":586585.73,\"avg_review\":4.09},{\"category\":\"Garden Tools\",\"products\":753,\"units_sold\":4328,\"revenue\":481009.94,\"avg_review\":4.13},{\"category\":\"Toys\",\"products\":1411,\"units_sold\":4083,\"revenue\":479808.54,\"avg_review\":4.19},{\"category\":\"Baby\",\"products\":919,\"units_sold\":3043,\"revenue\":410312.2,\"avg_review\":4.04},{\"category\":\"Perfumery\",\"products\":868,\"units_sold\":3402,\"revenue\":396599.31,\"avg_review\":4.21},{\"category\":\"Telephony\",\"products\":1134,\"units_sold\":4527,\"revenue\":322342.64,\"avg_review\":4},{\"category\":\"Office Furniture\",\"products\":309,\"units_sold\":1690,\"revenue\":273580.7,\"avg_review\":3.61},{\"ca",
+            "is_error": false
+          }
+        ],
+        "final_text": "The Health Beauty category generated **R$1,255,695.13** in merchandise revenue (product sales only, excluding shipping/freight).\n\n{\"answer\": 1255695.13}",
+        "turns": 2,
+        "duration_ms": 4736,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 295,
+          "cache_read_input_tokens": 8834,
+          "cache_creation_input_tokens": 4609
+        },
+        "cost_usd": 0.023160800000000002,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A05-health-beauty-merchandise.run2.jsonl"
+      },
+      "grade": {
+        "answer": 1255695.13,
+        "expected": 1255695.13,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "list_categories"
+        ]
+      }
+    },
+    {
+      "question_id": "A05-health-beauty-merchandise",
+      "run_index": 3,
+      "run": {
+        "question_id": "A05-health-beauty-merchandise",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01GU4dLiaJz3bHVjcwaNX8ae",
+            "tool": "list_categories",
+            "arguments": {
+              "sort": "revenue"
+            },
+            "result": "{\"categories\":[{\"category\":\"Health Beauty\",\"products\":2444,\"units_sold\":9634,\"revenue\":1255695.13,\"avg_review\":4.17},{\"category\":\"Watches Gifts\",\"products\":1329,\"units_sold\":5970,\"revenue\":1198185.21,\"avg_review\":4.06},{\"category\":\"Bed Bath Table\",\"products\":3029,\"units_sold\":11097,\"revenue\":1035964.06,\"avg_review\":3.95},{\"category\":\"Sports Leisure\",\"products\":2867,\"units_sold\":8590,\"revenue\":979740.92,\"avg_review\":4.17},{\"category\":\"Computers Accessories\",\"products\":1639,\"units_sold\":7781,\"revenue\":904322.02,\"avg_review\":4.03},{\"category\":\"Furniture Decor\",\"products\":2657,\"units_sold\":8298,\"revenue\":727465.05,\"avg_review\":4.01},{\"category\":\"Housewares\",\"products\":2335,\"units_sold\":6915,\"revenue\":626825.8,\"avg_review\":4.14},{\"category\":\"Cool Stuff\",\"products\":789,\"units_sold\":3779,\"revenue\":620770.49,\"avg_review\":4.17},{\"category\":\"Auto\",\"products\":1900,\"units_sold\":4204,\"revenue\":586585.73,\"avg_review\":4.09},{\"category\":\"Garden Tools\",\"products\":753,\"units_sold\":4328,\"revenue\":481009.94,\"avg_review\":4.13},{\"category\":\"Toys\",\"products\":1411,\"units_sold\":4083,\"revenue\":479808.54,\"avg_review\":4.19},{\"category\":\"Baby\",\"products\":919,\"units_sold\":3043,\"revenue\":410312.2,\"avg_review\":4.04},{\"category\":\"Perfumery\",\"products\":868,\"units_sold\":3402,\"revenue\":396599.31,\"avg_review\":4.21},{\"category\":\"Telephony\",\"products\":1134,\"units_sold\":4527,\"revenue\":322342.64,\"avg_review\":4},{\"category\":\"Office Furniture\",\"products\":309,\"units_sold\":1690,\"revenue\":273580.7,\"avg_review\":3.61},{\"ca",
+            "is_error": false
+          }
+        ],
+        "final_text": "The Health Beauty category generated **R$1,255,695.13** in merchandise revenue (product sales, excluding shipping/freight).\n\n{\"answer\": 1255695.13}",
+        "turns": 2,
+        "duration_ms": 4481,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 193,
+          "cache_read_input_tokens": 8834,
+          "cache_creation_input_tokens": 4581
+        },
+        "cost_usd": 0.0220288,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A05-health-beauty-merchandise.run3.jsonl"
+      },
+      "grade": {
+        "answer": 1255695.13,
+        "expected": 1255695.13,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "list_categories"
+        ]
+      }
+    },
+    {
+      "question_id": "A06-top-seller",
+      "run_index": 1,
+      "run": {
+        "question_id": "A06-top-seller",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_014H8Ejsbfn3BqzHd2gekYcu",
+            "tool": "seller_performance",
+            "arguments": {
+              "sort": "revenue",
+              "limit": 1
+            },
+            "result": "{\"min_orders\":50,\"sellers\":[{\"seller\":\"4869f7a5dfa277a7dca6462dcf3b52b2\",\"location\":\"guariba, SP\",\"orders\":1131,\"revenue\":229237.63,\"avg_review\":4.13,\"avg_days_late\":-10.2}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The seller with the highest revenue is **4869f7a5dfa277a7dca6462dcf3b52b2** (Guariba, SP), with BRL 229,237.63 in revenue across 1,131 orders.\n\n{\"answer\": \"4869f7a5dfa277a7dca6462dcf3b52b2\"}",
+        "turns": 2,
+        "duration_ms": 6249,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 185,
+          "cache_read_input_tokens": 8828,
+          "cache_creation_input_tokens": 1238
+        },
+        "cost_usd": 0.0085756,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A06-top-seller.run1.jsonl"
+      },
+      "grade": {
+        "answer": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "expected": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A06-top-seller",
+      "run_index": 2,
+      "run": {
+        "question_id": "A06-top-seller",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01NVMnLf5omjck7BaK2vtTCM",
+            "tool": "seller_performance",
+            "arguments": {
+              "sort": "revenue",
+              "limit": 1
+            },
+            "result": "{\"min_orders\":50,\"sellers\":[{\"seller\":\"4869f7a5dfa277a7dca6462dcf3b52b2\",\"location\":\"guariba, SP\",\"orders\":1131,\"revenue\":229237.63,\"avg_review\":4.13,\"avg_days_late\":-10.2}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The highest-revenue seller is **4869f7a5dfa277a7dca6462dcf3b52b2** (Guariba, SP), with R$229,237.63 in revenue across 1,131 orders.\n\n{\"answer\": \"4869f7a5dfa277a7dca6462dcf3b52b2\"}",
+        "turns": 2,
+        "duration_ms": 4545,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 182,
+          "cache_read_input_tokens": 8828,
+          "cache_creation_input_tokens": 1238
+        },
+        "cost_usd": 0.0085456,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A06-top-seller.run2.jsonl"
+      },
+      "grade": {
+        "answer": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "expected": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A06-top-seller",
+      "run_index": 3,
+      "run": {
+        "question_id": "A06-top-seller",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01U7GvfFodUkaz3ox3jfRKhU",
+            "tool": "seller_performance",
+            "arguments": {
+              "sort": "revenue",
+              "limit": 1
+            },
+            "result": "{\"min_orders\":50,\"sellers\":[{\"seller\":\"4869f7a5dfa277a7dca6462dcf3b52b2\",\"location\":\"guariba, SP\",\"orders\":1131,\"revenue\":229237.63,\"avg_review\":4.13,\"avg_days_late\":-10.2}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The seller with the highest sales revenue is seller ID **4869f7a5dfa277a7dca6462dcf3b52b2**, based in Guariba, SP, with R$229,237.63 in revenue from 1,131 orders.\n\n{\"answer\": \"4869f7a5dfa277a7dca6462dcf3b52b2\"}",
+        "turns": 2,
+        "duration_ms": 4549,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 191,
+          "cache_read_input_tokens": 8827,
+          "cache_creation_input_tokens": 1237
+        },
+        "cost_usd": 0.008631400000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A06-top-seller.run3.jsonl"
+      },
+      "grade": {
+        "answer": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "expected": "4869f7a5dfa277a7dca6462dcf3b52b2",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A07-credit-card-2018",
+      "run_index": 1,
+      "run": {
+        "question_id": "A07-credit-card-2018",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_0148w9ZQj5YgLWS3GD8g1b8s",
+            "tool": "revenue_report",
+            "arguments": {
+              "from": "2018-01-01",
+              "to": "2018-12-31",
+              "group_by": "payment_method"
+            },
+            "result": "{\"group_by\":\"payment_method\",\"metric\":\"payment_value\",\"orders_additive\":false,\"totals\":{\"revenue\":8594694.38},\"rows\":[{\"method\":\"credit_card\",\"orders\":41515,\"revenue\":6791660.43,\"avg_order_value\":163.6},{\"method\":\"boleto\",\"orders\":10136,\"revenue\":1452716.63,\"avg_order_value\":143.32},{\"method\":\"voucher\",\"orders\":1846,\"revenue\":181015.42,\"avg_order_value\":98.06},{\"method\":\"debit_card\",\"orders\":1097,\"revenue\":169301.9,\"avg_order_value\":154.33}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "For orders placed in 2018, credit card payments totaled **R$6,791,660.43** across 41,515 orders.\n\n{\"answer\": 6791660.43}",
+        "turns": 2,
+        "duration_ms": 5079,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 229,
+          "cache_read_input_tokens": 8824,
+          "cache_creation_input_tokens": 1436
+        },
+        "cost_usd": 0.009806800000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A07-credit-card-2018.run1.jsonl"
+      },
+      "grade": {
+        "answer": 6791660.43,
+        "expected": 6791660.43,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A07-credit-card-2018",
+      "run_index": 2,
+      "run": {
+        "question_id": "A07-credit-card-2018",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01Wt4NY2PhEmWpXRmNJQybkF",
+            "tool": "revenue_report",
+            "arguments": {
+              "from": "2018-01-01",
+              "to": "2018-12-31",
+              "group_by": "payment_method"
+            },
+            "result": "{\"group_by\":\"payment_method\",\"metric\":\"payment_value\",\"orders_additive\":false,\"totals\":{\"revenue\":8594694.38},\"rows\":[{\"method\":\"credit_card\",\"orders\":41515,\"revenue\":6791660.43,\"avg_order_value\":163.6},{\"method\":\"boleto\",\"orders\":10136,\"revenue\":1452716.63,\"avg_order_value\":143.32},{\"method\":\"voucher\",\"orders\":1846,\"revenue\":181015.42,\"avg_order_value\":98.06},{\"method\":\"debit_card\",\"orders\":1097,\"revenue\":169301.9,\"avg_order_value\":154.33}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Customers paid **R$6,791,660.43** by credit card across 41,515 orders placed in 2018.\n\n{\"answer\": 6791660.43}",
+        "turns": 2,
+        "duration_ms": 3206,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 224,
+          "cache_read_input_tokens": 8825,
+          "cache_creation_input_tokens": 1435
+        },
+        "cost_usd": 0.009753000000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A07-credit-card-2018.run2.jsonl"
+      },
+      "grade": {
+        "answer": 6791660.43,
+        "expected": 6791660.43,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A07-credit-card-2018",
+      "run_index": 3,
+      "run": {
+        "question_id": "A07-credit-card-2018",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01C58kvJHzKDwJp359FUpyZZ",
+            "tool": "revenue_report",
+            "arguments": {
+              "group_by": "payment_method",
+              "from": "2018-01-01",
+              "to": "2018-12-31"
+            },
+            "result": "{\"group_by\":\"payment_method\",\"metric\":\"payment_value\",\"orders_additive\":false,\"totals\":{\"revenue\":8594694.38},\"rows\":[{\"method\":\"credit_card\",\"orders\":41515,\"revenue\":6791660.43,\"avg_order_value\":163.6},{\"method\":\"boleto\",\"orders\":10136,\"revenue\":1452716.63,\"avg_order_value\":143.32},{\"method\":\"voucher\",\"orders\":1846,\"revenue\":181015.42,\"avg_order_value\":98.06},{\"method\":\"debit_card\",\"orders\":1097,\"revenue\":169301.9,\"avg_order_value\":154.33}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "For orders placed in 2018, R$6,791,660.43 was paid via credit card (across 41,515 orders).\n\n{\"answer\": 6791660.43}",
+        "turns": 2,
+        "duration_ms": 4277,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 306,
+          "cache_read_input_tokens": 8825,
+          "cache_creation_input_tokens": 1515
+        },
+        "cost_usd": 0.010893,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A07-credit-card-2018.run3.jsonl"
+      },
+      "grade": {
+        "answer": 6791660.43,
+        "expected": 6791660.43,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "revenue_report"
+        ]
+      }
+    },
+    {
+      "question_id": "A08-very-late-review",
+      "run_index": 1,
+      "run": {
+        "question_id": "A08-very-late-review",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01GV338WnVtq2qvQCWAvBpmN",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Orders delivered more than a week late (3,274 orders) have an average review score of **1.71**, far below the store-wide on-time average of 4.28.\n\n{\"answer\": 1.71}",
+        "turns": 2,
+        "duration_ms": 5399,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 152,
+          "cache_read_input_tokens": 8826,
+          "cache_creation_input_tokens": 1456
+        },
+        "cost_usd": 0.009117199999999999,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A08-very-late-review.run1.jsonl"
+      },
+      "grade": {
+        "answer": 1.71,
+        "expected": 1.71,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A08-very-late-review",
+      "run_index": 2,
+      "run": {
+        "question_id": "A08-very-late-review",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01JAKENNPCSFvgpzybxKsWQu",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Orders delivered more than a week late have an average review score of **1.71** (out of 5), across 3,274 orders — a steep drop from the 4.28 average for on-time/early deliveries.\n\n{\"answer\": 1.71}",
+        "turns": 2,
+        "duration_ms": 2680,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 134,
+          "cache_read_input_tokens": 8825,
+          "cache_creation_input_tokens": 1424
+        },
+        "cost_usd": 0.008808999999999999,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A08-very-late-review.run2.jsonl"
+      },
+      "grade": {
+        "answer": 1.71,
+        "expected": 1.71,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A08-very-late-review",
+      "run_index": 3,
+      "run": {
+        "question_id": "A08-very-late-review",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_016iNmYgeFWViNFA91NLpDii",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Orders delivered more than a week late have an average review score of **1.71** (out of 5), based on 3,274 such orders — a steep drop from the 4.28 average for on-time/early deliveries.\n\n{\"answer\": 1.71}",
+        "turns": 2,
+        "duration_ms": 3957,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 136,
+          "cache_read_input_tokens": 8826,
+          "cache_creation_input_tokens": 1425
+        },
+        "cost_usd": 0.0088332,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A08-very-late-review.run3.jsonl"
+      },
+      "grade": {
+        "answer": 1.71,
+        "expected": 1.71,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A09-late-rate",
+      "run_index": 1,
+      "run": {
+        "question_id": "A09-late-rate",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01ERiXqVvP2cK16HR3Ji2cao",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "About 7.9% of delivered orders (7,645 out of 96,470) arrived after their estimated delivery date.\n\n{\"answer\": 7.93}",
+        "turns": 2,
+        "duration_ms": 4420,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 197,
+          "cache_read_input_tokens": 8828,
+          "cache_creation_input_tokens": 1452
+        },
+        "cost_usd": 0.0095516,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A09-late-rate.run1.jsonl"
+      },
+      "grade": {
+        "answer": 7.93,
+        "expected": 7.92,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A09-late-rate",
+      "run_index": 2,
+      "run": {
+        "question_id": "A09-late-rate",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01NBtdNQYax9T11d47277QYC",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Of the delivered orders, **7,645 out of 96,470 (about 7.9%)** arrived after their estimated delivery date.\n\n{\"answer\": 7.93}",
+        "turns": 2,
+        "duration_ms": 3868,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 181,
+          "cache_read_input_tokens": 8829,
+          "cache_creation_input_tokens": 1428
+        },
+        "cost_usd": 0.0092958,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A09-late-rate.run2.jsonl"
+      },
+      "grade": {
+        "answer": 7.93,
+        "expected": 7.92,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A09-late-rate",
+      "run_index": 3,
+      "run": {
+        "question_id": "A09-late-rate",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_015o5ym9b5HHyou5ie3A3Jaz",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "bucket"
+            },
+            "result": "{\"group_by\":\"bucket\",\"rows\":[{\"delivery\":\"on time or early\",\"orders\":88825,\"late_orders\":0,\"late_rate\":0,\"avg_days_late\":-12.8,\"avg_delivery_days\":10.9,\"avg_review\":4.28},{\"delivery\":\"1-3 days late\",\"orders\":2544,\"late_orders\":2544,\"late_rate\":100,\"avg_days_late\":1.7,\"avg_delivery_days\":21.2,\"avg_review\":3.7},{\"delivery\":\"4-7 days late\",\"orders\":1827,\"late_orders\":1827,\"late_rate\":100,\"avg_days_late\":5.4,\"avg_delivery_days\":26.9,\"avg_review\":2.27},{\"delivery\":\"more than a week late\",\"orders\":3274,\"late_orders\":3274,\"late_rate\":100,\"avg_days_late\":18.9,\"avg_delivery_days\":42.7,\"avg_review\":1.71}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Out of 96,470 delivered orders, 7,645 arrived late — about 7.9% of delivered orders were late.\n\n{\"answer\": 7.9}",
+        "turns": 2,
+        "duration_ms": 11238,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 176,
+          "cache_read_input_tokens": 8828,
+          "cache_creation_input_tokens": 1427
+        },
+        "cost_usd": 0.009241599999999999,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A09-late-rate.run3.jsonl"
+      },
+      "grade": {
+        "answer": 7.9,
+        "expected": 7.92,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A10-worst-state-reviews",
+      "run_index": 1,
+      "run": {
+        "question_id": "A10-worst-state-reviews",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01Qf2QYpW8YYwP5MsFpVV2X9",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "state",
+              "min_orders": 500,
+              "limit": 50
+            },
+            "result": "{\"group_by\":\"state\",\"rows\":[{\"state\":\"MA\",\"orders\":717,\"late_orders\":137,\"late_rate\":19.1,\"avg_days_late\":-8.7,\"avg_delivery_days\":21.5,\"avg_review\":3.81},{\"state\":\"PA\",\"orders\":946,\"late_orders\":117,\"late_rate\":12.4,\"avg_days_late\":-13.2,\"avg_delivery_days\":23.7,\"avg_review\":3.89},{\"state\":\"BA\",\"orders\":3256,\"late_orders\":449,\"late_rate\":13.8,\"avg_days_late\":-9.9,\"avg_delivery_days\":19.3,\"avg_review\":3.91},{\"state\":\"CE\",\"orders\":1279,\"late_orders\":195,\"late_rate\":15.2,\"avg_days_late\":-10,\"avg_delivery_days\":21.2,\"avg_review\":3.94},{\"state\":\"RJ\",\"orders\":12350,\"late_orders\":1643,\"late_rate\":13.3,\"avg_days_late\":-10.9,\"avg_delivery_days\":15.3,\"avg_review\":3.95},{\"state\":\"ES\",\"orders\":1995,\"late_orders\":244,\"late_rate\":12.2,\"avg_days_late\":-9.6,\"avg_delivery_days\":15.7,\"avg_review\":4.05},{\"state\":\"PB\",\"orders\":517,\"late_orders\":57,\"late_rate\":11,\"avg_days_late\":-12.5,\"avg_delivery_days\":20.4,\"avg_review\":4.06},{\"state\":\"PE\",\"orders\":1593,\"late_orders\":170,\"late_rate\":10.7,\"avg_days_late\":-12.4,\"avg_delivery_days\":18.4,\"avg_review\":4.07},{\"state\":\"GO\",\"orders\":1957,\"late_orders\":156,\"late_rate\":8,\"avg_days_late\":-11.3,\"avg_delivery_days\":15.6,\"avg_review\":4.09},{\"state\":\"SC\",\"orders\":3546,\"late_orders\":340,\"late_rate\":9.6,\"avg_days_late\":-10.6,\"avg_delivery_days\":14.9,\"avg_review\":4.12},{\"state\":\"MT\",\"orders\":886,\"late_orders\":58,\"late_rate\":6.5,\"avg_days_late\":-13.5,\"avg_delivery_days\":18,\"avg_review\":4.13},{\"state\":\"DF\",\"orders\":2080,\"late_orders\":145,\"late_rate\":7,\"avg_days_l",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among states with at least 500 delivered orders, **Maranhão (MA)** has the lowest average review score at 3.81 stars.\n\n{\"answer\": \"MA\"}",
+        "turns": 2,
+        "duration_ms": 3430,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 160,
+          "cache_read_input_tokens": 8834,
+          "cache_creation_input_tokens": 2343
+        },
+        "cost_usd": 0.012746799999999999,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A10-worst-state-reviews.run1.jsonl"
+      },
+      "grade": {
+        "answer": "MA",
+        "expected": "MA",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A10-worst-state-reviews",
+      "run_index": 2,
+      "run": {
+        "question_id": "A10-worst-state-reviews",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01Tf6horNPFYAwMb4LCamnC3",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "state",
+              "min_orders": 500,
+              "limit": 30
+            },
+            "result": "{\"group_by\":\"state\",\"rows\":[{\"state\":\"MA\",\"orders\":717,\"late_orders\":137,\"late_rate\":19.1,\"avg_days_late\":-8.7,\"avg_delivery_days\":21.5,\"avg_review\":3.81},{\"state\":\"PA\",\"orders\":946,\"late_orders\":117,\"late_rate\":12.4,\"avg_days_late\":-13.2,\"avg_delivery_days\":23.7,\"avg_review\":3.89},{\"state\":\"BA\",\"orders\":3256,\"late_orders\":449,\"late_rate\":13.8,\"avg_days_late\":-9.9,\"avg_delivery_days\":19.3,\"avg_review\":3.91},{\"state\":\"CE\",\"orders\":1279,\"late_orders\":195,\"late_rate\":15.2,\"avg_days_late\":-10,\"avg_delivery_days\":21.2,\"avg_review\":3.94},{\"state\":\"RJ\",\"orders\":12350,\"late_orders\":1643,\"late_rate\":13.3,\"avg_days_late\":-10.9,\"avg_delivery_days\":15.3,\"avg_review\":3.95},{\"state\":\"ES\",\"orders\":1995,\"late_orders\":244,\"late_rate\":12.2,\"avg_days_late\":-9.6,\"avg_delivery_days\":15.7,\"avg_review\":4.05},{\"state\":\"PB\",\"orders\":517,\"late_orders\":57,\"late_rate\":11,\"avg_days_late\":-12.5,\"avg_delivery_days\":20.4,\"avg_review\":4.06},{\"state\":\"PE\",\"orders\":1593,\"late_orders\":170,\"late_rate\":10.7,\"avg_days_late\":-12.4,\"avg_delivery_days\":18.4,\"avg_review\":4.07},{\"state\":\"GO\",\"orders\":1957,\"late_orders\":156,\"late_rate\":8,\"avg_days_late\":-11.3,\"avg_delivery_days\":15.6,\"avg_review\":4.09},{\"state\":\"SC\",\"orders\":3546,\"late_orders\":340,\"late_rate\":9.6,\"avg_days_late\":-10.6,\"avg_delivery_days\":14.9,\"avg_review\":4.12},{\"state\":\"MT\",\"orders\":886,\"late_orders\":58,\"late_rate\":6.5,\"avg_days_late\":-13.5,\"avg_delivery_days\":18,\"avg_review\":4.13},{\"state\":\"DF\",\"orders\":2080,\"late_orders\":145,\"late_rate\":7,\"avg_days_l",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among states with at least 500 delivered orders, **Maranhão (MA)** has the lowest average review score at 3.81.\n\n{\"answer\": \"MA\"}",
+        "turns": 2,
+        "duration_ms": 3390,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 157,
+          "cache_read_input_tokens": 8832,
+          "cache_creation_input_tokens": 2341
+        },
+        "cost_usd": 0.0127084,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A10-worst-state-reviews.run2.jsonl"
+      },
+      "grade": {
+        "answer": "MA",
+        "expected": "MA",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A10-worst-state-reviews",
+      "run_index": 3,
+      "run": {
+        "question_id": "A10-worst-state-reviews",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_012RggryGmRZCxkr7MhYkm1s",
+            "tool": "delivery_performance",
+            "arguments": {
+              "group_by": "state",
+              "min_orders": 500,
+              "limit": 50
+            },
+            "result": "{\"group_by\":\"state\",\"rows\":[{\"state\":\"MA\",\"orders\":717,\"late_orders\":137,\"late_rate\":19.1,\"avg_days_late\":-8.7,\"avg_delivery_days\":21.5,\"avg_review\":3.81},{\"state\":\"PA\",\"orders\":946,\"late_orders\":117,\"late_rate\":12.4,\"avg_days_late\":-13.2,\"avg_delivery_days\":23.7,\"avg_review\":3.89},{\"state\":\"BA\",\"orders\":3256,\"late_orders\":449,\"late_rate\":13.8,\"avg_days_late\":-9.9,\"avg_delivery_days\":19.3,\"avg_review\":3.91},{\"state\":\"CE\",\"orders\":1279,\"late_orders\":195,\"late_rate\":15.2,\"avg_days_late\":-10,\"avg_delivery_days\":21.2,\"avg_review\":3.94},{\"state\":\"RJ\",\"orders\":12350,\"late_orders\":1643,\"late_rate\":13.3,\"avg_days_late\":-10.9,\"avg_delivery_days\":15.3,\"avg_review\":3.95},{\"state\":\"ES\",\"orders\":1995,\"late_orders\":244,\"late_rate\":12.2,\"avg_days_late\":-9.6,\"avg_delivery_days\":15.7,\"avg_review\":4.05},{\"state\":\"PB\",\"orders\":517,\"late_orders\":57,\"late_rate\":11,\"avg_days_late\":-12.5,\"avg_delivery_days\":20.4,\"avg_review\":4.06},{\"state\":\"PE\",\"orders\":1593,\"late_orders\":170,\"late_rate\":10.7,\"avg_days_late\":-12.4,\"avg_delivery_days\":18.4,\"avg_review\":4.07},{\"state\":\"GO\",\"orders\":1957,\"late_orders\":156,\"late_rate\":8,\"avg_days_late\":-11.3,\"avg_delivery_days\":15.6,\"avg_review\":4.09},{\"state\":\"SC\",\"orders\":3546,\"late_orders\":340,\"late_rate\":9.6,\"avg_days_late\":-10.6,\"avg_delivery_days\":14.9,\"avg_review\":4.12},{\"state\":\"MT\",\"orders\":886,\"late_orders\":58,\"late_rate\":6.5,\"avg_days_late\":-13.5,\"avg_delivery_days\":18,\"avg_review\":4.13},{\"state\":\"DF\",\"orders\":2080,\"late_orders\":145,\"late_rate\":7,\"avg_days_l",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among states with at least 500 delivered orders, **Maranhão (MA)** has the lowest average review score, at 3.81.\n\n{\"answer\": \"MA\"}",
+        "turns": 2,
+        "duration_ms": 3240,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 158,
+          "cache_read_input_tokens": 8832,
+          "cache_creation_input_tokens": 2341
+        },
+        "cost_usd": 0.012718400000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A10-worst-state-reviews.run3.jsonl"
+      },
+      "grade": {
+        "answer": "MA",
+        "expected": "MA",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "delivery_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A11-customer-lifetime-value",
+      "run_index": 1,
+      "run": {
+        "question_id": "A11-customer-lifetime-value",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01JxdkMhfXYQRcGnpZorxZt6",
+            "tool": "find_customer",
+            "arguments": {
+              "email": "000bfa1d2f1a41876493be685390d6d3@olist.invalid"
+            },
+            "result": "{\"email\":\"000bfa1d2f1a41876493be685390d6d3@olist.invalid\",\"name\":\"Customer 000BFA1D\",\"orders\":1,\"lifetime_value\":46.85,\"avg_review\":4,\"location\":\"Santos, SP\",\"recent_orders\":[{\"number\":\"OL000014913\",\"purchased_at\":\"2017-09-29\",\"status\":\"delivered\",\"total\":46.85,\"days_late\":-12,\"review\":4,\"city\":\"Santos\",\"state\":\"SP\"}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The customer has a lifetime value of R$46.85, based on a single delivered order (OL000014913) placed on 2017-09-29, which arrived 12 days early and received a 4-star review.\n\n{\"answer\": 46.85}",
+        "turns": 2,
+        "duration_ms": 2877,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 166,
+          "cache_read_input_tokens": 8847,
+          "cache_creation_input_tokens": 1330
+        },
+        "cost_usd": 0.0087574,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A11-customer-lifetime-value.run1.jsonl"
+      },
+      "grade": {
+        "answer": 46.85,
+        "expected": 46.85,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "find_customer"
+        ]
+      }
+    },
+    {
+      "question_id": "A11-customer-lifetime-value",
+      "run_index": 2,
+      "run": {
+        "question_id": "A11-customer-lifetime-value",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01UixWZvQMou1KLKhdKu5ZoB",
+            "tool": "find_customer",
+            "arguments": {
+              "email": "000bfa1d2f1a41876493be685390d6d3@olist.invalid"
+            },
+            "result": "{\"email\":\"000bfa1d2f1a41876493be685390d6d3@olist.invalid\",\"name\":\"Customer 000BFA1D\",\"orders\":1,\"lifetime_value\":46.85,\"avg_review\":4,\"location\":\"Santos, SP\",\"recent_orders\":[{\"number\":\"OL000014913\",\"purchased_at\":\"2017-09-29\",\"status\":\"delivered\",\"total\":46.85,\"days_late\":-12,\"review\":4,\"city\":\"Santos\",\"state\":\"SP\"}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The customer's lifetime value is R$46.85, based on a single delivered order (OL000014913) from Santos, SP, rated 4 stars.\n\n{\"answer\": 46.85}",
+        "turns": 2,
+        "duration_ms": 2507,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 140,
+          "cache_read_input_tokens": 8846,
+          "cache_creation_input_tokens": 1317
+        },
+        "cost_usd": 0.0084452,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A11-customer-lifetime-value.run2.jsonl"
+      },
+      "grade": {
+        "answer": 46.85,
+        "expected": 46.85,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "find_customer"
+        ]
+      }
+    },
+    {
+      "question_id": "A11-customer-lifetime-value",
+      "run_index": 3,
+      "run": {
+        "question_id": "A11-customer-lifetime-value",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01JmNdQap4gUaAQa76bbFkjA",
+            "tool": "find_customer",
+            "arguments": {
+              "email": "000bfa1d2f1a41876493be685390d6d3@olist.invalid"
+            },
+            "result": "{\"email\":\"000bfa1d2f1a41876493be685390d6d3@olist.invalid\",\"name\":\"Customer 000BFA1D\",\"orders\":1,\"lifetime_value\":46.85,\"avg_review\":4,\"location\":\"Santos, SP\",\"recent_orders\":[{\"number\":\"OL000014913\",\"purchased_at\":\"2017-09-29\",\"status\":\"delivered\",\"total\":46.85,\"days_late\":-12,\"review\":4,\"city\":\"Santos\",\"state\":\"SP\"}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The customer's lifetime value is **R$46.85**, based on a single delivered order (OL000014913) in September 2017, delivered 12 days early with a 4-star review.\n\n{\"answer\": 46.85}",
+        "turns": 2,
+        "duration_ms": 2530,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 148,
+          "cache_read_input_tokens": 8846,
+          "cache_creation_input_tokens": 1317
+        },
+        "cost_usd": 0.0085252,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A11-customer-lifetime-value.run3.jsonl"
+      },
+      "grade": {
+        "answer": 46.85,
+        "expected": 46.85,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "find_customer"
+        ]
+      }
+    },
+    {
+      "question_id": "A12-order-review-score",
+      "run_index": 1,
+      "run": {
+        "question_id": "A12-order-review-score",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01SjzWP96HddixmVS4TXgnsM",
+            "tool": "get_order",
+            "arguments": {
+              "order_number": "OL000087289"
+            },
+            "result": "{\"number\":\"OL000087289\",\"state\":\"complete\",\"olist_status\":\"delivered\",\"currency\":\"BRL\",\"item_total\":831.8,\"shipment_total\":39.64,\"total\":871.44,\"payment_state\":\"paid\",\"customer\":{\"email\":\"2c23489c329798c266c3ffcd50dbdcf8@olist.invalid\",\"city\":\"Sao Paulo\",\"state\":\"SP\"},\"timeline\":{\"purchased_at\":\"2018-01-24T12:33:57.000Z\",\"approved_at\":\"2018-01-25T12:31:18.000Z\",\"to_carrier_at\":\"2018-01-26T21:46:34.000Z\",\"delivered_at\":\"2018-02-01T21:43:45.000Z\",\"estimated_at\":\"2018-02-19T00:00:00.000Z\",\"delivery_days\":8,\"days_late\":-17},\"line_items\":[{\"product_id\":4481,\"name\":\"Construction Tools Construction 4F4524\",\"quantity\":1,\"price\":269.9,\"freight\":19.82,\"seller\":\"76d64c4aca3a7baf218bf93ef7fa768d\",\"seller_location\":\"curitiba, PR\"},{\"product_id\":294,\"name\":\"Construction Tools Construction F777C9\",\"quantity\":1,\"price\":561.9,\"freight\":19.82,\"seller\":\"4a3ccda38b2129705f3fb522db62ca31\",\"seller_location\":\"marilia, SP\"}],\"payments\":[{\"amount\":457.72,\"type\":\"voucher\",\"installments\":1},{\"amount\":413.72,\"type\":\"voucher\",\"installments\":1}],\"review\":{\"score\":5,\"title\":null,\"message\":\"<redacted: 29 chars of customer-written text>\"}}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Order OL000087289 received a 5-star review.\n\n{\"answer\": 5}",
+        "turns": 2,
+        "duration_ms": 3189,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 86,
+          "cache_read_input_tokens": 8820,
+          "cache_creation_input_tokens": 1654
+        },
+        "cost_usd": 0.009248,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A12-order-review-score.run1.jsonl"
+      },
+      "grade": {
+        "answer": 5,
+        "expected": 5,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_order"
+        ]
+      }
+    },
+    {
+      "question_id": "A12-order-review-score",
+      "run_index": 2,
+      "run": {
+        "question_id": "A12-order-review-score",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_012U8ydDAVidwLvN6fLKDX3F",
+            "tool": "get_order",
+            "arguments": {
+              "order_number": "OL000087289"
+            },
+            "result": "{\"number\":\"OL000087289\",\"state\":\"complete\",\"olist_status\":\"delivered\",\"currency\":\"BRL\",\"item_total\":831.8,\"shipment_total\":39.64,\"total\":871.44,\"payment_state\":\"paid\",\"customer\":{\"email\":\"2c23489c329798c266c3ffcd50dbdcf8@olist.invalid\",\"city\":\"Sao Paulo\",\"state\":\"SP\"},\"timeline\":{\"purchased_at\":\"2018-01-24T12:33:57.000Z\",\"approved_at\":\"2018-01-25T12:31:18.000Z\",\"to_carrier_at\":\"2018-01-26T21:46:34.000Z\",\"delivered_at\":\"2018-02-01T21:43:45.000Z\",\"estimated_at\":\"2018-02-19T00:00:00.000Z\",\"delivery_days\":8,\"days_late\":-17},\"line_items\":[{\"product_id\":4481,\"name\":\"Construction Tools Construction 4F4524\",\"quantity\":1,\"price\":269.9,\"freight\":19.82,\"seller\":\"76d64c4aca3a7baf218bf93ef7fa768d\",\"seller_location\":\"curitiba, PR\"},{\"product_id\":294,\"name\":\"Construction Tools Construction F777C9\",\"quantity\":1,\"price\":561.9,\"freight\":19.82,\"seller\":\"4a3ccda38b2129705f3fb522db62ca31\",\"seller_location\":\"marilia, SP\"}],\"payments\":[{\"amount\":457.72,\"type\":\"voucher\",\"installments\":1},{\"amount\":413.72,\"type\":\"voucher\",\"installments\":1}],\"review\":{\"score\":5,\"title\":null,\"message\":\"<redacted: 29 chars of customer-written text>\"}}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Order OL000087289 received a **5-star** review (though the customer noted in their comment that it arrived without the batteries).\n\n{\"answer\": 5}",
+        "turns": 2,
+        "duration_ms": 2408,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 108,
+          "cache_read_input_tokens": 8821,
+          "cache_creation_input_tokens": 1655
+        },
+        "cost_usd": 0.0094722,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A12-order-review-score.run2.jsonl"
+      },
+      "grade": {
+        "answer": 5,
+        "expected": 5,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_order"
+        ]
+      }
+    },
+    {
+      "question_id": "A12-order-review-score",
+      "run_index": 3,
+      "run": {
+        "question_id": "A12-order-review-score",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01NVmbidC4Z9ihHX2qYvs8dV",
+            "tool": "get_order",
+            "arguments": {
+              "order_number": "OL000087289"
+            },
+            "result": "{\"number\":\"OL000087289\",\"state\":\"complete\",\"olist_status\":\"delivered\",\"currency\":\"BRL\",\"item_total\":831.8,\"shipment_total\":39.64,\"total\":871.44,\"payment_state\":\"paid\",\"customer\":{\"email\":\"2c23489c329798c266c3ffcd50dbdcf8@olist.invalid\",\"city\":\"Sao Paulo\",\"state\":\"SP\"},\"timeline\":{\"purchased_at\":\"2018-01-24T12:33:57.000Z\",\"approved_at\":\"2018-01-25T12:31:18.000Z\",\"to_carrier_at\":\"2018-01-26T21:46:34.000Z\",\"delivered_at\":\"2018-02-01T21:43:45.000Z\",\"estimated_at\":\"2018-02-19T00:00:00.000Z\",\"delivery_days\":8,\"days_late\":-17},\"line_items\":[{\"product_id\":4481,\"name\":\"Construction Tools Construction 4F4524\",\"quantity\":1,\"price\":269.9,\"freight\":19.82,\"seller\":\"76d64c4aca3a7baf218bf93ef7fa768d\",\"seller_location\":\"curitiba, PR\"},{\"product_id\":294,\"name\":\"Construction Tools Construction F777C9\",\"quantity\":1,\"price\":561.9,\"freight\":19.82,\"seller\":\"4a3ccda38b2129705f3fb522db62ca31\",\"seller_location\":\"marilia, SP\"}],\"payments\":[{\"amount\":457.72,\"type\":\"voucher\",\"installments\":1},{\"amount\":413.72,\"type\":\"voucher\",\"installments\":1}],\"review\":{\"score\":5,\"title\":null,\"message\":\"<redacted: 29 chars of customer-written text>\"}}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Order OL000087289 received a review score of **5**.\n\n{\"answer\": 5}",
+        "turns": 2,
+        "duration_ms": 3420,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 87,
+          "cache_read_input_tokens": 8821,
+          "cache_creation_input_tokens": 1655
+        },
+        "cost_usd": 0.0092622,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A12-order-review-score.run3.jsonl"
+      },
+      "grade": {
+        "answer": 5,
+        "expected": 5,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_order"
+        ]
+      }
+    },
+    {
+      "question_id": "A13-product-units",
+      "run_index": 1,
+      "run": {
+        "question_id": "A13-product-units",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01HXmVdcSihbGiB3hn6UXqjA",
+            "tool": "get_product",
+            "arguments": {
+              "sku": "aca2eb7d00ea1a7b8ebd4e68314663af"
+            },
+            "result": "{\"id\":13431,\"name\":\"Furniture Decor ACA2EB\",\"sku\":\"aca2eb7d00ea1a7b8ebd4e68314663af\",\"slug\":\"furniture-decor-aca2eb7d00\",\"status\":\"active\",\"category\":\"Furniture Decor\",\"price\":69.9,\"units_sold\":527,\"revenue\":37608.9,\"orders\":431,\"avg_review\":4.09,\"avg_days_late\":-9.3,\"weight_g\":2600,\"dimensions_cm\":[50,10,30]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "This product (Furniture Decor ACA2EB) has sold 527 units across 431 orders.\n\n{\"answer\": 527}",
+        "turns": 2,
+        "duration_ms": 2617,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 119,
+          "cache_read_input_tokens": 8845,
+          "cache_creation_input_tokens": 1324
+        },
+        "cost_usd": 0.008263,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A13-product-units.run1.jsonl"
+      },
+      "grade": {
+        "answer": 527,
+        "expected": 527,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_product"
+        ]
+      }
+    },
+    {
+      "question_id": "A13-product-units",
+      "run_index": 2,
+      "run": {
+        "question_id": "A13-product-units",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01GcjiHUUzULG2H7fawiVrUu",
+            "tool": "get_product",
+            "arguments": {
+              "sku": "aca2eb7d00ea1a7b8ebd4e68314663af"
+            },
+            "result": "{\"id\":13431,\"name\":\"Furniture Decor ACA2EB\",\"sku\":\"aca2eb7d00ea1a7b8ebd4e68314663af\",\"slug\":\"furniture-decor-aca2eb7d00\",\"status\":\"active\",\"category\":\"Furniture Decor\",\"price\":69.9,\"units_sold\":527,\"revenue\":37608.9,\"orders\":431,\"avg_review\":4.09,\"avg_days_late\":-9.3,\"weight_g\":2600,\"dimensions_cm\":[50,10,30]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "The product \"Furniture Decor ACA2EB\" (SKU aca2eb7d00ea1a7b8ebd4e68314663af) has sold 527 units.\n\n{\"answer\": 527}",
+        "turns": 2,
+        "duration_ms": 4198,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 142,
+          "cache_read_input_tokens": 8846,
+          "cache_creation_input_tokens": 1325
+        },
+        "cost_usd": 0.0084972,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A13-product-units.run2.jsonl"
+      },
+      "grade": {
+        "answer": 527,
+        "expected": 527,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_product"
+        ]
+      }
+    },
+    {
+      "question_id": "A13-product-units",
+      "run_index": 3,
+      "run": {
+        "question_id": "A13-product-units",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01J4ECfjRAdZYNsYQZG8787h",
+            "tool": "get_product",
+            "arguments": {
+              "sku": "aca2eb7d00ea1a7b8ebd4e68314663af"
+            },
+            "result": "{\"id\":13431,\"name\":\"Furniture Decor ACA2EB\",\"sku\":\"aca2eb7d00ea1a7b8ebd4e68314663af\",\"slug\":\"furniture-decor-aca2eb7d00\",\"status\":\"active\",\"category\":\"Furniture Decor\",\"price\":69.9,\"units_sold\":527,\"revenue\":37608.9,\"orders\":431,\"avg_review\":4.09,\"avg_days_late\":-9.3,\"weight_g\":2600,\"dimensions_cm\":[50,10,30]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "This product (Furniture Decor ACA2EB) has sold 527 units across 431 orders.\n\n{\"answer\": 527}",
+        "turns": 2,
+        "duration_ms": 2635,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 119,
+          "cache_read_input_tokens": 8845,
+          "cache_creation_input_tokens": 1324
+        },
+        "cost_usd": 0.008263,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A13-product-units.run3.jsonl"
+      },
+      "grade": {
+        "answer": 527,
+        "expected": 527,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "get_product"
+        ]
+      }
+    },
+    {
+      "question_id": "A14-worst-seller",
+      "run_index": 1,
+      "run": {
+        "question_id": "A14-worst-seller",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01LBUwhEA92qHHZkZgxyvLGe",
+            "tool": "seller_performance",
+            "arguments": {
+              "sort": "avg_review",
+              "min_orders": 100,
+              "limit": 1
+            },
+            "result": "{\"min_orders\":100,\"sellers\":[{\"seller\":\"1ca7077d890b907f89be8c954a02686a\",\"location\":\"santana de parnaiba, SP\",\"orders\":115,\"revenue\":13341.57,\"avg_review\":2.32,\"avg_days_late\":-5.8}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among sellers with at least 100 orders, seller **1ca7077d890b907f89be8c954a02686a** (Santana de Parnaíba, SP) has the worst average review score at 2.32, despite delivering early on average.\n\n{\"answer\": \"1ca7077d890b907f89be8c954a02686a\"}",
+        "turns": 2,
+        "duration_ms": 6969,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 209,
+          "cache_read_input_tokens": 8837,
+          "cache_creation_input_tokens": 1271
+        },
+        "cost_usd": 0.008949400000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A14-worst-seller.run1.jsonl"
+      },
+      "grade": {
+        "answer": "1ca7077d890b907f89be8c954a02686a",
+        "expected": "1ca7077d890b907f89be8c954a02686a",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A14-worst-seller",
+      "run_index": 2,
+      "run": {
+        "question_id": "A14-worst-seller",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01BnP1um67VJctcyhDwKMUhq",
+            "tool": "seller_performance",
+            "arguments": {
+              "sort": "avg_review",
+              "min_orders": 100,
+              "limit": 1
+            },
+            "result": "{\"min_orders\":100,\"sellers\":[{\"seller\":\"1ca7077d890b907f89be8c954a02686a\",\"location\":\"santana de parnaiba, SP\",\"orders\":115,\"revenue\":13341.57,\"avg_review\":2.32,\"avg_days_late\":-5.8}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among sellers with at least 100 orders, the worst average review score belongs to seller **1ca7077d890b907f89be8c954a02686a** (2.32 avg review across 115 orders).\n\n{\"answer\": \"1ca7077d890b907f89be8c954a02686a\"}",
+        "turns": 2,
+        "duration_ms": 4540,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 197,
+          "cache_read_input_tokens": 8837,
+          "cache_creation_input_tokens": 1271
+        },
+        "cost_usd": 0.008829400000000001,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A14-worst-seller.run2.jsonl"
+      },
+      "grade": {
+        "answer": "1ca7077d890b907f89be8c954a02686a",
+        "expected": "1ca7077d890b907f89be8c954a02686a",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A14-worst-seller",
+      "run_index": 3,
+      "run": {
+        "question_id": "A14-worst-seller",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01FaE75Ybw6bh5XBcePQjkAe",
+            "tool": "seller_performance",
+            "arguments": {
+              "min_orders": 100,
+              "sort": "avg_review",
+              "limit": 1
+            },
+            "result": "{\"min_orders\":100,\"sellers\":[{\"seller\":\"1ca7077d890b907f89be8c954a02686a\",\"location\":\"santana de parnaiba, SP\",\"orders\":115,\"revenue\":13341.57,\"avg_review\":2.32,\"avg_days_late\":-5.8}]}",
+            "is_error": false
+          }
+        ],
+        "final_text": "Among sellers with at least 100 orders, seller **1ca7077d890b907f89be8c954a02686a** (Santana de Parnaíba, SP) has the worst average review score at 2.32.\n\n{\"answer\": \"1ca7077d890b907f89be8c954a02686a\"}",
+        "turns": 2,
+        "duration_ms": 5900,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 200,
+          "cache_read_input_tokens": 8836,
+          "cache_creation_input_tokens": 1270
+        },
+        "cost_usd": 0.0088552,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A14-worst-seller.run3.jsonl"
+      },
+      "grade": {
+        "answer": "1ca7077d890b907f89be8c954a02686a",
+        "expected": "1ca7077d890b907f89be8c954a02686a",
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "seller_performance"
+        ]
+      }
+    },
+    {
+      "question_id": "A15-big-sao-paulo-orders",
+      "run_index": 1,
+      "run": {
+        "question_id": "A15-big-sao-paulo-orders",
+        "run_index": 1,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01KgqoGwqDTom53PQDNTa3wp",
+            "tool": "search_orders",
+            "arguments": {
+              "customer_state": "SP",
+              "min_total": 1000,
+              "limit": 50
+            },
+            "result": "{\"total_matches\":359,\"orders\":[{\"number\":\"OL000055835\",\"purchased_at\":\"2018-08-25\",\"status\":\"delivered\",\"total\":1024.76,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-21,\"review\":5},{\"number\":\"OL000080499\",\"purchased_at\":\"2018-08-25\",\"status\":\"delivered\",\"total\":2328.4,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":3,\"days_late\":-1,\"review\":5},{\"number\":\"OL000038897\",\"purchased_at\":\"2018-08-23\",\"status\":\"delivered\",\"total\":2187.42,\"items\":1,\"city\":\"Praia Grande\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-1,\"review\":5},{\"number\":\"OL000051312\",\"purchased_at\":\"2018-08-21\",\"status\":\"delivered\",\"total\":1117.99,\"items\":1,\"city\":\"Santo Antonio Do Aracangua\",\"state\":\"SP\",\"delivery_days\":8,\"days_late\":-22,\"review\":4},{\"number\":\"OL000012738\",\"purchased_at\":\"2018-08-20\",\"status\":\"delivered\",\"total\":1272.67,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":3,\"days_late\":0,\"review\":5},{\"number\":\"OL000007571\",\"purchased_at\":\"2018-08-19\",\"status\":\"delivered\",\"total\":1326.85,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-20,\"review\":5},{\"number\":\"OL000077613\",\"purchased_at\":\"2018-08-18\",\"status\":\"delivered\",\"total\":1043.32,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":7,\"days_late\":-4,\"review\":3},{\"number\":\"OL000009562\",\"purchased_at\":\"2018-08-17\",\"status\":\"delivered\",\"total\":2014.99,\"items\":1,\"city\":\"Ferraz De Vasconcelos\",\"state\":\"SP\",\"delivery_days\":11,\"days_late\":-21,\"review\":1},{\"number\":\"OL000052644\",\"p",
+            "is_error": false
+          }
+        ],
+        "final_text": "There are 359 orders from customers in São Paulo state with a total of R$1,000 or more.\n\n{\"answer\": 359}",
+        "turns": 2,
+        "duration_ms": 2468,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 145,
+          "cache_read_input_tokens": 8832,
+          "cache_creation_input_tokens": 5321
+        },
+        "cost_usd": 0.0245084,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A15-big-sao-paulo-orders.run1.jsonl"
+      },
+      "grade": {
+        "answer": 359,
+        "expected": 359,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A15-big-sao-paulo-orders",
+      "run_index": 2,
+      "run": {
+        "question_id": "A15-big-sao-paulo-orders",
+        "run_index": 2,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_019cxjRAxryzbPYgyBYmK8m3",
+            "tool": "search_orders",
+            "arguments": {
+              "customer_state": "SP",
+              "min_total": 1000,
+              "limit": 50,
+              "sort": "total_desc"
+            },
+            "result": "{\"total_matches\":359,\"orders\":[{\"number\":\"OL000003509\",\"purchased_at\":\"2017-05-24\",\"status\":\"delivered\",\"total\":6726.66,\"items\":1,\"city\":\"Marilia\",\"state\":\"SP\",\"delivery_days\":12,\"days_late\":-22,\"review\":5},{\"number\":\"OL000040328\",\"purchased_at\":\"2017-04-18\",\"status\":\"delivered\",\"total\":4764.34,\"items\":1,\"city\":\"Maua\",\"state\":\"SP\",\"delivery_days\":19,\"days_late\":-8,\"review\":4},{\"number\":\"OL000011689\",\"purchased_at\":\"2018-08-03\",\"status\":\"delivered\",\"total\":4513.32,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-11,\"review\":5},{\"number\":\"OL000073756\",\"purchased_at\":\"2018-06-05\",\"status\":\"delivered\",\"total\":4034.44,\"items\":1,\"city\":\"Jundiai\",\"state\":\"SP\",\"delivery_days\":7,\"days_late\":-21,\"review\":5},{\"number\":\"OL000057035\",\"purchased_at\":\"2017-03-18\",\"status\":\"delivered\",\"total\":4016.91,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-10,\"review\":5},{\"number\":\"OL000022902\",\"purchased_at\":\"2018-04-09\",\"status\":\"delivered\",\"total\":3526.46,\"items\":1,\"city\":\"Presidente Prudente\",\"state\":\"SP\",\"delivery_days\":4,\"days_late\":-11,\"review\":4},{\"number\":\"OL000002893\",\"purchased_at\":\"2018-06-07\",\"status\":\"delivered\",\"total\":3256.14,\"items\":2,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":9,\"days_late\":-31,\"review\":1},{\"number\":\"OL000063626\",\"purchased_at\":\"2018-08-15\",\"status\":\"delivered\",\"total\":3076.13,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":15,\"days_late\":-1,\"review\":5},{\"number\":\"OL000088583\",\"purchased_at\":\"2017-03-27\"",
+            "is_error": false
+          }
+        ],
+        "final_text": "The tool reports **359** orders total from customers in São Paulo state (SP) with an order total of R$1,000 or more.\n\n{\"answer\": 359}",
+        "turns": 2,
+        "duration_ms": 7145,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 238,
+          "cache_read_input_tokens": 8834,
+          "cache_creation_input_tokens": 5399
+        },
+        "cost_usd": 0.0257508,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A15-big-sao-paulo-orders.run2.jsonl"
+      },
+      "grade": {
+        "answer": 359,
+        "expected": 359,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    },
+    {
+      "question_id": "A15-big-sao-paulo-orders",
+      "run_index": 3,
+      "run": {
+        "question_id": "A15-big-sao-paulo-orders",
+        "run_index": 3,
+        "model": "claude-sonnet-5",
+        "api_key_source": "none",
+        "tool_calls": [
+          {
+            "id": "toolu_01FCLqqrHUfW8sFsthTppYcP",
+            "tool": "search_orders",
+            "arguments": {
+              "customer_state": "SP",
+              "min_total": 1000,
+              "limit": 50
+            },
+            "result": "{\"total_matches\":359,\"orders\":[{\"number\":\"OL000055835\",\"purchased_at\":\"2018-08-25\",\"status\":\"delivered\",\"total\":1024.76,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-21,\"review\":5},{\"number\":\"OL000080499\",\"purchased_at\":\"2018-08-25\",\"status\":\"delivered\",\"total\":2328.4,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":3,\"days_late\":-1,\"review\":5},{\"number\":\"OL000038897\",\"purchased_at\":\"2018-08-23\",\"status\":\"delivered\",\"total\":2187.42,\"items\":1,\"city\":\"Praia Grande\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-1,\"review\":5},{\"number\":\"OL000051312\",\"purchased_at\":\"2018-08-21\",\"status\":\"delivered\",\"total\":1117.99,\"items\":1,\"city\":\"Santo Antonio Do Aracangua\",\"state\":\"SP\",\"delivery_days\":8,\"days_late\":-22,\"review\":4},{\"number\":\"OL000012738\",\"purchased_at\":\"2018-08-20\",\"status\":\"delivered\",\"total\":1272.67,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":3,\"days_late\":0,\"review\":5},{\"number\":\"OL000007571\",\"purchased_at\":\"2018-08-19\",\"status\":\"delivered\",\"total\":1326.85,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":5,\"days_late\":-20,\"review\":5},{\"number\":\"OL000077613\",\"purchased_at\":\"2018-08-18\",\"status\":\"delivered\",\"total\":1043.32,\"items\":1,\"city\":\"Sao Paulo\",\"state\":\"SP\",\"delivery_days\":7,\"days_late\":-4,\"review\":3},{\"number\":\"OL000009562\",\"purchased_at\":\"2018-08-17\",\"status\":\"delivered\",\"total\":2014.99,\"items\":1,\"city\":\"Ferraz De Vasconcelos\",\"state\":\"SP\",\"delivery_days\":11,\"days_late\":-21,\"review\":1},{\"number\":\"OL000052644\",\"p",
+            "is_error": false
+          }
+        ],
+        "final_text": "The total_matches field gives the full count directly: 359 orders from customers in São Paulo state had a total of R$1,000 or more.\n\n{\"answer\": 359}",
+        "turns": 2,
+        "duration_ms": 3782,
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 205,
+          "cache_read_input_tokens": 8833,
+          "cache_creation_input_tokens": 5370
+        },
+        "cost_usd": 0.0253046,
+        "error": null,
+        "raw_log": "tmp/agent/03-agent-baseline/A15-big-sao-paulo-orders.run3.jsonl"
+      },
+      "grade": {
+        "answer": 359,
+        "expected": 359,
+        "verdict": "correct",
+        "correct": true,
+        "tool_ok": true,
+        "args_ok": true,
+        "tools_called": [
+          "search_orders"
+        ]
+      }
+    }
+  ]
+}
