@@ -95,6 +95,11 @@ Rails.application.configure do
   if ENV["RAILS_HOST"].present?
     config.hosts << ENV["RAILS_HOST"]
 
+    # Hosts still accepted while the app moves hostname. RAILS_HOST is the
+    # canonical one; these are the previous names, kept working until the new
+    # one is verified and then dropped.
+    ENV.fetch("RAILS_ALIAS_HOSTS", "").split(",").map(&:strip).reject(&:empty?).each { |h| config.hosts << h }
+
     # kamal-proxy health-checks the container directly rather than through the
     # public hostname, so /up arrives with a Host header that is not
     # RAILS_HOST. Without this exclusion every health check 403s and the

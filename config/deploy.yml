@@ -25,7 +25,12 @@ servers:
 
 proxy:
   ssl: true
-  host: mcp-store.amitsolanki.com
+  # mcp-demo.railsfanatics.com is the canonical name. mcp-store.amitsolanki.com
+  # stays routed (with its own certificate) while clients move over, so the
+  # old endpoint keeps working until the new one is verified.
+  hosts:
+    - mcp-demo.railsfanatics.com
+    - mcp-store.amitsolanki.com
   # Thruster (see the Dockerfile's CMD) fronts Puma inside the container and
   # listens on 80 — kamal-proxy talks to that, not to Puma directly.
   app_port: 80
@@ -59,15 +64,17 @@ env:
     RAILS_ASSUME_SSL: "true"
     RAILS_FORCE_SSL: "true"
     # Drives config.hosts, the mailer host and Spree's own URL generation.
-    RAILS_HOST: mcp-store.amitsolanki.com
+    RAILS_HOST: mcp-demo.railsfanatics.com
+    # The previous hostname, still accepted by config.hosts during the move.
+    RAILS_ALIAS_HOSTS: mcp-store.amitsolanki.com
     # The MCP Ruby SDK's streamable-HTTP transport has its own DNS-rebinding
     # protection, defaulting to loopback hosts only, entirely separate from
     # Rails' config.hosts check above — McpController reads these two env vars
     # directly. Without them /mcp rejects every request from a real domain even
     # though Rails itself let it through. This is the "known limitation" the
     # README flags for a real deployment.
-    MCP_ALLOWED_HOSTS: mcp-store.amitsolanki.com
-    MCP_ALLOWED_ORIGINS: https://mcp-store.amitsolanki.com
+    MCP_ALLOWED_HOSTS: mcp-demo.railsfanatics.com,mcp-store.amitsolanki.com
+    MCP_ALLOWED_ORIGINS: https://mcp-demo.railsfanatics.com,https://mcp-store.amitsolanki.com
     # Read-only demo. The remote /mcp endpoint derives its tool set from the
     # presented token's scopes, not from a process flag, so read-only has to be
     # enforced where scopes are defined: this drops mcp:write from Doorkeeper's
