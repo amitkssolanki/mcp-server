@@ -273,3 +273,29 @@
   checks: [mcp_boundary_test (2026-07-28 negotiated down; discovery omits it), agent_grader_test (tool visibility)]
   reports: [03-agent-baseline (the aborted first attempt is described there)]
   regression: []
+
+- id: F13
+  title: Customer-written review text reaches the model unfenced in structured results
+  severity: low
+  triage: security
+  scope: separate
+  status: deferred
+  tools: [get_order]
+  definition: null
+  summary: >
+    Claude Code passes structuredContent to the model, not the text content.
+    get_order's text fences review title/message as customer-written data;
+    its structured review.title/message are bare strings. Probed with two
+    benign instruction-shaped payloads in a local test-database review, 3
+    runs each (claude-sonnet-5, Claude Code 2.1.284): the payload reached the
+    model unfenced 6/6, and the model reported the true score, made no extra
+    tool call and explicitly identified the text as an embedded instruction
+    6/6. Classified F13-B, a defence-in-depth weakness: not demonstrated
+    exploitable, but the server's own defence is absent from the
+    representation clients use, so protection rests on the model alone.
+    Remediation: mark customer text as untrusted inside the structured
+    result and in get_order's description. Before any write-enabled
+    deployment, together with F10.
+  checks: []
+  reports: [05-f13-untrusted-text.md]
+  regression: []
