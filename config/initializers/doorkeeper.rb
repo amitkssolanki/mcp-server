@@ -332,6 +332,18 @@ Doorkeeper.configure do
   # force_ssl_in_redirect_uri !Rails.env.development?
   #
   # force_ssl_in_redirect_uri { |uri| uri.host != 'localhost' }
+  #
+  # HTTPS everywhere except the loopback interface (finding F14). Native
+  # clients such as Claude Code receive the authorization code on a local port
+  # (http://localhost:<port>/callback): the OAuth 2.0 for Native Apps rule
+  # (RFC 8252 §7.3) that OAuth 2.1 adopts. With Doorkeeper's default of
+  # HTTPS-only outside development, their dynamic registration failed with
+  # "Redirect URI must be an HTTPS/SSL URI", so only web clients such as
+  # claude.ai could connect. A loopback redirect never leaves the user's
+  # machine, and the code is still bound to its PKCE verifier (force_pkce
+  # above) and still needs the admin's consent. Every other redirect URI
+  # stays HTTPS-only.
+  force_ssl_in_redirect_uri { |uri| !%w[localhost 127.0.0.1 [::1] ::1].include?(uri.host) }
 
   # Specify what redirect URI's you want to block during Application creation.
   # Any redirect URI is allowed by default.

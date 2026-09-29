@@ -299,3 +299,28 @@
   checks: []
   reports: [05-f13-untrusted-text.md]
   regression: []
+
+- id: F14
+  title: Native OAuth clients (Claude Code) could not register
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: fixed
+  tools: [all (OAuth layer)]
+  definition: null
+  summary: >
+    Found during the release, when Claude Code authenticated against the
+    deployed endpoint: dynamic client registration was rejected with
+    "Redirect URI must be an HTTPS/SSL URI". Doorkeeper's
+    force_ssl_in_redirect_uri defaults to HTTPS-only outside development,
+    which also rejects the loopback redirect (http://localhost:<port>/callback)
+    that native clients use (RFC 8252 section 7.3, adopted by OAuth 2.1). Only
+    web clients with an https callback, such as claude.ai, could connect. Fix:
+    http is allowed for loopback hosts only (localhost, 127.0.0.1, [::1]);
+    every other redirect stays HTTPS-only, and PKCE and admin consent still
+    apply. Two boundary tests: loopback registration succeeds while any other
+    http redirect is refused, and a loopback client still gets no grant
+    without consent. Both fail with the fix removed.
+  checks: [mcp_boundary_test (loopback registration; consent still required)]
+  reports: []
+  regression: []

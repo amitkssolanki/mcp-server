@@ -138,6 +138,33 @@ class McpBoundaryTest < ActionDispatch::IntegrationTest
     assert_equal "none", response.parsed_body["token_endpoint_auth_method"]
   end
 
+  # F14: native clients (Claude Code) receive the code on a loopback port.
+  test "a native client can register a loopback http redirect; any other http redirect is refused" do
+    %w[http://localhost:52713/callback http://127.0.0.1:52713/callback http://[::1]:52713/callback].each do |uri|
+      post "/register", params: { client_name: "cli", redirect_uris: [uri], token_endpoint_auth_method: "none" }, as: :json
+      assert_response :created, uri
+    end
+
+    %w[http://example.com/callback http://localhost.example.com/callback].each do |uri|
+      post "/register", params: { client_name: "web", redirect_uris: [uri], token_endpoint_auth_method: "none" }, as: :json
+      assert_response :bad_request, uri
+      assert_equal "invalid_client_metadata", response.parsed_body["error"]
+    end
+  end
+
+  test "a loopback client still needs the admin's consent before any code is issued" do
+    post "/register", params: { client_name: "cli", redirect_uris: ["http://localhost:52713/callback"],
+                                token_endpoint_auth_method: "none" }, as: :json
+    client = Doorkeeper::Application.find_by!(uid: response.parsed_body["client_id"])
+
+    get "/oauth/authorize", params: { client_id: client.uid, redirect_uri: "http://localhost:52713/callback",
+                                      response_type: "code", scope: "mcp:read",
+                                      code_challenge: "x" * 43, code_challenge_method: "S256" }
+    assert_response :redirect
+    assert_match %r{/admin_user/sign_in\z}, response.location
+    assert_empty Doorkeeper::AccessGrant.where(application: client)
+  end
+
   test "registering a client grants nothing: it holds no token until an admin approves" do
     post "/register", params: { client_name: "probe", redirect_uris: ["https://example.com/cb"],
                                 token_endpoint_auth_method: "none" }, as: :json
