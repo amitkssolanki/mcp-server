@@ -152,3 +152,37 @@ audits it), so caching an imported database would stop testing the importer.
 Cutting cases or data would weaken the claim the run exists to support. CI
 printed the same fingerprint as local runs (`f4841a48894b268d`) on a
 different machine and a fresh database.
+
+## Agent evaluation (day 3)
+
+The layers above test the tools. `eval/agent/` tests whether a model using
+them gets the right answer: 15 natural-language questions, graded against the
+same oracle, with no model judging.
+
+```bash
+RAILS_ENV=test bin/rails eval:agent_preregister   # oracle answers -> eval/agent/expected-answers.json
+RAILS_ENV=test bin/rails eval:agent NAME=03-agent-baseline RUNS=3
+```
+
+- **Pre-registered.** Questions, answer types, tolerances, acceptable tools
+  and argument rules (`eval/agent/questions.yml`, `grader.rb`) and the
+  expected answers were committed before any agent run.
+- **Graded deterministically.** The answer is the last `{"answer": ...}`
+  object in the reply. Prose is never mined for numbers. A wrong answer that
+  equals a different defined metric is labelled as such.
+- **Executed through Claude Code** (`claude -p`) on a Claude subscription
+  login, not an API key; the run stops if the first run reports otherwise.
+  The agent gets only the store's nine read tools: no built-in tools, repo,
+  settings or other MCP servers. A run that does not see exactly those nine
+  tools is an error. The runner is not part of CI, because it needs a
+  logged-in Claude account.
+- **Result:** `eval/reports/03-agent-baseline.md`: 45 of 45 runs (15 x 3,
+  claude-sonnet-5) agree with the oracle, with correct tool selection and
+  arguments. The planned tool-description experiment was not run: the
+  baseline showed no description weakness to target.
+- **What it found:** the first attempt exposed F12. The server agreed to
+  MCP revision 2026-07-28 without implementing it, so the client saw zero
+  tools. It also prompted F13, a defence-in-depth finding about customer
+  text in structured results (`eval/reports/05-f13-untrusted-text.md`). Raw
+  run logs stay local (`tmp/agent/`, gitignored), since they hold machine
+  paths and account details; the reports carry the evidence.
