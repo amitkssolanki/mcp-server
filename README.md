@@ -1,184 +1,277 @@
-# Spree + MCP
+# MCP-Server
 
-A [Spree Commerce](https://spreecommerce.org) store seeded with the [Olist Brazilian
-e-commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) — 100,000
-real orders from 2016–2018 — with an [MCP](https://modelcontextprotocol.io) server on top
-that lets an AI assistant query and (carefully) manage it. Built to learn MCP by building
-one against something real, not a toy API. See [db/olist/README.md](db/olist/README.md)
-for why real data instead of generated seeds, and every mapping decision the importer makes.
+[![Verify](https://github.com/amitkssolanki/mcp-server/actions/workflows/verify.yml/badge.svg)](https://github.com/amitkssolanki/mcp-server/actions/workflows/verify.yml)
 
-Running at **<https://mcp-store.amitsolanki.com>** — storefront, admin, and the remote MCP
-endpoint at `/mcp`, deployed read-only (see [Deployment](#deployment)).
+An MCP server that lets an AI assistant answer questions about a store's business, built over
+99,441 real, anonymised Olist orders, and an independent evaluation harness that checks whether
+those answers are true. The harness found nine correctness defects in tools that had already
+been demonstrated working. They are fixed, and each one is kept as a regression that CI must
+keep catching. The server runs as a live, read-only demo deployment behind OAuth.
 
-**This isn't a production template.** Real data, real OAuth, real bugs found and fixed — but
-a single hand-created admin account and no rate limiting is learning-project shaped, not
-launch shaped. See [Known limitations](#known-limitations).
+## The question
 
-## What's here
+**How do you know an AI interface over business data is telling the truth?**
 
-- **The store**: standard Spree 5.6 (storefront, admin, API), backed by Postgres, seeded
-  from real Olist data via a bulk importer that bypasses ActiveRecord's callback chain —
-  100k orders in about four minutes.
-- **The MCP server** (`app/mcp/store_mcp/`): 9 read tools and 2 write tools over the store —
-  revenue and delivery-performance reports, seller rankings, order/customer lookup, and
-  price/order-status updates that preview before they write. Both transports: local stdio
-  (`bin/mcp-stdio`) and remote streamable HTTP (`McpController`, mounted at `/mcp`).
-- **OAuth 2.1** (`config/initializers/doorkeeper.rb` + a few small controllers): the remote
-  endpoint is protected by [Doorkeeper](https://github.com/doorkeeper-gem/doorkeeper) with
-  PKCE required, plus hand-written RFC 9728 (protected resource metadata), RFC 8414
-  (authorization server metadata), and RFC 7591 (dynamic client registration) — enough for
-  a client like claude.ai to discover the server, self-register, and get a scoped token with
-  no manual setup on your end beyond approving the consent screen.
+A tool that returns a plausible number is easy to build. A model will repeat it with
+confidence, and nobody notices when it is wrong. This project answers the question by working
+every answer out a second time, from the source, without any of the code that produced the
+first answer:
 
-## Setup
+```
+                 raw Olist CSVs
+                       |
+            +----------+----------+
+            |                     |
+     independent oracle     importer (Rails)
+       (plain Ruby)               |
+            |                 PostgreSQL
+            |                     |
+            |             MCP server (9 tools)  <-- JSON-RPC, as a client sends it
+            |                     |
+         expected              actual
+            +----------+----------+
+                       |
+               field-by-field comparator
+```
 
-Ruby 3.4.7, Postgres running locally.
+## Verification results
+
+The same harness, same seed, run against the tools before and after the fixes:
+
+| Check | Before fixes | After fixes |
+|---|---:|---:|
+| Canonical questions, answered to the cent | 5 / 35 | **35 / 35** |
+| Invariants (150 seeded random cases) | 4 / 9 | **9 / 9** |
+| Differential checks vs the oracle (200 seeded random cases) | 0 / 6 | **6 / 6** |
+| CSV-to-database reconciliation | 2 / 2 | **2 / 2** |
+| Known bugs re-introduced and caught | 3 / 3 | **12 / 12** |
+
+- **Agent evaluation:** Claude, given only these tools, answered **45 of 45** runs correctly
+  (15 questions x 3 runs), against answers the oracle computed and committed before any run.
+- **Tests:** 52 (20 oracle self-tests, 21 HTTP/MCP boundary tests, 11 grader tests).
+- **Reproducibility:** CI rebuilds the database from a pinned, checksum-verified copy of the
+  dataset and reproduces the result fingerprint `f4841a48894b268d`.
+
+The 12 known bugs are 3 reconstructed historical bugs plus 9 pre-fix versions of the tools;
+before the fixes, only the 3 historical ones existed to re-introduce.
+
+These are engineering evaluations of this system, not a statistical benchmark of any model.
+Reconciliation passing before the fixes matters: the import was sound, and every defect was in
+the tools.
+
+Reports: [before](eval/reports/01b-before-fixes-full.txt),
+[after](eval/reports/02-after-fixes.txt), [agent](eval/reports/03-agent-baseline.md).
+
+## Live demo
+
+```
+https://mcp-demo.railsfanatics.com/mcp
+```
+
+- **OAuth with PKCE required.** A client discovers the server (RFC 9728 and RFC 8414),
+  registers itself (RFC 7591) and sends the store admin to a consent screen. Access is granted
+  by the owner; there is no guest access.
+- **Read-only.** Only the `mcp:read` scope is issued, and the endpoint exposes the 9 read
+  tools. The 2 write tools in the code are not reachable here.
+- **Verified with a current client.** Claude Code 2.1.284 connected over OAuth, saw exactly
+  the 9 read tools, and answered live questions with the oracle's figures (for example,
+  November 2017 revenue of R$1,172,191.68).
+
+Without credentials you can still inspect what a client sees first:
+
+```bash
+curl https://mcp-demo.railsfanatics.com/.well-known/oauth-protected-resource
+curl https://mcp-demo.railsfanatics.com/.well-known/oauth-authorization-server
+curl -i -X POST https://mcp-demo.railsfanatics.com/mcp -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'     # 401, with a resource_metadata pointer
+```
+
+## What was wrong
+
+Nine defects, in five classes. The full register, with before/after figures and the fixing
+commit for each, is [eval/findings.yml](eval/findings.yml).
+
+- **Join fan-out.** 555 orders carry more than one review. Every query joining reviews at
+  order level counted those orders twice: a search reported 100,000 matches for 99,441 orders,
+  and one customer's lifetime value doubled.
+- **Population mistakes.** Cancelled and unavailable orders were counted as sales in product,
+  category and seller figures, and in delivery metrics.
+- **Undefined metrics.** Two tools asked for "Health Beauty revenue" returned R$1,258,681 and
+  R$1,445,137, and both did what they were written to do. The fix was a definition first
+  ([docs/METRICS.md](docs/METRICS.md)): under it, the category's item revenue is
+  R$1,255,695.13.
+- **Revenue aggregation.** Whole-order totals were credited to every seller and every payment
+  method an order touched: credit card revenue came out R$185,429 too high.
+- **Customer lookup.** Email was matched as a substring, so `%` returned an arbitrary
+  customer's history.
+
+## Why the oracle is independent
+
+The oracle (`eval/oracle/`) reads the raw CSVs with Ruby's CSV library and computes each metric
+as a fold over one fact record per order. It shares no code with the importer, the Spree
+models, the SQL or the tools, and a test asserts it issues no database queries. It is not a
+translation of the SQL: fan-out bugs come from joins multiplying rows, and the oracle has no
+joins. Answers are compared field by field, to the cent.
+
+The two sides do share the input files and the written metric definitions, and
+[eval/README.md](eval/README.md) lists those shared assumptions. The oracle itself is tested
+against a hand-built five-order dataset whose expected values are worked out by hand.
+
+Regressions are proven, not assumed. Each known-bad implementation (three reconstructed
+historical bugs and nine pre-fix versions copied verbatim from git) is swapped in, and a named
+check must fail differently from how it fails on the unmodified system.
+
+## Agent evaluation
+
+The layers above test the tools. The agent evaluation tests whether a model using them gets
+the right answer.
+
+- 15 natural-language questions, each testing a distinction such as placed vs completed
+  orders, gross vs item revenue, or seller vs delivery population.
+- Expected answers computed by the oracle and committed before any run.
+- Run through Claude Code in headless mode with `claude-sonnet-5`, with only the store's tools
+  available: no repository, files or other servers.
+- Graded deterministically from a structured final answer. No model judges another.
+
+**Result: 45/45** answers, tool choices and arguments correct, and 15 of 15 questions correct
+on every run.
+
+**Limits:** one model, one client version, 3 runs per question. It shows these tools can be
+used correctly, not how any model performs in general. The planned tool-description
+experiment was not run, because the baseline showed no description weakness to target.
+Details: [eval/reports/03-agent-baseline.md](eval/reports/03-agent-baseline.md).
+
+## MCP interoperability findings
+
+Two failures surfaced only when a real, current client talked to the server. No unit test
+could have found either.
+
+- **F12, protocol revision.** Claude Code negotiated MCP revision 2026-07-28, which the Ruby
+  SDK in use (mcp 1.1.0) advertised but did not implement. The server connected cleanly and
+  exposed zero tools. With no tools, Claude wrote tool calls as prose, and in one probe
+  invented an answer (6 cancelled 2018 orders; the oracle says 334). The server now pins
+  the negotiated revision to 2025-11-25, the newest one the SDK implements. Over the live
+  endpoint the same question returns 334.
+- **F14, OAuth callback.** The deployed OAuth server rejected Claude Code's
+  `http://localhost` callback, so only web clients could connect. Plain HTTP is now allowed
+  for loopback callbacks only (`localhost`, `127.0.0.1`, `[::1]`). Every other callback still
+  requires HTTPS, and PKCE and admin consent are unchanged.
+
+A related finding, F13, is recorded as a defence-in-depth consideration: customer-written
+review text reaches the model in structured results without a "treat as data" label. In 6 of
+6 local probes the model declined instruction-shaped review text. See
+[eval/reports/05-f13-untrusted-text.md](eval/reports/05-f13-untrusted-text.md).
+
+## Architecture
+
+- **Store:** Rails 8.1 and Spree 5.6 on PostgreSQL, loaded from the Olist CSVs by a bulk
+  importer (`lib/olist/importer.rb`) that bypasses ActiveRecord callbacks (about 3 minutes
+  for the full dataset).
+- **MCP server** (`app/mcp/store_mcp/`): 9 read tools and 2 write tools, built on the MCP Ruby
+  SDK. Two transports: stdio (`bin/mcp-stdio`) for local clients, and streamable HTTP
+  (`McpController`, at `/mcp`) behind OAuth.
+- **OAuth:** Doorkeeper for tokens and PKCE, with hand-written discovery (RFC 9728, RFC 8414)
+  and dynamic client registration (RFC 7591) controllers. The consent screen is wired to the
+  store admin login.
+- **Evaluation harness** (`eval/`): oracle, canonical questions, invariants, differential
+  checks, reconciliation, regressions and the agent evaluation.
+- **Deployment:** Kamal 2 on a shared VPS, TLS through kamal-proxy, its own PostgreSQL
+  accessory.
+
+## Reproduce it
+
+Ruby 3.4.7 and PostgreSQL.
 
 ```bash
 bundle install
-bin/rails db:create db:migrate db:seed
+bin/olist-fetch                     # the 8 Olist CSVs, pinned mirror, SHA-256 verified
+RAILS_ENV=test bin/rails db:create db:schema:load db:seed olist:import
+RAILS_ENV=test bin/rails test       # 52 tests
+RAILS_ENV=test bin/rails eval:run   # harness: prints a report and the fingerprint
 ```
 
-`db:seed` sets up Spree's reference data (countries, states, a default store, shipping
-categories, a payment method) — not the Olist data yet.
+The import takes a few minutes and the harness about two to three. CI
+([`.github/workflows/verify.yml`](.github/workflows/verify.yml)) runs exactly these steps on
+every push, in about 6 to 8 minutes, and fails on any failing check, uncaught regression or
+failing test. The agent evaluation (`bin/rails eval:agent`) is not part of CI, because it
+needs a logged-in Claude account; see [eval/README.md](eval/README.md).
 
-### Load the Olist data
+## Evidence
 
-```bash
-bin/olist-fetch             # pinned mirror, checksum-verified; see db/olist/README.md for the licence
-bin/rails olist:import      # ~4 min for the full 100k orders; LIMIT=2000 for a quick subset
-bin/rails olist:verify      # row counts, referential integrity, Spree validity
-bin/rails olist:queries     # sample analytics — proves the data is worth querying
-```
+| What | Where |
+|---|---|
+| Metric definitions and the decisions behind them | [docs/METRICS.md](docs/METRICS.md) |
+| Harness method, independence, provenance | [eval/README.md](eval/README.md) |
+| Findings register, F1 to F14 | [eval/findings.yml](eval/findings.yml) |
+| Before and after | [01b-before-fixes-full](eval/reports/01b-before-fixes-full.txt), [02-after-fixes](eval/reports/02-after-fixes.txt) |
+| First harness run (13 questions) | [01-before-fixes](eval/reports/01-before-fixes.txt) |
+| Agent evaluation | [03-agent-baseline](eval/reports/03-agent-baseline.md) |
+| Customer text in structured results (F13) | [05-f13-untrusted-text](eval/reports/05-f13-untrusted-text.md) |
+| Regression corpus | [eval/regressions/](eval/regressions/) |
+| Canonical questions | [eval/questions/](eval/questions/), [eval/agent/questions.yml](eval/agent/questions.yml) |
 
-`olist:import` **truncates** Spree's product/order/user/address/taxon tables first — it
-owns those tables, not anything else you might add later. See
-[db/olist/README.md](db/olist/README.md) if you're planning to reuse this store for
-something else too.
+## Dataset and scope
 
-### Set up Devise and an admin login
+- **Data:** the [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce),
+  CC BY-NC-SA 4.0: 99,441 anonymised orders from 2016 to 2018. It is downloaded at run time
+  and never committed; see [db/olist/README.md](db/olist/README.md).
+- **Products:** Olist ships no product names, so the importer synthesizes them from the
+  category and a product-id prefix.
+- **Scope:** one store, one admin account, no rate limiting. This is a demonstration
+  deployment, not a store anyone buys from.
 
-The generator that scaffolds Spree skips authentication by default. This needs real Devise
-(not the bcrypt placeholder Spree falls back to) for both the admin panel and Doorkeeper's
-consent screen to work:
+## Running your own
+
+**Admin login.** The Spree generator skips authentication by default. The admin panel and the
+OAuth consent screen both need real Devise:
 
 ```bash
 bin/rails g spree:admin:devise
-bin/rails g spree:storefront:devise   # only if you also want customer-facing login/signup
 EMAIL=admin@example.com PASSWORD=yourpassword bin/rails spree:cli:create_admin
+bin/rails server                    # storefront at /, admin at /admin
 ```
 
-### Run it
-
-```bash
-bin/rails server
-```
-
-- Storefront: `http://localhost:3000/`
-- Admin: `http://localhost:3000/admin`
-
-## Using the MCP server
-
-### Locally (stdio)
+**Local MCP (stdio):** no auth, since the OS process boundary is the trust boundary. Set
+`MCP_READ_ONLY=true` to expose only the read tools.
 
 ```jsonc
-// Claude Desktop config, or any stdio-based MCP client
-{
-  "mcpServers": {
-    "spree-store": {
-      "command": "/absolute/path/to/this/checkout/bin/mcp-stdio"
-    }
-  }
-}
+{ "mcpServers": { "store": { "command": "/absolute/path/to/checkout/bin/mcp-stdio" } } }
 ```
 
-No auth — the OS process boundary is the trust boundary for a locally-spawned server. Set
-`MCP_READ_ONLY=true` in the client's env config to expose only the 9 read tools.
+**Remote MCP:** point a client that supports dynamic registration at `https://your-host/mcp`.
+Behind a tunnel or a new domain, two independent host checks must both allow the hostname:
+Rails' `config.hosts` and the MCP SDK's `MCP_ALLOWED_HOSTS` / `MCP_ALLOWED_ORIGINS`.
 
-### Remote (streamable HTTP + OAuth)
-
-The `/mcp` endpoint requires a Doorkeeper-issued Bearer token with at least the `mcp:read`
-scope; `mcp:write` additionally exposes the two write tools. A client that supports RFC 7591
-(claude.ai's custom connectors included) can self-register and walk the full OAuth flow
-without you creating anything by hand — point it at:
-
-```
-https://your-host/mcp
-```
-
-It'll hit the 401, discover `/.well-known/oauth-protected-resource`, find the authorization
-server, register itself at `/register`, and send you (the Spree admin) to the consent screen.
-Approving the consent grant is an admin-equivalent access decision — every tool here reads or
-writes store-operator data, not customer-scoped data — so `resource_owner_authenticator` in
-the Doorkeeper initializer is wired to the admin login, not the storefront one.
-
-The deployed instance is read-only: `MCP_ALLOW_WRITE_SCOPE=false` drops `mcp:write` from
-Doorkeeper's configured scopes, so the authorization endpoint refuses a client that asks for
-it and `tools/list` returns the 9 read tools only.
-
-For local testing before you have a real domain, a tunnel (ngrok or similar) works, with two
-things worth knowing:
-
-- Rails' own `Host` header check (`config.hosts` in `config/environments/development.rb`)
-  needs the tunnel's hostname allowed, or every request 403s before reaching any controller.
-- The MCP Ruby SDK has its *own*, separate DNS-rebinding protection defaulting to loopback
-  hosts only — set `MCP_ALLOWED_HOSTS` / `MCP_ALLOWED_ORIGINS` when launching the server, or
-  it'll reject the tunnel's hostname independently of the Rails-level check above.
+**Deploy:** `config/deploy.yml` records the reasoning. It covers read-only mode
+(`MCP_ALLOW_WRITE_SCOPE=false`, enforced both when a token is issued and when it is used),
+both host checks, `DEMO_NOINDEX`, and the hostname alias kept during a move
+(`RAILS_ALIAS_HOSTS`). After deploying new importer code to an existing database, run
+`bin/rails olist:recount_products`.
 
 ### The tools
 
 | Tool | Scope | What it does |
 |---|---|---|
 | `search_products`, `get_product` | read | Catalogue lookup |
-| `list_categories` | read | Revenue/units/reviews per category |
+| `list_categories` | read | Products, units, item revenue and review score per category |
 | `search_orders`, `get_order` | read | Order lookup, including delivery timeline and review |
-| `revenue_report` | read | Revenue grouped by month/category/state/payment method/seller |
-| `delivery_performance` | read | Lateness vs. review score, by bucket/category/state/seller |
-| `seller_performance` | read | Seller ranking by revenue, review score, or lateness |
-| `find_customer` | read | Customer order history |
-| `update_product_price` | write | Previews the change; only writes with `confirm: true` |
-| `update_order_status` | write | Same preview-then-confirm pattern |
+| `revenue_report` | read | Revenue by month, category, state, payment method or seller |
+| `delivery_performance` | read | Lateness vs review score, by band, category, state or seller |
+| `seller_performance` | read | Seller ranking by revenue, review score or lateness |
+| `find_customer` | read | A customer's order history, by exact email |
+| `update_product_price` | write | Preview first; writes only with `confirm: true`. Not exposed by the deployment |
+| `update_order_status` | write | Same pattern. Not exposed by the deployment |
 
-## Deployment
+## Limitations
 
-Kamal 2 onto a Hetzner box shared with a few other demo apps, reusing that box's
-`kamal-proxy` for TLS. `config/deploy.yml` carries the reasoning; the parts worth knowing:
-
-- **Its own Postgres accessory**, not a shared one. Each `revenue_report` or
-  `delivery_performance` call scans ~100k orders on demand from an MCP client, which has no
-  business sharing an instance with another app.
-- **The data is restored, not imported.** `olist:import` is a four-minute bulk load that
-  bypasses ActiveRecord's callback chain; it runs on a workstation and ships as a `pg_dump`.
-- **Read-only takes two halves.** The remote endpoint derives its tool set from the
-  presented token's scopes, so `MCP_ALLOW_WRITE_SCOPE=false` both drops `mcp:write` from
-  Doorkeeper's configured scopes (no new token can carry it) and is re-checked at request
-  time by `StoreMcp.write_enabled?` — because Doorkeeper validates scopes when a token is
-  *issued*, not when it is presented.
-- **Two host checks, not one.** Rails' `config.hosts` and the MCP SDK's own
-  `MCP_ALLOWED_HOSTS`/`MCP_ALLOWED_ORIGINS` are independent; setting either alone leaves a
-  gap. `/up` is excluded from the Rails check so kamal-proxy's health check can reach it.
-- **`DEMO_NOINDEX`** serves a disallow-all `robots.txt` and an `X-Robots-Tag: noindex`
-  header, because 32k synthesized product names should not be indexed under a real domain.
-
-```bash
-bin/rails secret                 # -> SECRET_KEY_BASE in .env.kamal (gitignored)
-bundle exec kamal setup          # first run: proxy, accessory, app
-bundle exec kamal deploy         # subsequent deploys
-bundle exec kamal logs -f
-```
-
-## Known limitations
-
-- Single hand-created admin account, no per-scope granularity beyond read/write, no rate
-  limiting, no audit trail of who approved which OAuth grant.
-- RFC 7591 client registration is intentionally wide open (registering a client grants it
-  nothing by itself — every token still needs an admin's explicit consent), but that's a
-  design choice worth a second opinion from someone who's actually shipped this before.
-- Products have no real names or photos — the Olist dataset doesn't include them, so the
-  importer synthesizes names from category + a product-ID fragment.
-- The deployed instance is read-only. The write tools are exercised over stdio locally;
-  they have never run against a token issued by the public authorization server.
-- No rate limiting on `/admin` or `/oauth`. The consent screen is wired to the admin login
-  because every tool reads store-operator data, which makes that login admin-equivalent to
-  MCP access — a single password protecting both, with no throttling and no audit trail of
-  who approved which grant.
+- **Read-only deployment.** The write tools are exercised locally only, and their
+  preview-then-confirm step is enforced by the tool description, not by server state (F10).
+  That would need fixing before writes were ever enabled.
+- **Customer text:** F13 above, a defence-in-depth consideration rather than a demonstrated
+  issue.
+- **One tenant.** Customer lookup is not scoped to a store (F11). With one store it cannot
+  leak anything.
+- **Operations:** one admin account, no rate limiting on `/admin` or `/oauth`, and no audit
+  trail of who approved which OAuth grant.
+- **SDK:** the protocol pin (F12) stays until the MCP Ruby SDK is upgraded to a version that
+  implements 2026-07-28.
