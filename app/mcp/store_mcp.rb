@@ -60,7 +60,7 @@ module StoreMcp
       published = read_only ? READ_TOOLS : READ_TOOLS + WRITE_TOOLS
       tools = substitute(published, tools)
 
-      MCP::Server.new(
+      Server.new(
         name: "spree-store",
         title: "Spree Store Operations",
         version: StoreMcp::VERSION,
@@ -73,8 +73,10 @@ module StoreMcp
       )
     end
 
+    # The protocol revision is pinned too, as the fallback for a client that
+    # asks for a revision the SDK does not know at all (see StoreMcp::Server).
     def configuration
-      MCP::Configuration.new(validate_tool_call_arguments: true)
+      MCP::Configuration.new(validate_tool_call_arguments: true, protocol_version: Server::PROTOCOL_VERSION)
     end
 
     def substitute(published, replacements)

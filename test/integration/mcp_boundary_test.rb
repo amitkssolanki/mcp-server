@@ -167,6 +167,33 @@ class McpBoundaryTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  # --- protocol revision (F12) ------------------------------------------------
+
+  # mcp 1.1.0 would agree to 2026-07-28 without implementing it, and a client
+  # holding it to that revision rejects tools/list and sees zero tools.
+  test "a client asking for 2026-07-28 is negotiated down to 2025-11-25, the newest revision implemented" do
+    rpc("initialize", { protocolVersion: "2026-07-28", capabilities: {}, clientInfo: { name: "probe", version: "1" } },
+        token: token("mcp:read").token)
+
+    assert_response :success
+    assert_equal "2025-11-25", result["protocolVersion"]
+  end
+
+  test "a client asking for an older revision the server implements gets that revision" do
+    rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "probe", version: "1" } },
+        token: token("mcp:read").token)
+
+    assert_equal "2025-06-18", result["protocolVersion"]
+  end
+
+  test "sessionless discovery does not advertise 2026-07-28" do
+    rpc("server/discover", {}, token: token("mcp:read").token)
+
+    versions = result.fetch("supportedVersions")
+    assert_equal "2025-11-25", versions.max
+    refute_includes versions, "2026-07-28"
+  end
+
   # --- store scoping ----------------------------------------------------------
 
   test "a server bound to another store sees none of this store's orders" do

@@ -243,3 +243,33 @@
     widen or narrow this.
   checks: []
   regression: []
+
+- id: F12
+  title: The server agreed to an MCP protocol revision it does not implement
+  severity: high
+  triage: tool_bug
+  scope: fix
+  status: verified
+  tools: [all (protocol layer)]
+  definition: null
+  summary: >
+    Found on day 3, when the agent evaluation's first runs showed the store
+    server connected but exposing 0 tools. Logging in updated Claude Code
+    from 2.1.252 to 2.1.284, which negotiates MCP revision 2026-07-28. The
+    Ruby SDK (mcp 1.1.0) lists 2026-07-28 as its latest stable revision and
+    agreed to it on both initialize and server/discover, but does not
+    implement it: that revision requires a resultType on list results, and
+    1.1.0 sends none (the SDK's changelog adds it in 1.2.0). The client
+    rejected tools/list, the model saw no tools, wrote "Tool call:
+    search_orders" as prose, and in one probe invented a tool result (6
+    cancelled 2018 orders; the oracle says 334). The same SDK serves the
+    deployed HTTP endpoint, so any client negotiating 2026-07-28 would likely
+    get zero tools there too. That is not verified against production, which
+    was not touched. Fix: StoreMcp::Server pins the negotiated revision to
+    2025-11-25, the newest 1.1.0 implements, on both paths. The SDK was not
+    upgraded. Tool definitions and outputs are unchanged, and the day 2
+    harness fingerprint is identical. The agent runner now fails a run that
+    does not see exactly the nine read tools.
+  checks: [mcp_boundary_test (2026-07-28 negotiated down; discovery omits it), agent_grader_test (tool visibility)]
+  reports: [03-agent-baseline (the aborted first attempt is described there)]
+  regression: []
