@@ -186,7 +186,7 @@ Ruby 3.4.7 and PostgreSQL.
 bundle install
 bin/olist-fetch                     # the 8 Olist CSVs, pinned mirror, SHA-256 verified
 RAILS_ENV=test bin/rails db:create db:schema:load db:seed olist:import
-RAILS_ENV=test bin/rails test       # 52 tests
+RAILS_ENV=test bin/rails test       # 52 verification tests, plus the homepage tests
 RAILS_ENV=test bin/rails eval:run   # harness: prints a report and the fingerprint
 ```
 

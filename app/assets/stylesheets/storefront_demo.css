@@ -1,0 +1,45 @@
+/* The Spree storefront here is the data the MCP tools query, not a shop. Hide what implies a working
+   store (cart, quantity and add-to-cart, wishlist, account and sign-up, newsletter, the default announcement,
+   blog and the empty company links), keep product browsing, search, filters and product details. Loaded
+   by the theme's custom_head override. */
+
+.section-announcement-bar,
+.section-newsletter,
+#cart-pane-container,
+#cart-pane-link,
+#cart-pane,
+[id^="cart-icon"],
+a[href$="/cart"],
+#wishlist-icon,
+a[href*="/account"],
+button[aria-label="Open account panel"],
+#mobile-menu,
+#slideover-account,
+form[action$="/account/wishlist"],
+[data-controller~="wished-item"],
+.block-quantity-selector,
+.block-buy-buttons,
+.fixed-pdp-button,
+footer nav[aria-label="Account"],
+footer nav[aria-label="Company"],
+footer nav[aria-label="Follow us"],
+a[data-title="blog"],
+a[href$="/posts"] {
+  display: none !important;
+}
+
+.demo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  text-align: center;
+  background: #f4ecdd;
+  color: #1c1a17;
+  border-bottom: 1px solid #e3ddd1;
+}
+.demo-banner a { color: #8a6420; font-weight: 600; white-space: nowrap; }

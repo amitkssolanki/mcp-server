@@ -41,6 +41,11 @@ Rails.application.routes.draw do
   # "/" and would otherwise swallow this path.
   post "/mcp" => "mcp#handle"
 
+  # The demo's own homepage (what the project is, the evidence, how to explore). Declared before the
+  # Spree engine for the same reason: Spree is mounted at "/" and its storefront home would win. The
+  # storefront itself stays where it is (/products and the rest), as the data the tools query.
+  root "home#show"
+
   # This line mounts Spree's routes at the root of your application.
   # This means, any requests to URLs such as /products, will go to
   # Spree::ProductsController.
