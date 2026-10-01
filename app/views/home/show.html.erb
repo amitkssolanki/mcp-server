@@ -1,0 +1,251 @@
+<%# Demo homepage. Every figure and quote is governed by the MCP claims ledger
+    (portfolio/mcp-server/claims-ledger.md in the site repository, private):
+    99,441 orders C1 K2 · 9 read-only tools C3 C6 · OAuth with PKCE C5 · 334 I2 E2 · R,172,191.68 I5 E3 K7
+    · 5/35 and 35/35 V1 · 9/9 V2 · 6/6 V3 · 2/2 V4 · 12/12 = 3 historical + 9 pre-fix V5 · 45/45 V10 K5
+    · fingerprint V8 E1 · defect classes D1-D9 · caveats K1 K2 K5 · oracle independence M1.
+    The two transcripts are the questions, tool calls (production log) and opening sentences of the answers
+    recorded on 29 September 2026 in the approved demo video. %>
+<%
+  # The approved portfolio cut, served by amitsolanki.com; never copied into this repository. Its narration
+  # is an ElevenLabs Free-plan voice, so its title carries the attribution ElevenLabs requires.
+  video_url = "https://amitsolanki.com/writing/mcp-server/mcp-verification-eric-portfolio.mp4"
+  video_title = "MCP Server verification demo (AI voice: elevenlabs.io)"
+%>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="<%= root_path %>"><i aria-hidden="true"></i>MCP Server <span>read-only demo</span></a>
+    <nav class="links" aria-label="Sections">
+      <a href="#use-case">What the AI does</a>
+      <a href="#how">How it works</a>
+      <a href="#verified">Verification</a>
+      <a href="#proof">Video</a>
+      <a href="#explore">Explore</a>
+      <a href="https://amitsolanki.com/work/mcp-server/">Case study</a>
+    </nav>
+    <details class="menu">
+      <summary>Menu</summary>
+      <nav aria-label="Sections">
+        <a href="#use-case">What the AI does</a>
+        <a href="#how">How it works</a>
+        <a href="#verified">Verification</a>
+        <a href="#proof">Video</a>
+        <a href="#explore">Explore</a>
+        <a href="https://amitsolanki.com/work/mcp-server/">Case study</a>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<main>
+  <!-- 1 HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <ul class="status" aria-label="Status">
+        <li class="live">Live demo</li><li>Read-only</li><li>9 MCP tools</li><li>OAuth with PKCE</li>
+      </ul>
+      <p class="kicker">MCP · real commerce data · checked answers</p>
+      <h1>Ask an AI about a real commerce system.<br>Then check the answer.</h1>
+      <p class="lede">
+        This server gives an AI client such as Claude Code nine read-only tools over a Spree store holding
+        99,441 real, anonymised Olist orders. An independent harness recomputes the answers from the raw data,
+        so you can tell whether what the AI says is right.
+      </p>
+      <div class="ctas">
+        <a class="btn primary" href="#proof">Watch the demo (88 s)</a>
+        <a class="btn secondary" href="https://amitsolanki.com/work/mcp-server/">Read the case study</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 USE CASE -->
+  <section id="use-case">
+    <div class="wrap">
+      <p class="kicker">What the AI actually does</p>
+      <h2>Two questions, answered from the store's data</h2>
+      <p class="lede">Claude Code calls one of the server's tools, and the tool queries the Spree store in PostgreSQL. No mock API.</p>
+      <div class="convo" style="margin-top:26px">
+        <article class="chat">
+          <header><span>Claude Code 2.1.284 · live demo</span><span>29 Sep 2026</span></header>
+          <div class="turn"><div class="who">Question</div><div class="q">How many orders placed in 2018 were cancelled?</div></div>
+          <div class="tool"><b>search_orders</b> status: canceled · from: 2018-01-01 · to: 2018-12-31</div>
+          <div class="turn a"><div class="who">Claude</div><strong>334 orders</strong> placed in 2018 were cancelled. This counts orders with status canceled and purchase dates from 2018-01-01 to 2018-12-31. <span class="muted">…</span></div>
+          <div class="check">Matches the independent oracle: 334</div>
+        </article>
+        <article class="chat">
+          <header><span>Claude Code 2.1.284 · live demo</span><span>29 Sep 2026</span></header>
+          <div class="turn"><div class="who">Question</div><div class="q">What was the store's revenue in November 2017?</div></div>
+          <div class="tool"><b>revenue_report</b> from: 2017-11-01 · to: 2017-11-30 · group_by: month</div>
+          <div class="turn a"><div class="who">Claude</div>Gross revenue in November 2017 was <strong>R$1,172,191.68</strong> from 7,421 orders.
+            <div class="figs"><span>Item revenue</span><span>R$1,003,862.14</span><span>Freight</span><span>R$168,329.54</span><span class="tot">Total</span><span class="tot">R$1,172,191.68</span></div>
+          </div>
+          <div class="check">Matches the independent oracle: R$1,172,191.68</div>
+        </article>
+      </div>
+      <p class="provenance muted">Questions, tool calls and the opening of each answer as recorded in the demo video; Claude's further remarks are omitted (<span class="mono">…</span>). Revenue is gross revenue, items plus freight, over completed orders, under the project's metric definitions.</p>
+    </div>
+  </section>
+
+  <!-- 3 HOW -->
+  <section id="how">
+    <div class="wrap">
+      <p class="kicker">What MCP changes</p>
+      <h2>The AI calls tools; the tools query the store</h2>
+      <p class="lede">The Model Context Protocol lets an AI client discover and call a server's tools. This server exposes only read tools, behind OAuth.</p>
+      <div class="flow" role="list">
+        <div class="node" role="listitem"><h3>AI client</h3><small>Claude Code, or any MCP client</small></div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node" role="listitem"><h3>MCP over HTTPS</h3><small>OAuth with PKCE; only the <code>mcp:read</code> scope is issued</small></div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node accent" role="listitem"><h3>9 read-only tools</h3>
+          <div class="tools"><code>search_products</code><code>get_product</code><code>list_categories</code><code>search_orders</code><code>get_order</code><code>revenue_report</code><code>delivery_performance</code><code>seller_performance</code><code>find_customer</code></div>
+        </div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node" role="listitem"><h3>Spree + PostgreSQL</h3><small>Rails commerce store</small></div>
+        <div class="arrow" aria-hidden="true">↓</div>
+        <div class="node" role="listitem"><h3>Olist data</h3><small>99,441 real, anonymised orders, 2016 to 2018</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 TRUST -->
+  <section id="trust">
+    <div class="wrap">
+      <p class="kicker">The trust problem</p>
+      <h2>Getting an answer is easy. Getting the right answer is harder.</h2>
+      <p class="lede">Every tool returned a plausible number. Real commerce data is full of cases where the obvious query counts the wrong thing:</p>
+      <div class="issues">
+        <div class="issue"><h3>Reviews</h3><p>Orders with more than one review were counted once per review.</p></div>
+        <div class="issue"><h3>Cancelled orders</h3><p>Cancelled and unavailable orders were counted as sales.</p></div>
+        <div class="issue"><h3>Category revenue</h3><p>Two tools gave two different "revenue" figures for the same category.</p></div>
+        <div class="issue"><h3>Multiple sellers</h3><p>In multi-seller orders, sellers were credited with other sellers' items.</p></div>
+        <div class="issue"><h3>Split payments</h3><p>Payment-method revenue double-counted split payments.</p></div>
+        <div class="issue"><h3>Delivery and lookup</h3><p>Delivery metrics included cancelled orders; customer email matched as a substring.</p></div>
+      </div>
+      <div class="callout">
+        <b>Before the fixes, the tools answered 5 of 35 canonical questions correctly.</b> Asked for Health Beauty revenue, two tools returned R$1,258,681 and R$1,445,137. The independent harness exposed nine such defects; each is fixed and kept as a regression.
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 VERIFICATION -->
+  <section id="verified">
+    <div class="wrap">
+      <p class="kicker">Independent verification</p>
+      <h2>Every answer is worked out twice, by code that shares nothing</h2>
+      <div class="verify">
+        <div class="paths">
+          <div class="node"><h3>Raw Olist CSV files</h3><small>A pinned copy, checked with SHA-256</small></div>
+          <div class="split">
+            <div class="node accent"><h3>Independent oracle</h3><small>Plain Ruby over the CSVs: no importer, no SQL, no Spree models, no tool code</small></div>
+            <div class="node"><h3>System under test</h3><small>Importer → PostgreSQL → MCP server, called over JSON-RPC as a client would</small></div>
+          </div>
+          <div class="node"><h3>Field-by-field comparison, to the cent</h3><small>Runs in CI on every push</small></div>
+        </div>
+        <div>
+          <div class="results">
+            <div class="res"><b>35 / 35</b><span>canonical questions</span></div>
+            <div class="res"><b>9 / 9</b><span>invariants, 150 seeded cases</span></div>
+            <div class="res"><b>6 / 6</b><span>differential checks, 200 seeded random cases</span></div>
+            <div class="res"><b>12 / 12</b><span>known bugs caught (3 historical, 9 pre-fix)</span></div>
+            <div class="res wide"><b>45 / 45</b><span>Claude Code answers matching oracle answers committed before any run (15 questions, 3 runs, one model)</span></div>
+          </div>
+          <p class="caveat">An engineering evaluation of this demo and its data, not a benchmark, and not a guarantee beyond the checks run. Result fingerprint <span class="mono">f4841a48894b268d</span>, identical locally and in CI.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 PROOF -->
+  <section id="proof">
+    <div class="wrap">
+      <p class="kicker">Proof</p>
+      <h2>See the system answer a real question</h2>
+      <figure class="video">
+        <video controls preload="metadata" playsinline width="1920" height="1080" title="<%= video_title %>" aria-label="<%= video_title %>">
+          <source src="<%= video_url %>" type="video/mp4">
+        </video>
+        <figcaption><strong><%= video_title %>.</strong> Claude Code on the live read-only demo answers both questions above, then the independent harness runs locally on the pinned dataset. 88 seconds, recorded in one take.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 6 EXPLORE -->
+  <section id="explore" class="explore">
+    <div class="wrap">
+      <p class="kicker">Explore the demo</p>
+      <h2>Look at the system being queried</h2>
+      <div class="grid g3" style="margin-top:22px">
+        <div class="card"><h3>Browse the underlying commerce data <span>→</span></h3><p>Explore the anonymised Olist catalogue behind the MCP tools.</p><a href="/products">Explore the data →</a></div>
+        <div class="card"><h3>Inspect the endpoint <span>→</span></h3><p>The public OAuth discovery documents. The MCP endpoint itself answers 401 without a token.</p><a href="/.well-known/oauth-protected-resource">Resource metadata</a> · <a href="/.well-known/oauth-authorization-server">Authorization server</a></div>
+        <div class="card"><h3>Connect an MCP client</h3><p>The client configuration. Access is owner-consented: only the store admin can approve a client.</p>
+<pre>{ "mcpServers": { "store-demo": {
+  "type": "http",
+  "url": "https://mcp-demo.railsfanatics.com/mcp"
+} } }</pre>
+          <p class="note">Visitors cannot use the tools; the video shows what an approved client sees.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 CASE STUDY -->
+  <section id="case-study">
+    <div class="wrap cs">
+      <div>
+        <p class="kicker">How it was verified</p>
+        <h2>The full engineering story</h2>
+        <ol class="steps">
+          <li>An independent oracle that shares no code with the server</li>
+          <li>A harness: questions, invariants, random cases, reconciliation</li>
+          <li>Nine defects found in tools that already looked right</li>
+          <li>Fixes, each kept as a regression</li>
+          <li>An agent evaluation with Claude Code against pre-registered answers</li>
+          <li>Live verification over OAuth, and the protocol fix it needed</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Case study</h3>
+        <p class="muted small">Six diagrams, the before-and-after results, and what is and is not shown.</p>
+        <div class="ctas" style="margin-top:12px">
+          <a class="btn primary" href="https://amitsolanki.com/work/mcp-server/">Read the case study</a>
+          <a class="btn secondary" href="https://amitsolanki.com/writing/mcp-server-spree-commerce/">Build log</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 FACTS -->
+  <section id="facts">
+    <div class="wrap">
+      <p class="kicker">Technical summary</p>
+      <dl class="facts">
+        <div><dt>Protocol</dt><dd>MCP (Ruby SDK), revision 2025-11-25</dd></div>
+        <div><dt>Auth</dt><dd>OAuth with PKCE (S256), Doorkeeper, dynamic client registration</dd></div>
+        <div><dt>Tools</dt><dd>9 read-only; writes not exposed</dd></div>
+        <div><dt>Store</dt><dd>Spree Commerce on Ruby on Rails, PostgreSQL</dd></div>
+        <div><dt>Data</dt><dd>Olist, 99,441 anonymised orders, 2016 to 2018</dd></div>
+        <div><dt>Verification</dt><dd>Independent CSV oracle; harness and the 52 oracle, boundary and grader tests in CI on every push</dd></div>
+        <div><dt>Agent evaluation</dt><dd>Claude Code 2.1.284, claude-sonnet-5, 15 questions × 3 runs</dd></div>
+        <div><dt>Status</dt><dd>A live, read-only demo deployment, not a business</dd></div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div>
+      <div class="brand" style="margin-bottom:8px"><i aria-hidden="true"></i>MCP Server <span>read-only demo</span></div>
+      Data: Brazilian E-Commerce Public Dataset by Olist, CC BY-NC-SA 4.0, anonymised. Product names are synthesized. A demonstration, not a store: nothing here is for sale.
+    </div>
+    <nav aria-label="Links">
+      <a href="https://amitsolanki.com/work/mcp-server/">Case study</a>
+      <a href="https://amitsolanki.com/writing/mcp-server-spree-commerce/">Build log</a>
+      <a href="https://github.com/amitkssolanki/mcp-server">Repository</a>
+      <a href="/products">Browse the underlying commerce data</a>
+    </nav>
+  </div>
+</footer>
+<script>
+  // Close the small-screen menu once a section link is chosen (the menu itself needs no script).
+  document.querySelectorAll(".menu nav a").forEach((a) => a.addEventListener("click", () => a.closest("details").removeAttribute("open")));
+</script>

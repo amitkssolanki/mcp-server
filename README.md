@@ -8,6 +8,10 @@ those answers are true. The harness found nine correctness defects in tools that
 been demonstrated working. They are fixed, and each one is kept as a regression that CI must
 keep catching. The server runs as a live, read-only demo deployment behind OAuth.
 
+- **Demo homepage:** [mcp-demo.railsfanatics.com](https://mcp-demo.railsfanatics.com/)
+- **Case study:** [amitsolanki.com/work/mcp-server](https://amitsolanki.com/work/mcp-server/)
+- **Build log:** [amitsolanki.com/writing/mcp-server-spree-commerce](https://amitsolanki.com/writing/mcp-server-spree-commerce/)
+
 ## The question
 
 **How do you know an AI interface over business data is telling the truth?**
@@ -186,7 +190,7 @@ Ruby 3.4.7 and PostgreSQL.
 bundle install
 bin/olist-fetch                     # the 8 Olist CSVs, pinned mirror, SHA-256 verified
 RAILS_ENV=test bin/rails db:create db:schema:load db:seed olist:import
-RAILS_ENV=test bin/rails test       # 52 tests
+RAILS_ENV=test bin/rails test       # 52 verification tests, plus the homepage tests
 RAILS_ENV=test bin/rails eval:run   # harness: prints a report and the fingerprint
 ```
 

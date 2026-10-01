@@ -1,0 +1,34 @@
+<%# Layout for the demo homepage only (HomeController). Light or dark follows the visitor's system
+    setting, with the same tokens as the OAuth pages (oauth.css). %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>MCP Server: a read-only AI interface to real commerce data, with checked answers</title>
+  <% description = "A read-only MCP server over a Spree store with 99,441 real, anonymised Olist orders, and an independent harness that checks the answers. A live demo, not a business." %>
+  <%# Canonical and share URLs on the primary host, also when the page is reached on the alias host. %>
+  <% primary = ENV["RAILS_HOST"] %>
+  <% canonical_url = primary ? root_url(host: primary, protocol: "https") : root_url %>
+  <% og_image_url = primary ? image_url("home-og.png", host: "https://#{primary}") : image_url("home-og.png") %>
+  <meta name="description" content="<%= description %>">
+  <link rel="canonical" href="<%= canonical_url %>">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MCP Server: ask an AI about a real commerce system, then check the answer">
+  <meta property="og:description" content="<%= description %>">
+  <meta property="og:url" content="<%= canonical_url %>">
+  <meta property="og:image" content="<%= og_image_url %>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/icon.png" type="image/png">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <%= stylesheet_link_tag "home" %>
+</head>
+<body class="home">
+  <%= yield %>
+</body>
+</html>
