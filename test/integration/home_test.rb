@@ -74,6 +74,8 @@ class HomeTest < ActionDispatch::IntegrationTest
     assert_includes page, %(href="https://amitsolanki.com/work/mcp-server/">Read the case study</a>)
     assert_includes page, %(href="https://amitsolanki.com/writing/mcp-server-spree-commerce/">Build log</a>)
     assert_includes page, %(href="https://github.com/amitkssolanki/mcp-server">Repository</a>)
+    assert_includes page, %(<h3>Browse the underlying commerce data <span>→</span></h3>)
+    assert_includes page, %(<a href="/products">Explore the data →</a>)
     assert_includes page, %(<a href="/products">Browse the underlying commerce data</a>)
     assert_includes page, "https://mcp-demo.railsfanatics.com/mcp"
     assert_no_match(%r{href="[^"]*/mcp"}, page, "/mcp must not be a clickable link")
