@@ -108,4 +108,34 @@ class HomeTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Brazilian E-Commerce Public Dataset by Olist"
     assert_match(%r{<link rel="stylesheet" href="/assets/storefront_demo-\h+\.css"}, response.body)
   end
+
+  test "robots.txt lets LinkedIn's preview bot fetch only the homepage and its share image" do
+    get "/"
+    og_image = URI(response.body[/<meta property="og:image" content="([^"]+)"/, 1]).path
+
+    assert robots_allowed?("LinkedInBot", "/")
+    assert robots_allowed?("LinkedInBot", og_image)
+    %w[/products /products/perfumery-1e9e8ef04d /t/categories /?q=x /mcp /oauth/authorize].each do |path|
+      assert_not robots_allowed?("LinkedInBot", path), "LinkedInBot may fetch #{path}"
+    end
+    [ "/", "/products", og_image ].each { |path| assert_not robots_allowed?("Googlebot", path), "Googlebot may fetch #{path}" }
+  end
+
+  private
+
+  # RFC 9309 matching: the group for the agent (else "*"), then the longest matching rule, Allow on a tie;
+  # "*" matches any run of characters and a trailing "$" anchors the end.
+  def robots_allowed?(agent, path)
+    groups = Rails.root.join("public/robots.txt").read.split(/\n\s*\n/).map do |block|
+      lines = block.lines.map { |l| l.sub(/#.*/, "").strip }.reject(&:empty?).map { |l| l.split(":", 2).map(&:strip) }
+      [ lines.select { |k, _| k.casecmp?("user-agent") }.map(&:last), lines.reject { |k, _| k.casecmp?("user-agent") } ]
+    end
+    _, rules = groups.find { |agents, _| agents.any? { |a| a.casecmp?(agent) } } || groups.find { |agents, _| agents.include?("*") }
+    matches = rules.select do |_, pattern|
+      regex = Regexp.escape(pattern.delete_suffix("$")).gsub('\*', ".*")
+      path.match?(/\A#{regex}#{'\z' if pattern.end_with?("$")}/)
+    end
+    best = matches.max_by { |kind, pattern| [ pattern.length, kind.casecmp?("allow") ? 1 : 0 ] }
+    best.nil? || best.first.casecmp?("allow")
+  end
 end
