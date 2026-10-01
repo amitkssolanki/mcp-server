@@ -3,5 +3,14 @@
 # is anonymised 2016-2018 Brazilian data. None of it should appear in search
 # results. Production also sends X-Robots-Tag: noindex, nofollow while
 # DEMO_NOINDEX is on — see config/environments/production.rb.
+#
+# One exception: LinkedIn's preview bot may fetch the demo's homepage ("/" only,
+# the $ anchors it) and its share image, so a LinkedIn link to the demo gets a
+# preview card. Everything else stays disallowed for it too.
+User-agent: LinkedInBot
+Allow: /$
+Allow: /assets/home-og-
+Disallow: /
+
 User-agent: *
 Disallow: /
