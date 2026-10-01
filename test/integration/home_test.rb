@@ -66,6 +66,20 @@ class HomeTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "<strong>#{VIDEO_TITLE}.</strong>"
   end
 
+  test "it links the case study page, build log, repository and commerce data; /mcp stays text" do
+    get "/"
+    page = response.body
+
+    assert_includes page, %(<a class="btn primary" href="#proof">Watch the demo (88 s)</a>)
+    assert_includes page, %(href="https://amitsolanki.com/work/mcp-server/">Read the case study</a>)
+    assert_includes page, %(href="https://amitsolanki.com/writing/mcp-server-spree-commerce/">Build log</a>)
+    assert_includes page, %(href="https://github.com/amitkssolanki/mcp-server">Repository</a>)
+    assert_includes page, %(<a href="/products">Browse the underlying commerce data</a>)
+    assert_includes page, "https://mcp-demo.railsfanatics.com/mcp"
+    assert_no_match(%r{href="[^"]*/mcp"}, page, "/mcp must not be a clickable link")
+    assert_no_match(/\.pdf|mcp-store\.amitsolanki\.com|Open the store|Store data/, page)
+  end
+
   test "its canonical and share URLs use the primary host, also on the alias host" do
     previous, ENV["RAILS_HOST"] = ENV["RAILS_HOST"], "primary.example"
     host! "alias.example"

@@ -8,6 +8,10 @@ those answers are true. The harness found nine correctness defects in tools that
 been demonstrated working. They are fixed, and each one is kept as a regression that CI must
 keep catching. The server runs as a live, read-only demo deployment behind OAuth.
 
+- **Demo homepage:** [mcp-demo.railsfanatics.com](https://mcp-demo.railsfanatics.com/)
+- **Case study:** [amitsolanki.com/work/mcp-server](https://amitsolanki.com/work/mcp-server/)
+- **Build log:** [amitsolanki.com/writing/mcp-server-spree-commerce](https://amitsolanki.com/writing/mcp-server-spree-commerce/)
+
 ## The question
 
 **How do you know an AI interface over business data is telling the truth?**
